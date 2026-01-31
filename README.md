@@ -13,27 +13,57 @@ This project follows clean architecture with clear separation of concerns:
 
 ## Setup
 
-### Create virtual environment
+### Quick Start
+
+1. Create and activate virtual environment:
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### Install development dependencies
+2. Install the project in development mode:
 ```bash
 pip install -e ".[dev]"
 ```
 
+This will install:
+- The `pryces` package in editable mode
+- Development dependencies (pytest, etc.)
+
 ## Development
 
-### Run tests
+### Running Tests
+
+Run all tests:
 ```bash
 pytest
 ```
 
-### Run tests with coverage
+Run tests with verbose output:
+```bash
+pytest -v
+```
+
+Run specific test file:
+```bash
+pytest tests/application/use_cases/get_stock_price/test_get_stock_price.py -v
+```
+
+Run tests with coverage:
 ```bash
 pytest --cov=pryces --cov-report=html
+```
+
+### Working with Virtual Environment
+
+Activate the virtual environment before running tests or installing dependencies:
+```bash
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+Deactivate when done:
+```bash
+deactivate
 ```
 
 ## Project Principles

@@ -34,17 +34,6 @@ Follow clean architecture principles to create a resilient, scalable, and mainta
 
 ## Architecture
 
-The project follows a layered clean architecture approach:
-
-### Layer Structure
-```
-src/pryces/
-├── domain/          # Core business logic (no external dependencies)
-├── application/     # Use cases and application services
-├── infrastructure/  # External dependencies (DB, APIs, file systems)
-└── presentation/    # User interfaces (CLI, web, API)
-```
-
 ### Dependency Rules
 - **Domain**: No dependencies on other layers (pure business logic)
 - **Application**: Depends only on Domain
@@ -53,41 +42,7 @@ src/pryces/
 
 Dependencies always point inward (Presentation → Application → Domain).
 
-## Development Commands
-
-### Environment Setup
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install in development mode
-pip install -e ".[dev]"
-```
-
-### Testing
-```bash
-# Run all tests
-pytest
-
-# Run tests with coverage
-pytest --cov=pryces --cov-report=html
-
-# Run specific test file
-pytest tests/domain/test_example.py
-
-# Run specific test function
-pytest tests/domain/test_example.py::test_function_name
-```
-
-### Code Quality
-```bash
-# Type checking (if mypy is added)
-mypy src/pryces
-
-# Run tests in watch mode (if pytest-watch is added)
-ptw
-```
+**Note**: For setup and testing commands, see [README.md](README.md).
 
 ## Development Workflow
 
@@ -96,3 +51,32 @@ ptw
 3. Use dependency injection for infrastructure dependencies
 4. Keep the domain layer pure and testable
 5. Follow conventional commits for all commit messages
+
+## Commit Message Format
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>: <description>
+
+[optional body]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring (no functional changes)
+- `test`: Adding or updating tests
+- `docs`: Documentation changes
+- `chore`: Maintenance tasks (dependencies, config, etc.)
+- `style`: Code style/formatting changes
+- `perf`: Performance improvements
+
+**Examples:**
+```
+feat: add GetStockPrice use case with provider interface
+fix: handle null response from stock price provider
+test: add unit tests for StockNotFound exception
+chore: update README with testing instructions
+refactor: extract mock provider to setup method
+```
