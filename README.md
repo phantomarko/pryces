@@ -66,6 +66,44 @@ Deactivate when done:
 deactivate
 ```
 
+## Console Commands
+
+### Get Stock Price
+
+Retrieve stock price information via command line:
+
+```bash
+python -m pryces.presentation.console.cli AAPL
+```
+
+With verbose logging (logs go to stderr, JSON to stdout):
+```bash
+python -m pryces.presentation.console.cli AAPL --verbose
+```
+
+Example output (success):
+```json
+{
+  "success": true,
+  "data": {
+    "ticker": "AAPL",
+    "price": "150.25",
+    "currency": "USD"
+  }
+}
+```
+
+Example output (error):
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STOCK_NOT_FOUND",
+    "message": "Stock not found: INVALID"
+  }
+}
+```
+
 ## Project Principles
 
 See [CLAUDE.md](CLAUDE.md) for detailed conventions and architectural guidelines.
