@@ -6,11 +6,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.providers.dtos import StockPriceResponse
-from pryces.application.use_cases.get_stock_price import (
-    GetStockPrice,
-    StockNotFound,
-)
+from pryces.application.exceptions import StockNotFound
+from pryces.application.providers import StockPriceResponse
+from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
 )

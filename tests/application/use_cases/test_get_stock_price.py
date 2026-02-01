@@ -5,12 +5,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.providers.dtos import StockPriceResponse
-from pryces.application.providers.interfaces import StockPriceProvider
+from pryces.application.exceptions import StockNotFound
+from pryces.application.providers import StockPriceProvider, StockPriceResponse
 from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
     GetStockPriceRequest,
-    StockNotFound,
 )
 
 

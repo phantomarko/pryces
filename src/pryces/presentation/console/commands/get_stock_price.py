@@ -6,9 +6,8 @@ from dataclasses import asdict
 from decimal import Decimal
 from typing import Any
 
-from ....application.use_cases.get_stock_price.dtos import GetStockPriceRequest
-from ....application.use_cases.get_stock_price.exceptions import StockNotFound
-from ....application.use_cases.get_stock_price.get_stock_price import GetStockPrice
+from ....application.exceptions import StockNotFound
+from ....application.use_cases.get_stock_price import GetStockPrice, GetStockPriceRequest
 
 
 class DecimalEncoder(json.JSONEncoder):

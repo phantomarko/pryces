@@ -52,6 +52,17 @@ Dependencies always point inward (Presentation → Application → Domain).
 4. Keep the domain layer pure and testable
 5. Follow conventional commits for all commit messages
 
+### Pre-Commit Checklist
+
+Before creating any commit, ensure the following:
+
+1. **Run all tests**: Execute `pytest` to verify all tests pass
+2. **Verify test coverage**: Ensure new code is adequately tested
+3. **Review changes**: Check that only intended changes are staged
+4. **Update documentation**: If adding new features, update relevant docs
+
+**Important**: Never commit code with failing tests. The test suite must pass before any commit.
+
 ## Commit Message Format
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:

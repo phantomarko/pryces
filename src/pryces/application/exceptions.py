@@ -1,4 +1,7 @@
-"""Exceptions for get stock price use case."""
+"""Application layer exceptions.
+
+This module contains domain-specific exceptions used across the application layer.
+"""
 
 
 class StockNotFound(Exception):

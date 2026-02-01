@@ -3,8 +3,7 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.providers.dtos import StockPriceResponse
-from pryces.application.providers.interfaces import StockPriceProvider
+from pryces.application.providers import StockPriceProvider, StockPriceResponse
 from pryces.presentation.console.commands.factories import (
     CommandFactory,
     MockStockPriceProvider,

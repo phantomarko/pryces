@@ -1,9 +1,23 @@
-"""Get stock price use case implementation."""
+"""Get stock price use case implementation.
 
-from ...providers.dtos import StockPriceResponse
-from ...providers.interfaces import StockPriceProvider
-from .dtos import GetStockPriceRequest
-from .exceptions import StockNotFound
+This module contains the use case for retrieving stock price information,
+including the request DTO and the use case orchestrator.
+"""
+
+from dataclasses import dataclass
+
+from ..exceptions import StockNotFound
+from ..providers import StockPriceProvider, StockPriceResponse
+
+
+@dataclass(frozen=True)
+class GetStockPriceRequest:
+    """Request DTO for getting stock price.
+
+    Attributes:
+        ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
+    """
+    ticker: str
 
 
 class GetStockPrice:

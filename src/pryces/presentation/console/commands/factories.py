@@ -6,9 +6,8 @@ their required dependencies properly wired up.
 
 from decimal import Decimal
 
-from ....application.providers.dtos import StockPriceResponse
-from ....application.providers.interfaces import StockPriceProvider
-from ....application.use_cases.get_stock_price.get_stock_price import GetStockPrice
+from ....application.providers import StockPriceProvider, StockPriceResponse
+from ....application.use_cases.get_stock_price import GetStockPrice
 from .get_stock_price import GetStockPriceCommand
 
 
