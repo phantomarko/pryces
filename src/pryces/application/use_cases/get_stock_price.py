@@ -15,9 +15,9 @@ class GetStockPriceRequest:
     """Request DTO for getting stock price.
 
     Attributes:
-        ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
+        symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
     """
-    ticker: str
+    symbol: str
 
 
 class GetStockPrice:
@@ -39,18 +39,19 @@ class GetStockPrice:
         """Handle a stock price request.
 
         Args:
-            request: GetStockPriceRequest containing the ticker symbol
+            request: GetStockPriceRequest containing the symbol
 
         Returns:
-            StockPriceResponse containing ticker, price, and currency
+            StockPriceResponse containing symbol, price, and optional fields
 
         Raises:
-            StockNotFound: If the stock ticker is not found
+            StockNotFound: If the stock symbol is not found
+            StockInformationIncomplete: If current price unavailable
             Exception: Provider-specific exceptions for failures
         """
-        response = self._provider.get_stock_price(request.ticker)
+        response = self._provider.get_stock_price(request.symbol)
 
         if response is None:
-            raise StockNotFound(request.ticker)
+            raise StockNotFound(request.symbol)
 
         return response

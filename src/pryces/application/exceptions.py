@@ -5,17 +5,37 @@ This module contains domain-specific exceptions used across the application laye
 
 
 class StockNotFound(Exception):
-    """Raised when a stock ticker cannot be found.
+    """Raised when a stock symbol cannot be found.
 
     Attributes:
-        ticker: The stock ticker that was not found
+        symbol: The stock symbol that was not found
     """
 
-    def __init__(self, ticker: str) -> None:
+    def __init__(self, symbol: str) -> None:
         """Initialize the exception.
 
         Args:
-            ticker: The stock ticker that was not found
+            symbol: The stock symbol that was not found
         """
-        self.ticker = ticker
-        super().__init__(f"Stock not found: {ticker}")
+        self.symbol = symbol
+        super().__init__(f"Stock not found: {symbol}")
+
+
+class StockInformationIncomplete(Exception):
+    """Raised when required stock price information is not available.
+
+    This exception is thrown when the provider can find the stock but
+    cannot retrieve the required current price field from the data source.
+
+    Attributes:
+        symbol: The stock symbol that has incomplete information
+    """
+
+    def __init__(self, symbol: str) -> None:
+        """Initialize the exception.
+
+        Args:
+            symbol: The stock symbol with incomplete information
+        """
+        self.symbol = symbol
+        super().__init__(f"Stock information incomplete: unable to retrieve current price for {symbol}")

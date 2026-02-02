@@ -86,12 +86,23 @@ Example output (success):
 {
   "success": true,
   "data": {
-    "ticker": "AAPL",
-    "price": "150.25",
-    "currency": "USD"
+    "symbol": "AAPL",
+    "currentPrice": "270.01",
+    "name": "Apple Inc.",
+    "currency": "USD",
+    "previousClosePrice": "259.48",
+    "openPrice": "260.03",
+    "dayHigh": "270.49",
+    "dayLow": "259.205",
+    "fiftyDayAverage": "268.2952",
+    "twoHundredDayAverage": "236.65195",
+    "fiftyTwoWeekHigh": "288.62",
+    "fiftyTwoWeekLow": "169.21"
   }
 }
 ```
+
+**Note:** Only `symbol` and `currentPrice` are required fields. All other fields are optional and may be `null` if data is unavailable.
 
 Example output (error):
 ```json

@@ -14,13 +14,31 @@ class StockPriceResponse:
     """Response DTO for stock price queries.
 
     Attributes:
-        ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
-        price: Current stock price as a Decimal for precision
-        currency: Currency code (e.g., 'USD', 'EUR')
+        symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL') - REQUIRED
+        currentPrice: Current stock price as a Decimal for precision - REQUIRED
+        name: Company name (e.g., 'Apple Inc.') - OPTIONAL
+        currency: Currency code (e.g., 'USD', 'EUR') - OPTIONAL
+        previousClosePrice: Previous closing price - OPTIONAL
+        openPrice: Opening price for the day - OPTIONAL
+        dayHigh: Highest price of the day - OPTIONAL
+        dayLow: Lowest price of the day - OPTIONAL
+        fiftyDayAverage: 50-day moving average - OPTIONAL
+        twoHundredDayAverage: 200-day moving average - OPTIONAL
+        fiftyTwoWeekHigh: 52-week high price - OPTIONAL
+        fiftyTwoWeekLow: 52-week low price - OPTIONAL
     """
-    ticker: str
-    price: Decimal
-    currency: str
+    symbol: str
+    currentPrice: Decimal
+    name: str | None = None
+    currency: str | None = None
+    previousClosePrice: Decimal | None = None
+    openPrice: Decimal | None = None
+    dayHigh: Decimal | None = None
+    dayLow: Decimal | None = None
+    fiftyDayAverage: Decimal | None = None
+    twoHundredDayAverage: Decimal | None = None
+    fiftyTwoWeekHigh: Decimal | None = None
+    fiftyTwoWeekLow: Decimal | None = None
 
 
 class StockPriceProvider(ABC):
@@ -30,16 +48,18 @@ class StockPriceProvider(ABC):
     """
 
     @abstractmethod
-    def get_stock_price(self, ticker: str) -> StockPriceResponse | None:
-        """Retrieve current price for a given stock ticker.
+    def get_stock_price(self, symbol: str) -> StockPriceResponse | None:
+        """Retrieve current price for a given stock symbol.
 
         Args:
-            ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
+            symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
 
         Returns:
-            StockPriceResponse containing ticker, price, and currency, or None if not found
+            StockPriceResponse with required fields (symbol, currentPrice) and optional
+            fields, or None if symbol not found
 
         Raises:
+            StockInformationIncomplete: When symbol is found but current price unavailable
             Exception: Implementation-specific exceptions for failures
         """
         pass

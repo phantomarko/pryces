@@ -11,6 +11,9 @@ requires-python = ">=3.8"
 authors = [
     {name = "phantomarko"}
 ]
+dependencies = [
+    "yfinance>=0.2.40",
+]
 
 [project.optional-dependencies]
 dev = [

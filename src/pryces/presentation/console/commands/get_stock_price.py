@@ -46,24 +46,40 @@ class GetStockPriceCommand:
         self._get_stock_price = get_stock_price_use_case
         self._logger = logging.getLogger(__name__)
 
-    def execute(self, ticker: str) -> str:
-        """Execute the command to get stock price for a ticker.
+    def execute(self, symbol: str) -> str:
+        """Execute the command to get stock price for a symbol.
 
         Args:
-            ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
+            symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
 
         Returns:
             JSON string containing either:
-                - Success: {"success": true, "data": {"ticker": "...", "price": "...", "currency": "..."}}
+                - Success: {
+                    "success": true,
+                    "data": {
+                        "symbol": "..." (required),
+                        "currentPrice": "..." (required),
+                        "name": "..." (optional),
+                        "currency": "..." (optional),
+                        "previousClosePrice": "..." (optional),
+                        "openPrice": "..." (optional),
+                        "dayHigh": "..." (optional),
+                        "dayLow": "..." (optional),
+                        "fiftyDayAverage": "..." (optional),
+                        "twoHundredDayAverage": "..." (optional),
+                        "fiftyTwoWeekHigh": "..." (optional),
+                        "fiftyTwoWeekLow": "..." (optional)
+                    }
+                }
                 - Error: {"success": false, "error": {"code": "...", "message": "..."}}
         """
-        self._logger.info(f"Fetching stock price for ticker: {ticker}")
+        self._logger.info(f"Fetching stock price for symbol: {symbol}")
 
         try:
-            request = GetStockPriceRequest(ticker=ticker)
+            request = GetStockPriceRequest(symbol=symbol)
             response = self._get_stock_price.handle(request)
 
-            self._logger.info(f"Successfully retrieved price for {ticker}")
+            self._logger.info(f"Successfully retrieved price for {symbol}")
 
             result = {
                 "success": True,
@@ -73,7 +89,7 @@ class GetStockPriceCommand:
             return json.dumps(result, cls=DecimalEncoder, indent=2)
 
         except StockNotFound as e:
-            self._logger.error(f"Stock not found: {ticker}")
+            self._logger.error(f"Stock not found: {symbol}")
 
             result = {
                 "success": False,
@@ -86,7 +102,7 @@ class GetStockPriceCommand:
             return json.dumps(result, indent=2)
 
         except Exception as e:
-            self._logger.exception(f"Unexpected error while fetching stock price for {ticker}")
+            self._logger.exception(f"Unexpected error while fetching stock price for {symbol}")
 
             result = {
                 "success": False,

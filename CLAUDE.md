@@ -6,15 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pryces is a Python project built with clean architecture principles, emphasizing SOLID design, minimal dependencies, and clear separation of concerns.
 
-## Patterns and Conventions
+## Critical Directives
 
-### SOLID Principles
-This project adheres to SOLID principles:
-- **S**ingle Responsibility Principle
-- **O**pen/Closed Principle
-- **L**iskov Substitution Principle
-- **I**nterface Segregation Principle
-- **D**ependency Inversion Principle
+### Update README.md After Changes
+**IMPORTANT**: Whenever you make significant changes to the codebase (new features, API changes, new fields, renamed parameters, etc.), you MUST update the README.md to reflect these changes:
+- Update example outputs to match current JSON structure
+- Update command examples if CLI arguments change
+- Add documentation for new features
+- Ensure all examples are accurate and tested
+
+The README is user-facing documentation and must stay synchronized with the actual code behavior.
+
+## Patterns and Conventions
 
 ### Dependency Management
 - Minimize use of third-party packages
@@ -23,36 +26,27 @@ This project adheres to SOLID principles:
   - The package is secure, well-maintained, and clearly the best option for the use case
 - Prefer built-in language/platform features over external libraries
 
-### Clean Architecture
-Follow clean architecture principles to create a resilient, scalable, and maintainable codebase:
-- Separate concerns into distinct layers (domain, application, infrastructure, presentation)
-- Keep business logic independent of frameworks, databases, and external agencies
-- Use dependency inversion to point dependencies inward toward the domain
-- Write testable code with clear boundaries between layers
-- Design for change and evolution
-- Create a codebase that any skilled developer would appreciate working with
+### Data Structures
+**StockPriceResponse Structure:**
+- **Required fields**: `symbol` (str) and `currentPrice` (Decimal) - these must always be present
+- **Optional fields**: All other fields may be `None` if data is unavailable:
+  - `name` (str | None): Company name
+  - `currency` (str | None): Currency code
+  - `previousClosePrice` (Decimal | None): Previous closing price
+  - `openPrice` (Decimal | None): Opening price
+  - `dayHigh` (Decimal | None): Day's high price
+  - `dayLow` (Decimal | None): Day's low price
+  - `fiftyDayAverage` (Decimal | None): 50-day moving average
+  - `twoHundredDayAverage` (Decimal | None): 200-day moving average
+  - `fiftyTwoWeekHigh` (Decimal | None): 52-week high
+  - `fiftyTwoWeekLow` (Decimal | None): 52-week low
 
-## Architecture
+**Exception Handling:**
+- Throw `StockNotFound` when a stock symbol cannot be found (provider returns None)
+- Throw `StockInformationIncomplete` when a stock is found but `currentPrice` is unavailable
+- Both exceptions have a `symbol` attribute (not `ticker`)
 
-### Dependency Rules
-- **Domain**: No dependencies on other layers (pure business logic)
-- **Application**: Depends only on Domain
-- **Infrastructure**: Implements interfaces defined in Domain/Application
-- **Presentation**: Depends on Application (calls use cases)
-
-Dependencies always point inward (Presentation → Application → Domain).
-
-**Note**: For setup and testing commands, see [README.md](README.md).
-
-## Development Workflow
-
-1. Write tests first (TDD approach recommended)
-2. Implement features starting from the domain layer outward
-3. Use dependency injection for infrastructure dependencies
-4. Keep the domain layer pure and testable
-5. Follow conventional commits for all commit messages
-
-### Pre-Commit Checklist
+## Pre-Commit Requirements
 
 Before creating any commit, ensure the following:
 
@@ -63,31 +57,8 @@ Before creating any commit, ensure the following:
 
 **Important**: Never commit code with failing tests. The test suite must pass before any commit.
 
-## Commit Message Format
+## Commit Messages
 
-Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+Use [Conventional Commits](https://www.conventionalcommits.org/) format: `<type>: <description>`
 
-```
-<type>: <description>
-
-[optional body]
-```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `refactor`: Code refactoring (no functional changes)
-- `test`: Adding or updating tests
-- `docs`: Documentation changes
-- `chore`: Maintenance tasks (dependencies, config, etc.)
-- `style`: Code style/formatting changes
-- `perf`: Performance improvements
-
-**Examples:**
-```
-feat: add GetStockPrice use case with provider interface
-fix: handle null response from stock price provider
-test: add unit tests for StockNotFound exception
-chore: update README with testing instructions
-refactor: extract mock provider to setup method
-```
+Common types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`

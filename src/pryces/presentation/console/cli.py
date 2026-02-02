@@ -8,6 +8,7 @@ import argparse
 import logging
 import sys
 
+from ...infrastructure.providers import YahooFinanceProvider
 from .commands.factories import CommandFactory
 
 
@@ -46,7 +47,7 @@ Examples:
     )
 
     parser.add_argument(
-        'ticker',
+        'symbol',
         help='Stock ticker symbol (e.g., AAPL, GOOGL, TSLA)'
     )
 
@@ -61,9 +62,10 @@ Examples:
     configure_logging(args.verbose)
 
     try:
-        factory = CommandFactory()
+        provider = YahooFinanceProvider()
+        factory = CommandFactory(stock_price_provider=provider)
         command = factory.create_get_stock_price_command()
-        result = command.execute(args.ticker)
+        result = command.execute(args.symbol)
         print(result)
         return 0
 
