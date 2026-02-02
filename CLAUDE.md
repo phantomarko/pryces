@@ -17,6 +17,41 @@ Pryces is a Python project built with clean architecture principles, emphasizing
 
 The README is user-facing documentation and must stay synchronized with the actual code behavior.
 
+### Prefer Using Subagents for Context Optimization
+**IMPORTANT**: Always use specialized subagents (via the Task tool) whenever possible to optimize context usage, unless explicitly instructed not to use subagents.
+
+Use subagents for:
+- **Exploration tasks**: Understanding codebase structure, finding patterns, locating functionality
+- **Search operations**: Multi-step searches across files, grep operations with follow-up analysis
+- **Planning**: Complex implementation plans that require code exploration
+- **Research**: Investigating how features work, tracing dependencies
+- **Parallel work**: Independent tasks that can run simultaneously
+
+Only work directly (without subagents) when:
+- User explicitly requests direct execution
+- Task is trivial (single file read/write)
+- Already in a subagent context
+
+This helps maintain clean context and allows better task delegation.
+
+### Prefer Using Plan Mode for Non-Trivial Tasks
+**IMPORTANT**: Always use plan mode (EnterPlanMode) for implementation tasks unless explicitly instructed not to or the task is trivial.
+
+Use plan mode for:
+- **New features**: Adding any new functionality beyond single-line changes
+- **Code modifications**: Changes affecting multiple files or existing behavior
+- **Refactoring**: Restructuring code or changing architecture
+- **Multi-step implementations**: Tasks requiring more than 2-3 simple steps
+- **Uncertain scope**: When you need to explore before understanding full requirements
+
+Do NOT use plan mode for:
+- User explicitly requests direct implementation
+- Trivial tasks (typo fixes, single-line changes, obvious bugs)
+- Pure research/exploration (use Task tool with Explore agent instead)
+- Tasks with very specific, detailed instructions already provided
+
+Plan mode ensures alignment on approach before implementation, preventing wasted effort.
+
 ## Patterns and Conventions
 
 ### Dependency Management
