@@ -8,6 +8,7 @@ from typing import Any
 
 from ....application.exceptions import StockNotFound
 from ....application.use_cases.get_stock_price import GetStockPrice, GetStockPriceRequest
+from .base import Command, CommandMetadata, InputPrompt
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -30,7 +31,12 @@ class DecimalEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-class GetStockPriceCommand:
+def validate_symbol(value: str) -> bool:
+    """Validate stock symbol input."""
+    return bool(value and value.strip() and len(value.strip()) <= 10)
+
+
+class GetStockPriceCommand(Command):
     """Console command for retrieving stock price information.
 
     This command provides a CLI interface to the GetStockPrice use case,
@@ -46,7 +52,25 @@ class GetStockPriceCommand:
         self._get_stock_price = get_stock_price_use_case
         self._logger = logging.getLogger(__name__)
 
-    def execute(self, symbol: str) -> str:
+    def get_metadata(self) -> CommandMetadata:
+        """Return metadata for menu display."""
+        return CommandMetadata(
+            id="get_stock_price",
+            name="Get Stock Price",
+            description="Retrieve current price and details for a single stock symbol"
+        )
+
+    def get_input_prompts(self) -> list[InputPrompt]:
+        """Return input prompts for collecting symbol."""
+        return [
+            InputPrompt(
+                key="symbol",
+                prompt="Enter stock symbol (e.g., AAPL, GOOGL): ",
+                validator=validate_symbol
+            )
+        ]
+
+    def execute(self, symbol: str = None, **kwargs) -> str:
         """Execute the command to get stock price for a symbol.
 
         Args:

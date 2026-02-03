@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from pryces.application.providers import StockPriceProvider, StockPriceResponse
 from pryces.presentation.console.commands.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
+from pryces.presentation.console.commands.registry import CommandRegistry
 from tests.fixtures import MockStockPriceProvider
 
 
@@ -133,3 +134,45 @@ class TestCommandFactory:
         assert '"success": true' in result
         assert "AAPL" in result
         assert "150.25" in result
+
+    def test_create_command_registry_returns_registry_instance(self):
+        """Test that factory creates CommandRegistry instance."""
+        # Arrange
+        mock_provider = MockStockPriceProvider()
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        registry = factory.create_command_registry()
+
+        # Assert
+        assert isinstance(registry, CommandRegistry)
+
+    def test_registry_contains_get_stock_price_command(self):
+        """Test that registry contains GetStockPrice command."""
+        # Arrange
+        mock_provider = MockStockPriceProvider()
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        registry = factory.create_command_registry()
+        all_commands = registry.get_all_commands()
+
+        # Assert
+        assert len(all_commands) > 0
+        command = registry.get_command("get_stock_price")
+        assert isinstance(command, GetStockPriceCommand)
+
+    def test_registry_commands_are_functional(self):
+        """Test that commands in registry are properly wired and functional."""
+        # Arrange
+        mock_provider = MockStockPriceProvider()
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        registry = factory.create_command_registry()
+        command = registry.get_command("get_stock_price")
+        result = command.execute(symbol="AAPL")
+
+        # Assert
+        assert '"success": true' in result
+        assert "AAPL" in result

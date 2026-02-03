@@ -10,6 +10,7 @@ import sys
 
 from ...infrastructure.providers import YahooFinanceProvider
 from .commands.factories import CommandFactory
+from .menu import InteractiveMenu
 
 
 def configure_logging(verbose: bool = False) -> None:
@@ -34,18 +35,8 @@ def main() -> int:
         Exit code (0 for success, 1 for error)
     """
     parser = argparse.ArgumentParser(
-        description='Get stock price information',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  %(prog)s AAPL
-  %(prog)s GOOGL --verbose
-        """
-    )
-
-    parser.add_argument(
-        'symbol',
-        help='Stock ticker symbol (e.g., AAPL, GOOGL, TSLA)'
+        description='Stock price information system - Interactive Menu',
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     parser.add_argument(
@@ -61,9 +52,10 @@ Examples:
     try:
         provider = YahooFinanceProvider()
         factory = CommandFactory(stock_price_provider=provider)
-        command = factory.create_get_stock_price_command()
-        result = command.execute(args.symbol)
-        print(result)
+
+        registry = factory.create_command_registry()
+        menu = InteractiveMenu(registry)
+        menu.run()
         return 0
 
     except Exception as e:

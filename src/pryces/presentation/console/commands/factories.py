@@ -8,6 +8,7 @@ from ....application.providers import StockPriceProvider
 from ....application.use_cases.get_stock_price import GetStockPrice
 from ....infrastructure.providers import YahooFinanceProvider
 from .get_stock_price import GetStockPriceCommand
+from .registry import CommandRegistry
 
 
 class CommandFactory:
@@ -25,3 +26,13 @@ class CommandFactory:
         """
         use_case = GetStockPrice(provider=self._stock_price_provider)
         return GetStockPriceCommand(get_stock_price_use_case=use_case)
+
+    def create_command_registry(self) -> CommandRegistry:
+        """Create a CommandRegistry with all available commands.
+
+        Returns:
+            CommandRegistry with all commands registered
+        """
+        registry = CommandRegistry()
+        registry.register(self.create_get_stock_price_command())
+        return registry

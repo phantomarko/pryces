@@ -68,17 +68,45 @@ deactivate
 
 ## Console Commands
 
-### Get Stock Price
+### Interactive Menu
 
-Retrieve stock price information via command line:
+Launch the interactive menu system:
 
 ```bash
-python -m pryces.presentation.console.cli AAPL
+python -m pryces.presentation.console.cli
 ```
 
-With verbose logging (logs go to stderr, JSON to stdout):
+With verbose logging:
 ```bash
-python -m pryces.presentation.console.cli AAPL --verbose
+python -m pryces.presentation.console.cli --verbose
+```
+
+The interactive menu displays available commands and prompts for input:
+
+```
+============================================================
+PRYCES - Stock Price Information System
+============================================================
+
+Available Commands:
+
+  1. Get Stock Price
+     Retrieve current price and details for a single stock symbol
+
+  0. Exit
+
+Enter your selection:
+```
+
+### Get Stock Price
+
+When you select option 1, you'll be prompted to enter a stock symbol:
+
+```
+--- Get Stock Price ---
+
+Enter stock symbol (e.g., AAPL, GOOGL): AAPL
+Executing...
 ```
 
 Example output (success):
@@ -87,15 +115,15 @@ Example output (success):
   "success": true,
   "data": {
     "symbol": "AAPL",
-    "currentPrice": "270.01",
+    "currentPrice": "269.48",
     "name": "Apple Inc.",
     "currency": "USD",
-    "previousClosePrice": "259.48",
-    "openPrice": "260.03",
-    "dayHigh": "270.49",
-    "dayLow": "259.205",
-    "fiftyDayAverage": "268.2952",
-    "twoHundredDayAverage": "236.65195",
+    "previousClosePrice": "269.955",
+    "openPrice": "269.13",
+    "dayHigh": "271.875",
+    "dayLow": "267.61",
+    "fiftyDayAverage": "268.3466",
+    "twoHundredDayAverage": "236.9913",
     "fiftyTwoWeekHigh": "288.62",
     "fiftyTwoWeekLow": "169.21"
   }
@@ -114,6 +142,8 @@ Example output (error):
   }
 }
 ```
+
+After each command execution, the menu returns to the main selection screen. Select `0` to exit the program.
 
 ## Project Principles
 

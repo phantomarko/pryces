@@ -11,7 +11,9 @@ from pryces.application.providers import StockPriceResponse
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
+    validate_symbol
 )
+from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 
 
 class TestGetStockPriceCommand:
@@ -203,3 +205,53 @@ class TestGetStockPriceCommand:
         assert result_data["data"]["name"] is None
         assert result_data["data"]["currency"] is None
         assert result_data["data"]["previousClosePrice"] is None
+
+    def test_get_metadata_returns_correct_metadata(self):
+        """Test that get_metadata() returns correct command metadata."""
+        metadata = self.command.get_metadata()
+
+        assert isinstance(metadata, CommandMetadata)
+        assert metadata.id == "get_stock_price"
+        assert metadata.name == "Get Stock Price"
+        assert "single stock symbol" in metadata.description
+
+    def test_get_input_prompts_returns_symbol_prompt(self):
+        """Test that get_input_prompts() returns prompt for symbol input."""
+        prompts = self.command.get_input_prompts()
+
+        assert len(prompts) == 1
+        assert isinstance(prompts[0], InputPrompt)
+        assert prompts[0].key == "symbol"
+        assert "stock symbol" in prompts[0].prompt.lower()
+        assert prompts[0].validator is validate_symbol
+
+    def test_validate_symbol_accepts_valid_symbols(self):
+        """Test that validate_symbol() accepts valid stock symbols."""
+        assert validate_symbol("AAPL") is True
+        assert validate_symbol("GOOGL") is True
+        assert validate_symbol("MSFT") is True
+        assert validate_symbol("BRK.B") is True
+        assert validate_symbol("TSM") is True
+
+    def test_validate_symbol_rejects_invalid_symbols(self):
+        """Test that validate_symbol() rejects invalid stock symbols."""
+        assert validate_symbol("") is False
+        assert validate_symbol("   ") is False
+        assert validate_symbol("TOOLONGSYMBOL") is False
+
+    def test_execute_accepts_kwargs_for_compatibility(self):
+        """Test that execute() accepts **kwargs for backward compatibility."""
+        symbol = "AAPL"
+        stock_response = StockPriceResponse(
+            symbol=symbol,
+            name="Apple Inc.",
+            currentPrice=Decimal("150.25"),
+            currency="USD"
+        )
+        self.mock_use_case.handle.return_value = stock_response
+
+        result = self.command.execute(symbol=symbol, extra_arg="ignored")
+
+        result_data = json.loads(result)
+        assert result_data["success"] is True
+        assert result_data["data"]["symbol"] == symbol
