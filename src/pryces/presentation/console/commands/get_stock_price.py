@@ -1,34 +1,12 @@
 """Console command for getting stock prices."""
 
-import json
 import logging
 from dataclasses import asdict
-from decimal import Decimal
-from typing import Any
 
 from ....application.exceptions import StockNotFound
 from ....application.use_cases.get_stock_price import GetStockPrice, GetStockPriceRequest
+from ..json_utils import to_json
 from .base import Command, CommandMetadata, InputPrompt
-
-
-class DecimalEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles Decimal types.
-
-    Converts Decimal to string to preserve precision in JSON output.
-    """
-
-    def default(self, obj: Any) -> Any:
-        """Encode Decimal as string, otherwise use default encoder.
-
-        Args:
-            obj: Object to encode
-
-        Returns:
-            String representation for Decimal, default encoding otherwise
-        """
-        if isinstance(obj, Decimal):
-            return str(obj)
-        return super().default(obj)
 
 
 def validate_symbol(value: str) -> bool:
@@ -110,7 +88,7 @@ class GetStockPriceCommand(Command):
                 "data": asdict(response)
             }
 
-            return json.dumps(result, cls=DecimalEncoder, indent=2)
+            return to_json(result)
 
         except StockNotFound as e:
             self._logger.error(f"Stock not found: {symbol}")
@@ -123,7 +101,7 @@ class GetStockPriceCommand(Command):
                 }
             }
 
-            return json.dumps(result, indent=2)
+            return to_json(result)
 
         except Exception as e:
             self._logger.exception(f"Unexpected error while fetching stock price for {symbol}")
@@ -136,4 +114,4 @@ class GetStockPriceCommand(Command):
                 }
             }
 
-            return json.dumps(result, indent=2)
+            return to_json(result)
