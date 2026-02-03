@@ -85,3 +85,15 @@ class MockStockPriceProvider(StockPriceProvider):
                 fiftyTwoWeekLow=data["fiftyTwoWeekLow"]
             )
         return None
+
+    def get_stocks_prices(self, symbols: list[str]) -> list[StockPriceResponse]:
+        """Return mock data for multiple symbols.
+
+        Only includes successfully retrieved symbols (skips None results).
+        """
+        results = []
+        for symbol in symbols:
+            response = self.get_stock_price(symbol)
+            if response is not None:
+                results.append(response)
+        return results

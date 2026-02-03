@@ -89,3 +89,10 @@ class YahooFinanceProvider(StockPriceProvider):
         except Exception as e:
             self._logger.error(f"Error fetching data for {symbol}: {e}")
             raise
+
+    def get_stocks_prices(self, symbols: list[str]) -> list[StockPriceResponse]:
+        """Retrieve prices for multiple stock symbols.
+
+        Note: This method is not yet implemented.
+        """
+        raise NotImplementedError("Batch stock price fetching is not yet implemented for YahooFinanceProvider")

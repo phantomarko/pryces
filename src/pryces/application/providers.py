@@ -63,3 +63,22 @@ class StockPriceProvider(ABC):
             Exception: Implementation-specific exceptions for failures
         """
         pass
+
+    @abstractmethod
+    def get_stocks_prices(self, symbols: list[str]) -> list[StockPriceResponse]:
+        """Retrieve current prices for multiple stock symbols.
+
+        Args:
+            symbols: List of stock ticker symbols (e.g., ['AAPL', 'GOOGL', 'TSLA'])
+
+        Returns:
+            List of StockPriceResponse for successfully retrieved symbols only.
+            Failed symbols (not found or incomplete data) are omitted from results.
+            Result length may be less than input length.
+
+        Notes:
+            - Empty list returns empty list
+            - Failed symbols are silently skipped (not included in results)
+            - No None values in returned list
+        """
+        pass
