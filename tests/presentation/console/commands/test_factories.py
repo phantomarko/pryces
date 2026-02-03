@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from pryces.application.providers import StockPriceProvider, StockPriceResponse
 from pryces.presentation.console.commands.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
+from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.commands.registry import CommandRegistry
 from tests.fixtures import MockStockPriceProvider
 
@@ -176,3 +177,76 @@ class TestCommandFactory:
         # Assert
         assert '"success": true' in result
         assert "AAPL" in result
+
+    def test_create_get_stocks_prices_command_returns_command_instance(self):
+        """Test that factory creates GetStocksPricesCommand instance."""
+        # Arrange
+        mock_provider = MockStockPriceProvider()
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        command = factory.create_get_stocks_prices_command()
+
+        # Assert
+        assert isinstance(command, GetStocksPricesCommand)
+
+    def test_create_get_stocks_prices_command_wires_dependencies_correctly(self):
+        """Test that created command works with mocked provider."""
+        # Arrange
+        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider.get_stocks_prices.return_value = [
+            StockPriceResponse(
+                symbol="AAPL",
+                name="Apple Inc.",
+                currentPrice=Decimal("150.25"),
+                currency="USD"
+            ),
+            StockPriceResponse(
+                symbol="GOOGL",
+                name="Alphabet Inc.",
+                currentPrice=Decimal("2847.50"),
+                currency="USD"
+            )
+        ]
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        command = factory.create_get_stocks_prices_command()
+        result = command.execute("AAPL,GOOGL")
+
+        # Assert
+        assert "AAPL" in result
+        assert "GOOGL" in result
+        assert "150.25" in result
+        assert "2847.50" in result
+        mock_provider.get_stocks_prices.assert_called_once()
+
+    def test_registry_contains_get_stocks_prices_command(self):
+        """Test that registry contains GetStocksPrices command."""
+        # Arrange
+        mock_provider = MockStockPriceProvider()
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        registry = factory.create_command_registry()
+        command = registry.get_command("get_stocks_prices")
+
+        # Assert
+        assert isinstance(command, GetStocksPricesCommand)
+
+    def test_registry_get_stocks_prices_command_is_functional(self):
+        """Test that GetStocksPrices command in registry is properly wired."""
+        # Arrange
+        mock_provider = MockStockPriceProvider()
+        factory = CommandFactory(stock_price_provider=mock_provider)
+
+        # Act
+        registry = factory.create_command_registry()
+        command = registry.get_command("get_stocks_prices")
+        result = command.execute(symbols="AAPL,GOOGL,MSFT")
+
+        # Assert
+        assert '"success": true' in result
+        assert "AAPL" in result
+        assert "GOOGL" in result
+        assert "MSFT" in result
