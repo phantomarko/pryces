@@ -6,6 +6,7 @@ A Python project built with clean architecture principles.
 
 This project follows clean architecture with clear separation of concerns:
 
+- **Domain**: Core business logic and entities (framework-independent)
 - **Application**: Use cases and application services
 - **Infrastructure**: External dependencies (databases, APIs, file systems)
 - **Presentation**: User interfaces (CLI, web, API endpoints)
