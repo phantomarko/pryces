@@ -18,7 +18,6 @@ class TestGetStockPriceCommand:
     """Test suite for GetStockPriceCommand."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
         self.mock_use_case = Mock(spec=GetStockPrice)
         self.command = GetStockPriceCommand(self.mock_use_case)
 

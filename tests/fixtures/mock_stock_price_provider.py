@@ -14,14 +14,7 @@ class MockStockPriceProvider(StockPriceProvider):
     """
 
     def get_stock_price(self, symbol: str) -> StockPriceResponse | None:
-        """Return mock stock price data.
-
-        Args:
-            symbol: Stock ticker symbol
-
-        Returns:
-            StockPriceResponse with mock data if symbol exists, None otherwise
-        """
+        """Return mock stock price data for known symbols, or None if unknown."""
         # Mock data with all price fields
         mock_data = {
             "AAPL": {

@@ -17,7 +17,6 @@ class TestGetStockPrice:
     """Test suite for GetStockPrice use case."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
         self.mock_provider = Mock(spec=StockPriceProvider)
 
     def test_handle_returns_stock_price_from_provider(self):

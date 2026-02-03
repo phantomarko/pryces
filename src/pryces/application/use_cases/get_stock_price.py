@@ -28,11 +28,7 @@ class GetStockPrice:
     """
 
     def __init__(self, provider: StockPriceProvider) -> None:
-        """Initialize the use case with a stock price provider.
-
-        Args:
-            provider: Implementation of StockPriceProvider interface
-        """
+        """Initialize the use case with a stock price provider."""
         self._provider = provider
 
     def handle(self, request: GetStockPriceRequest) -> StockPriceResponse:

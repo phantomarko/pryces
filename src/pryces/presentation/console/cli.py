@@ -16,9 +16,6 @@ def configure_logging(verbose: bool = False) -> None:
     """Configure logging for CLI execution.
 
     Logs are sent to stderr to keep stdout clean for JSON output.
-
-    Args:
-        verbose: If True, set log level to INFO, otherwise WARNING
     """
     log_level = logging.INFO if verbose else logging.WARNING
     logging.basicConfig(

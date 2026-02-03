@@ -57,7 +57,6 @@ class YahooFinanceProvider(StockPriceProvider):
                 self._logger.error(f"No current price available for symbol: {symbol}")
                 raise StockInformationIncomplete(symbol)
 
-            # Extract optional price fields (None if not available)
             previous_close = info.get('previousClose')
             open_price = info.get('open')
             day_high = info.get('dayHigh')

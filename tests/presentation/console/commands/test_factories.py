@@ -13,7 +13,6 @@ class TestMockStockPriceProvider:
     """Test suite for MockStockPriceProvider."""
 
     def setup_method(self):
-        """Set up test fixtures before each test method."""
         self.provider = MockStockPriceProvider()
 
     def test_get_stock_price_returns_response_for_valid_symbol(self):

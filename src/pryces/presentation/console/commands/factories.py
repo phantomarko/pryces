@@ -11,19 +11,10 @@ from .get_stock_price import GetStockPriceCommand
 
 
 class CommandFactory:
-    """Factory for creating console command instances.
-
-    This factory handles the creation and wiring of command instances with
-    their dependencies. It serves as a simple dependency injection container
-    for the console layer.
-    """
+    """Factory for creating console command instances with their dependencies."""
 
     def __init__(self, stock_price_provider: StockPriceProvider) -> None:
-        """Initialize the command factory.
-
-        Args:
-            stock_price_provider: Stock price provider implementation.
-        """
+        """Initialize the command factory."""
         self._stock_price_provider = stock_price_provider
 
     def create_get_stock_price_command(self) -> GetStockPriceCommand:

@@ -61,25 +61,31 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
   - The package is secure, well-maintained, and clearly the best option for the use case
 - Prefer built-in language/platform features over external libraries
 
-### Data Structures
-**StockPriceResponse Structure:**
-- **Required fields**: `symbol` (str) and `currentPrice` (Decimal) - these must always be present
-- **Optional fields**: All other fields may be `None` if data is unavailable:
-  - `name` (str | None): Company name
-  - `currency` (str | None): Currency code
-  - `previousClosePrice` (Decimal | None): Previous closing price
-  - `openPrice` (Decimal | None): Opening price
-  - `dayHigh` (Decimal | None): Day's high price
-  - `dayLow` (Decimal | None): Day's low price
-  - `fiftyDayAverage` (Decimal | None): 50-day moving average
-  - `twoHundredDayAverage` (Decimal | None): 200-day moving average
-  - `fiftyTwoWeekHigh` (Decimal | None): 52-week high
-  - `fiftyTwoWeekLow` (Decimal | None): 52-week low
+### Code Comments
+**Write code that explains itself through clear naming and structure.** Only add comments when they provide value beyond what the code already communicates.
 
-**Exception Handling:**
-- Throw `StockNotFound` when a stock symbol cannot be found (provider returns None)
-- Throw `StockInformationIncomplete` when a stock is found but `currentPrice` is unavailable
-- Both exceptions have a `symbol` attribute (not `ticker`)
+**When to add comments:**
+- **WHY, not WHAT**: Explain reasoning, not mechanics
+  - Good: `# Fallback to regularMarketPrice for after-hours trading`
+  - Bad: `# Get the price from info dictionary`
+- **Non-obvious logic**: Explain heuristics, validation rules, edge cases
+  - Good: `# Yahoo Finance returns ≤3 fields for invalid symbols`
+- **Architectural decisions**: Document important design choices
+  - Good: `# Use Decimal for precision in financial calculations`
+- **Complex algorithms**: Break down multi-step logic
+
+**When NOT to add comments:**
+- Method names that restate the function signature
+- Docstrings that just repeat parameter names/types already shown in type hints
+- `setup_method()` docstrings in tests (the name is self-explanatory)
+- Inline comments describing obvious operations (`# Extract price`, `# Return response`)
+- Parameter documentation when type hints are clear (`provider: StockPriceProvider`)
+
+**Docstring guidelines:**
+- Module/class docstrings: Explain purpose and responsibility
+- Method docstrings: Focus on contract (inputs/outputs/side effects), not implementation
+- Test docstrings: Only if the test scenario is complex or non-obvious
+- Keep parameter docs minimal; rely on type hints when they're sufficient
 
 ## Pre-Commit Requirements
 
