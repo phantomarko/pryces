@@ -13,6 +13,10 @@ This project follows clean architecture with clear separation of concerns:
 
 ## Setup
 
+### Requirements
+
+- Python 3.10 or higher
+
 ### Quick Start
 
 1. Create and activate virtual environment:
