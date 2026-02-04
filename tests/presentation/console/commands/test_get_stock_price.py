@@ -1,5 +1,3 @@
-"""Unit tests for GetStockPriceCommand."""
-
 import json
 from decimal import Decimal
 from unittest.mock import Mock
@@ -18,14 +16,13 @@ from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStockPriceCommand:
-    """Test suite for GetStockPriceCommand."""
+
 
     def setup_method(self):
         self.mock_use_case = Mock(spec=GetStockPrice)
         self.command = GetStockPriceCommand(self.mock_use_case)
 
     def test_execute_returns_success_json_with_stock_data(self):
-        # Arrange
         symbol = "AAPL"
         stock_response = create_stock_price(
             symbol,
@@ -42,10 +39,8 @@ class TestGetStockPriceCommand:
         )
         self.mock_use_case.handle.return_value = stock_response
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert result_data["data"]["symbol"] == symbol
@@ -54,7 +49,6 @@ class TestGetStockPriceCommand:
         assert result_data["data"]["currency"] == "USD"
 
     def test_execute_handles_decimal_precision_in_json(self):
-        # Arrange
         symbol = "GOOGL"
         stock_response = create_stock_price(
             symbol,
@@ -71,58 +65,46 @@ class TestGetStockPriceCommand:
         )
         self.mock_use_case.handle.return_value = stock_response
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["data"]["currentPrice"] == "2847.123456789"
 
     def test_execute_returns_error_json_when_stock_not_found(self):
-        # Arrange
         symbol = "INVALID"
         self.mock_use_case.handle.side_effect = StockNotFound(symbol)
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert result_data["error"]["code"] == "STOCK_NOT_FOUND"
         assert symbol in result_data["error"]["message"]
 
     def test_execute_returns_error_json_when_stock_information_incomplete(self):
-        # Arrange
         symbol = "AAPL"
         self.mock_use_case.handle.side_effect = StockInformationIncomplete(symbol)
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert result_data["error"]["code"] == "INTERNAL_ERROR"
         assert "unable to retrieve current price" in result_data["error"]["message"]
 
     def test_execute_returns_error_json_on_unexpected_exception(self):
-        # Arrange
         symbol = "AAPL"
         error_message = "Database connection failed"
         self.mock_use_case.handle.side_effect = Exception(error_message)
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert result_data["error"]["code"] == "INTERNAL_ERROR"
         assert error_message in result_data["error"]["message"]
 
     def test_execute_calls_use_case_with_correct_symbol(self):
-        # Arrange
         symbol = "TSLA"
         stock_response = create_stock_price(
             symbol,
@@ -139,16 +121,13 @@ class TestGetStockPriceCommand:
         )
         self.mock_use_case.handle.return_value = stock_response
 
-        # Act
         self.command.execute(symbol)
 
-        # Assert
         self.mock_use_case.handle.assert_called_once()
         call_args = self.mock_use_case.handle.call_args[0][0]
         assert call_args.symbol == symbol
 
     def test_execute_returns_valid_json_format(self):
-        # Arrange
         symbol = "MSFT"
         stock_response = create_stock_price(
             symbol,
@@ -165,17 +144,14 @@ class TestGetStockPriceCommand:
         )
         self.mock_use_case.handle.return_value = stock_response
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         try:
             json.loads(result)
         except json.JSONDecodeError:
             pytest.fail("Command did not return valid JSON")
 
     def test_execute_handles_response_with_minimal_fields(self):
-        # Arrange
         symbol = "AAPL"
         minimal_response = StockPriceResponse(
             symbol=symbol,
@@ -183,10 +159,8 @@ class TestGetStockPriceCommand:
         )
         self.mock_use_case.handle.return_value = minimal_response
 
-        # Act
         result = self.command.execute(symbol)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert result_data["data"]["symbol"] == symbol

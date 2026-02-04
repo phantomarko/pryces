@@ -1,5 +1,3 @@
-"""Unit tests for CommandRegistry."""
-
 import pytest
 from unittest.mock import Mock
 
@@ -8,7 +6,7 @@ from pryces.presentation.console.commands.base import Command, CommandMetadata
 
 
 class TestCommandRegistry:
-    """Test suite for CommandRegistry."""
+
 
     def setup_method(self):
         self.registry = CommandRegistry()

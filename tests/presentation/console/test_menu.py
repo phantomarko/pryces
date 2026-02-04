@@ -1,5 +1,3 @@
-"""Unit tests for InteractiveMenu."""
-
 from io import StringIO
 from unittest.mock import Mock
 
@@ -11,7 +9,7 @@ from pryces.presentation.console.commands.registry import CommandRegistry
 
 
 class TestInteractiveMenu:
-    """Test suite for InteractiveMenu."""
+
 
     def setup_method(self):
         self.registry = CommandRegistry()

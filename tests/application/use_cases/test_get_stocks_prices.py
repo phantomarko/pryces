@@ -1,5 +1,3 @@
-"""Tests for GetStocksPrices use case."""
-
 from decimal import Decimal
 from unittest.mock import Mock
 import pytest
@@ -13,13 +11,12 @@ from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStocksPrices:
-    """Test suite for GetStocksPrices use case."""
+
 
     def setup_method(self):
         self.mock_provider = Mock(spec=StockPriceProvider)
 
     def test_handle_returns_all_successful_results(self):
-        # Arrange
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
             create_stock_price("GOOGL", Decimal("2847.50")),
@@ -29,10 +26,8 @@ class TestGetStocksPrices:
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL", "MSFT"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert len(result) == 3
         assert result == responses
         self.mock_provider.get_stocks_prices.assert_called_once_with(["AAPL", "GOOGL", "MSFT"])
@@ -47,10 +42,8 @@ class TestGetStocksPrices:
         request = GetStocksPricesRequest(symbols=["AAPL", "INVALID", "MSFT"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert len(result) == 2
         assert result[0].symbol == "AAPL"
         assert result[1].symbol == "MSFT"
@@ -60,10 +53,8 @@ class TestGetStocksPrices:
         request = GetStocksPricesRequest(symbols=["INVALID1", "INVALID2", "INVALID3"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert len(result) == 0
         assert result == []
 
@@ -72,10 +63,8 @@ class TestGetStocksPrices:
         request = GetStocksPricesRequest(symbols=[])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert len(result) == 0
         self.mock_provider.get_stocks_prices.assert_called_once_with([])
 
@@ -88,10 +77,8 @@ class TestGetStocksPrices:
         request = GetStocksPricesRequest(symbols=["AAPL", "AAPL"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert len(result) == 2
         assert all(r.symbol == "AAPL" for r in result)
 
@@ -104,10 +91,8 @@ class TestGetStocksPrices:
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert len(result) == 2
         assert result[0].name is None
         assert result[0].currency is None

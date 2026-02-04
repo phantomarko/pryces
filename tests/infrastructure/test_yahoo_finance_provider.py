@@ -1,5 +1,3 @@
-"""Tests for YahooFinanceProvider."""
-
 from decimal import Decimal
 from unittest.mock import Mock, patch
 import pytest
@@ -10,8 +8,6 @@ from pryces.application.exceptions import StockInformationIncomplete
 
 
 class TestYahooFinanceProviderGetStocksPrices:
-    """Test suite for YahooFinanceProvider.get_stocks_prices method."""
-
     def setup_method(self):
         self.provider = YahooFinanceProvider()
 
@@ -39,7 +35,6 @@ class TestYahooFinanceProviderGetStocksPrices:
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_with_valid_symbols_returns_all_responses(self, mock_tickers_class):
-        # Arrange
         mock_ticker_aapl = Mock()
         mock_ticker_aapl.info = self._create_mock_ticker_info('AAPL')
 
@@ -53,10 +48,8 @@ class TestYahooFinanceProviderGetStocksPrices:
         }
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL', 'GOOGL'])
 
-        # Assert
         assert len(result) == 2
         assert result[0].symbol == 'AAPL'
         assert result[1].symbol == 'GOOGL'
@@ -66,7 +59,6 @@ class TestYahooFinanceProviderGetStocksPrices:
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_with_invalid_symbols_skips_them(self, mock_tickers_class):
-        # Arrange
         mock_ticker_aapl = Mock()
         mock_ticker_aapl.info = self._create_mock_ticker_info('AAPL', valid=True)
 
@@ -80,16 +72,13 @@ class TestYahooFinanceProviderGetStocksPrices:
         }
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL', 'INVALID'])
 
-        # Assert
         assert len(result) == 1
         assert result[0].symbol == 'AAPL'
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_with_all_invalid_returns_empty_list(self, mock_tickers_class):
-        # Arrange
         mock_ticker_invalid1 = Mock()
         mock_ticker_invalid1.info = self._create_mock_ticker_info('INVALID1', valid=False)
 
@@ -103,24 +92,19 @@ class TestYahooFinanceProviderGetStocksPrices:
         }
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['INVALID1', 'INVALID2'])
 
-        # Assert
         assert len(result) == 0
         assert result == []
 
     def test_get_stocks_prices_with_empty_input_returns_empty_list(self):
-        # Act
         result = self.provider.get_stocks_prices([])
 
-        # Assert
         assert len(result) == 0
         assert result == []
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_with_duplicate_symbols(self, mock_tickers_class):
-        # Arrange
         mock_ticker_aapl = Mock()
         mock_ticker_aapl.info = self._create_mock_ticker_info('AAPL')
 
@@ -128,17 +112,14 @@ class TestYahooFinanceProviderGetStocksPrices:
         mock_tickers.tickers = {'AAPL': mock_ticker_aapl}
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL', 'AAPL'])
 
-        # Assert
         assert len(result) == 2
         assert result[0].symbol == 'AAPL'
         assert result[1].symbol == 'AAPL'
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_preserves_decimal_precision(self, mock_tickers_class):
-        # Arrange
         mock_ticker = Mock()
         mock_ticker.info = {
             'symbol': 'AAPL',
@@ -156,17 +137,14 @@ class TestYahooFinanceProviderGetStocksPrices:
         mock_tickers.tickers = {'AAPL': mock_ticker}
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL'])
 
-        # Assert
         assert len(result) == 1
         assert isinstance(result[0].currentPrice, Decimal)
         assert str(result[0].currentPrice) == '150.256789'
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_includes_all_optional_fields(self, mock_tickers_class):
-        # Arrange
         mock_ticker = Mock()
         mock_ticker.info = self._create_mock_ticker_info('AAPL')
 
@@ -174,10 +152,8 @@ class TestYahooFinanceProviderGetStocksPrices:
         mock_tickers.tickers = {'AAPL': mock_ticker}
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL'])
 
-        # Assert
         assert len(result) == 1
         response = result[0]
         assert response.name == 'AAPL Inc.'
@@ -193,7 +169,6 @@ class TestYahooFinanceProviderGetStocksPrices:
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_handles_mixed_case_symbols(self, mock_tickers_class):
-        # Arrange
         mock_ticker = Mock()
         mock_ticker.info = self._create_mock_ticker_info('aapl')
 
@@ -201,16 +176,13 @@ class TestYahooFinanceProviderGetStocksPrices:
         mock_tickers.tickers = {'aapl': mock_ticker}
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['aapl'])
 
-        # Assert
         assert len(result) == 1
         assert result[0].symbol == 'AAPL'
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_skips_symbols_without_price(self, mock_tickers_class):
-        # Arrange
         mock_ticker_valid = Mock()
         mock_ticker_valid.info = self._create_mock_ticker_info('AAPL', valid=True, has_price=True)
 
@@ -229,16 +201,13 @@ class TestYahooFinanceProviderGetStocksPrices:
         }
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL', 'GOOGL'])
 
-        # Assert
         assert len(result) == 1
         assert result[0].symbol == 'AAPL'
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_handles_individual_symbol_errors(self, mock_tickers_class):
-        # Arrange
         mock_ticker_valid = Mock()
         mock_ticker_valid.info = self._create_mock_ticker_info('AAPL')
 
@@ -252,16 +221,13 @@ class TestYahooFinanceProviderGetStocksPrices:
         }
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL', 'ERROR'])
 
-        # Assert
         assert len(result) == 1
         assert result[0].symbol == 'AAPL'
 
     @patch('pryces.infrastructure.providers.yf.Tickers')
     def test_get_stocks_prices_uses_price_fallback_strategy(self, mock_tickers_class):
-        # Arrange - Test regularMarketPrice fallback
         mock_ticker = Mock()
         mock_ticker.info = {
             'symbol': 'AAPL',
@@ -277,9 +243,7 @@ class TestYahooFinanceProviderGetStocksPrices:
         mock_tickers.tickers = {'AAPL': mock_ticker}
         mock_tickers_class.return_value = mock_tickers
 
-        # Act
         result = self.provider.get_stocks_prices(['AAPL'])
 
-        # Assert
         assert len(result) == 1
         assert result[0].currentPrice == Decimal('150.25')

@@ -1,4 +1,3 @@
-"""Test fixtures and utilities."""
 
 from .factories import create_stock_price
 

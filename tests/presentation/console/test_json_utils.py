@@ -1,5 +1,3 @@
-"""Unit tests for JSON utilities."""
-
 import json
 from decimal import Decimal
 
@@ -9,7 +7,7 @@ from pryces.presentation.console.json_utils import DecimalEncoder, to_json
 
 
 class TestDecimalEncoder:
-    """Test suite for DecimalEncoder."""
+
 
     def test_encodes_decimal_as_string(self):
         data = {"price": Decimal("123.45")}
@@ -41,7 +39,7 @@ class TestDecimalEncoder:
 
 
 class TestToJson:
-    """Test suite for to_json function."""
+
 
     def test_returns_formatted_json_string(self):
         data = {"key": "value"}

@@ -1,5 +1,3 @@
-"""Unit tests for GetStocksPricesCommand."""
-
 import json
 from decimal import Decimal
 from unittest.mock import Mock
@@ -18,14 +16,13 @@ from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStocksPricesCommand:
-    """Test suite for GetStocksPricesCommand."""
+
 
     def setup_method(self):
         self.mock_use_case = Mock(spec=GetStocksPrices)
         self.command = GetStocksPricesCommand(self.mock_use_case)
 
     def test_execute_returns_success_json_with_multiple_stocks(self):
-        # Arrange
         symbols = "AAPL,GOOGL,MSFT"
         stock_responses = [
             create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
@@ -34,10 +31,8 @@ class TestGetStocksPricesCommand:
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert len(result_data["data"]) == 3
@@ -49,7 +44,6 @@ class TestGetStocksPricesCommand:
         assert result_data["summary"]["failed"] == 0
 
     def test_execute_handles_partial_failures(self):
-        # Arrange
         symbols = "AAPL,INVALID,GOOGL"
         stock_responses = [
             create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
@@ -57,10 +51,8 @@ class TestGetStocksPricesCommand:
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert len(result_data["data"]) == 2
@@ -69,15 +61,12 @@ class TestGetStocksPricesCommand:
         assert result_data["summary"]["failed"] == 1
 
     def test_execute_handles_all_failures(self):
-        # Arrange
         symbols = "INVALID1,INVALID2,INVALID3"
         stock_responses = []
         self.mock_use_case.handle.return_value = stock_responses
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert len(result_data["data"]) == 0
@@ -86,37 +75,30 @@ class TestGetStocksPricesCommand:
         assert result_data["summary"]["failed"] == 3
 
     def test_execute_handles_decimal_precision_in_json(self):
-        # Arrange
         symbols = "GOOGL"
         stock_responses = [
             create_stock_price("GOOGL", Decimal("2847.123456789"), name="Alphabet Inc.")
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["data"][0]["currentPrice"] == "2847.123456789"
 
     def test_execute_returns_error_json_on_unexpected_exception(self):
-        # Arrange
         symbols = "AAPL,GOOGL"
         error_message = "Network connection failed"
         self.mock_use_case.handle.side_effect = Exception(error_message)
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is False
         assert result_data["error"]["code"] == "INTERNAL_ERROR"
         assert error_message in result_data["error"]["message"]
 
     def test_execute_calls_use_case_with_correct_symbols(self):
-        # Arrange
         symbols = "AAPL, GOOGL, MSFT"
         stock_responses = [
             create_stock_price("AAPL", Decimal("150.25")),
@@ -125,16 +107,13 @@ class TestGetStocksPricesCommand:
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
-        # Act
         self.command.execute(symbols)
 
-        # Assert
         self.mock_use_case.handle.assert_called_once()
         call_args = self.mock_use_case.handle.call_args[0][0]
         assert call_args.symbols == ["AAPL", "GOOGL", "MSFT"]
 
     def test_execute_returns_valid_json_format(self):
-        # Arrange
         symbols = "AAPL,GOOGL"
         stock_responses = [
             create_stock_price("AAPL", Decimal("150.25")),
@@ -142,17 +121,14 @@ class TestGetStocksPricesCommand:
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         try:
             json.loads(result)
         except json.JSONDecodeError:
             pytest.fail("Command did not return valid JSON")
 
     def test_execute_handles_responses_with_minimal_fields(self):
-        # Arrange
         symbols = "AAPL,GOOGL"
         minimal_responses = [
             StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
@@ -160,10 +136,8 @@ class TestGetStocksPricesCommand:
         ]
         self.mock_use_case.handle.return_value = minimal_responses
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         assert result_data["success"] is True
         assert result_data["data"][0]["symbol"] == "AAPL"
@@ -172,7 +146,6 @@ class TestGetStocksPricesCommand:
         assert result_data["data"][0]["currency"] is None
 
     def test_execute_handles_responses_with_all_fields(self):
-        # Arrange
         symbols = "AAPL"
         complete_response = [
             create_stock_price(
@@ -191,10 +164,8 @@ class TestGetStocksPricesCommand:
         ]
         self.mock_use_case.handle.return_value = complete_response
 
-        # Act
         result = self.command.execute(symbols)
 
-        # Assert
         result_data = json.loads(result)
         data = result_data["data"][0]
         assert data["name"] == "Apple Inc."
@@ -241,7 +212,7 @@ class TestGetStocksPricesCommand:
 
 
 class TestValidateSymbols:
-    """Test suite for validate_symbols function."""
+
 
     def test_accepts_valid_single_symbol(self):
         assert validate_symbols("AAPL") is True
@@ -268,7 +239,7 @@ class TestValidateSymbols:
 
 
 class TestParseSymbolsInput:
-    """Test suite for parse_symbols_input function."""
+
 
     def test_parses_single_symbol(self):
         result = parse_symbols_input("AAPL")

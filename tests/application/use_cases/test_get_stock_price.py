@@ -1,5 +1,3 @@
-"""Unit tests for GetStockPrice use case."""
-
 from decimal import Decimal
 from unittest.mock import Mock
 
@@ -15,13 +13,10 @@ from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStockPrice:
-    """Test suite for GetStockPrice use case."""
-
     def setup_method(self):
         self.mock_provider = Mock(spec=StockPriceProvider)
 
     def test_handle_returns_stock_price_from_provider(self):
-        # Arrange
         symbol = "AAPL"
         expected_response = create_stock_price(
             symbol,
@@ -41,22 +36,18 @@ class TestGetStockPrice:
         use_case = GetStockPrice(provider=self.mock_provider)
         request = GetStockPriceRequest(symbol=symbol)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert result == expected_response
         self.mock_provider.get_stock_price.assert_called_once_with(symbol)
 
     def test_handle_raises_stock_not_found_when_provider_returns_none(self):
-        # Arrange
         symbol = "INVALID"
         self.mock_provider.get_stock_price.return_value = None
 
         use_case = GetStockPrice(provider=self.mock_provider)
         request = GetStockPriceRequest(symbol=symbol)
 
-        # Act & Assert
         with pytest.raises(StockNotFound) as exc_info:
             use_case.handle(request)
 
@@ -65,14 +56,12 @@ class TestGetStockPrice:
         self.mock_provider.get_stock_price.assert_called_once_with(symbol)
 
     def test_handle_propagates_stock_information_incomplete(self):
-        # Arrange
         symbol = "AAPL"
         self.mock_provider.get_stock_price.side_effect = StockInformationIncomplete(symbol)
 
         use_case = GetStockPrice(provider=self.mock_provider)
         request = GetStockPriceRequest(symbol=symbol)
 
-        # Act & Assert
         with pytest.raises(StockInformationIncomplete) as exc_info:
             use_case.handle(request)
 
@@ -81,7 +70,6 @@ class TestGetStockPrice:
         self.mock_provider.get_stock_price.assert_called_once_with(symbol)
 
     def test_handle_accepts_response_with_minimal_fields(self):
-        # Arrange
         symbol = "AAPL"
         minimal_response = StockPriceResponse(
             symbol=symbol,
@@ -92,10 +80,8 @@ class TestGetStockPrice:
         use_case = GetStockPrice(provider=self.mock_provider)
         request = GetStockPriceRequest(symbol=symbol)
 
-        # Act
         result = use_case.handle(request)
 
-        # Assert
         assert result == minimal_response
         assert result.symbol == symbol
         assert result.currentPrice == Decimal("150.25")
