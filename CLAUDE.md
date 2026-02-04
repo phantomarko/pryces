@@ -52,6 +52,21 @@ Do NOT use plan mode for:
 
 Plan mode ensures alignment on approach before implementation, preventing wasted effort.
 
+### Always Use Virtual Environment for Testing
+**IMPORTANT**: This project uses a Python virtual environment. You MUST activate it before running any tests or testing code manually.
+
+**Required workflow:**
+1. **Before testing**: Activate the virtual environment with `source venv/bin/activate` (or `source .venv/bin/activate` depending on the venv location)
+2. **Run tests**: Execute `pytest` or test the CLI manually
+3. **After testing**: Deactivate with `deactivate`
+
+**Why this matters:**
+- Running tests without the venv will fail due to missing dependencies
+- Attempting to install packages globally wastes time and may cause permission errors
+- Always check for the venv before running Python commands
+
+**Never**: Try to install the Python environment from scratch or install packages globally. The virtual environment already exists and contains all required dependencies.
+
 ## Patterns and Conventions
 
 ### Dependency Management
