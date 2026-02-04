@@ -1,5 +1,5 @@
 """Test fixtures and utilities."""
 
-from .mock_stock_price_provider import MockStockPriceProvider
+from .factories import create_stock_price
 
-__all__ = ["MockStockPriceProvider"]
+__all__ = ["create_stock_price"]

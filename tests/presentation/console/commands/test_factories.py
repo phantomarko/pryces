@@ -8,62 +8,7 @@ from pryces.presentation.console.commands.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.commands.registry import CommandRegistry
-from tests.fixtures import MockStockPriceProvider
-
-
-class TestMockStockPriceProvider:
-    """Test suite for MockStockPriceProvider."""
-
-    def setup_method(self):
-        self.provider = MockStockPriceProvider()
-
-    def test_get_stock_price_returns_response_for_valid_symbol(self):
-        """Test that provider returns response for known symbols."""
-        # Arrange
-        symbol = "AAPL"
-
-        # Act
-        result = self.provider.get_stock_price(symbol)
-
-        # Assert
-        assert result is not None
-        assert result.symbol == "AAPL"
-        assert result.currentPrice == Decimal("150.25")
-        assert result.name == "Apple Inc."
-        assert result.currency == "USD"
-
-    def test_get_stock_price_handles_case_insensitive_symbol(self):
-        """Test that provider handles lowercase symbols."""
-        # Arrange
-        symbol = "aapl"
-
-        # Act
-        result = self.provider.get_stock_price(symbol)
-
-        # Assert
-        assert result is not None
-        assert result.symbol == "AAPL"
-
-    def test_get_stock_price_returns_none_for_unknown_symbol(self):
-        """Test that provider returns None for unknown symbols."""
-        # Arrange
-        symbol = "UNKNOWN"
-
-        # Act
-        result = self.provider.get_stock_price(symbol)
-
-        # Assert
-        assert result is None
-
-    def test_get_stock_price_returns_different_prices_for_different_symbols(self):
-        """Test that provider returns correct prices for different symbols."""
-        # Act
-        aapl = self.provider.get_stock_price("AAPL")
-        googl = self.provider.get_stock_price("GOOGL")
-
-        # Assert
-        assert aapl.currentPrice == Decimal("150.25")
-        assert googl.currentPrice == Decimal("2847.50")
+from tests.fixtures.factories import create_stock_price
 
 
 class TestCommandFactory:
@@ -83,7 +28,7 @@ class TestCommandFactory:
     def test_create_get_stock_price_command_returns_command_instance(self):
         """Test that factory creates GetStockPriceCommand instance."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -122,9 +67,14 @@ class TestCommandFactory:
         mock_provider.get_stock_price.assert_called_once()
 
     def test_create_get_stock_price_command_with_default_provider(self):
-        """Test that command works with injected MockStockPriceProvider."""
+        """Test that command works with injected provider."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider.get_stock_price.return_value = create_stock_price(
+            "AAPL",
+            Decimal("150.25"),
+            name="Apple Inc."
+        )
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -139,7 +89,7 @@ class TestCommandFactory:
     def test_create_command_registry_returns_registry_instance(self):
         """Test that factory creates CommandRegistry instance."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -151,7 +101,7 @@ class TestCommandFactory:
     def test_registry_contains_get_stock_price_command(self):
         """Test that registry contains GetStockPrice command."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -166,7 +116,12 @@ class TestCommandFactory:
     def test_registry_commands_are_functional(self):
         """Test that commands in registry are properly wired and functional."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider.get_stock_price.return_value = create_stock_price(
+            "AAPL",
+            Decimal("150.25"),
+            name="Apple Inc."
+        )
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -181,7 +136,7 @@ class TestCommandFactory:
     def test_create_get_stocks_prices_command_returns_command_instance(self):
         """Test that factory creates GetStocksPricesCommand instance."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -224,7 +179,7 @@ class TestCommandFactory:
     def test_registry_contains_get_stocks_prices_command(self):
         """Test that registry contains GetStocksPrices command."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
@@ -237,7 +192,12 @@ class TestCommandFactory:
     def test_registry_get_stocks_prices_command_is_functional(self):
         """Test that GetStocksPrices command in registry is properly wired."""
         # Arrange
-        mock_provider = MockStockPriceProvider()
+        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider.get_stocks_prices.return_value = [
+            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock_price("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
+        ]
         factory = CommandFactory(stock_price_provider=mock_provider)
 
         # Act
