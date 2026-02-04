@@ -9,6 +9,7 @@ from pryces.application.use_cases.get_stocks_prices import (
     GetStocksPricesRequest,
 )
 from pryces.application.providers import StockPriceProvider, StockPriceResponse
+from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStocksPrices:
@@ -21,9 +22,9 @@ class TestGetStocksPrices:
         """All symbols found - returns complete list."""
         # Arrange
         responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50")),
-            StockPriceResponse(symbol="MSFT", currentPrice=Decimal("350.75"))
+            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock_price("GOOGL", Decimal("2847.50")),
+            create_stock_price("MSFT", Decimal("350.75"))
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL", "MSFT"])
@@ -41,8 +42,8 @@ class TestGetStocksPrices:
         """Mixed results - provider returns only successful responses."""
         # Provider already filtered out None values
         responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="MSFT", currentPrice=Decimal("350.75"))
+            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock_price("MSFT", Decimal("350.75"))
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "INVALID", "MSFT"])
@@ -85,8 +86,8 @@ class TestGetStocksPrices:
     def test_handle_processes_duplicate_symbols(self):
         """Duplicate symbols are processed independently."""
         responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25"))
+            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock_price("AAPL", Decimal("150.25"))
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "AAPL"])

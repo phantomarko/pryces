@@ -41,11 +41,10 @@ class TestCommandFactory:
         """Test that created command works with mocked provider."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = StockPriceResponse(
-            symbol="TEST",
+        mock_provider.get_stock_price.return_value = create_stock_price(
+            "TEST",
+            Decimal("100.00"),
             name="Test Company",
-            currentPrice=Decimal("100.00"),
-            currency="USD",
             previousClosePrice=Decimal("99.00"),
             openPrice=Decimal("99.50"),
             dayHigh=Decimal("101.00"),
@@ -150,18 +149,8 @@ class TestCommandFactory:
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stocks_prices.return_value = [
-            StockPriceResponse(
-                symbol="AAPL",
-                name="Apple Inc.",
-                currentPrice=Decimal("150.25"),
-                currency="USD"
-            ),
-            StockPriceResponse(
-                symbol="GOOGL",
-                name="Alphabet Inc.",
-                currentPrice=Decimal("2847.50"),
-                currency="USD"
-            )
+            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc.")
         ]
         factory = CommandFactory(stock_price_provider=mock_provider)
 

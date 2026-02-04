@@ -11,6 +11,7 @@ from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
     GetStockPriceRequest,
 )
+from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStockPrice:
@@ -23,11 +24,10 @@ class TestGetStockPrice:
         """Test that handle() returns the stock price from the provider."""
         # Arrange
         symbol = "AAPL"
-        expected_response = StockPriceResponse(
-            symbol=symbol,
+        expected_response = create_stock_price(
+            symbol,
+            Decimal("150.25"),
             name="Apple Inc.",
-            currentPrice=Decimal("150.25"),
-            currency="USD",
             previousClosePrice=Decimal("148.50"),
             openPrice=Decimal("149.00"),
             dayHigh=Decimal("151.00"),

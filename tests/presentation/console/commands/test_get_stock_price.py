@@ -14,6 +14,7 @@ from pryces.presentation.console.commands.get_stock_price import (
     validate_symbol
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
+from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStockPriceCommand:
@@ -27,11 +28,10 @@ class TestGetStockPriceCommand:
         """Test that execute() returns success JSON when stock is found."""
         # Arrange
         symbol = "AAPL"
-        stock_response = StockPriceResponse(
-            symbol=symbol,
+        stock_response = create_stock_price(
+            symbol,
+            Decimal("150.25"),
             name="Apple Inc.",
-            currentPrice=Decimal("150.25"),
-            currency="USD",
             previousClosePrice=Decimal("148.50"),
             openPrice=Decimal("149.00"),
             dayHigh=Decimal("151.00"),
@@ -58,11 +58,10 @@ class TestGetStockPriceCommand:
         """Test that execute() preserves Decimal precision in JSON output."""
         # Arrange
         symbol = "GOOGL"
-        stock_response = StockPriceResponse(
-            symbol=symbol,
+        stock_response = create_stock_price(
+            symbol,
+            Decimal("2847.123456789"),
             name="Alphabet Inc.",
-            currentPrice=Decimal("2847.123456789"),
-            currency="USD",
             previousClosePrice=Decimal("2830.00"),
             openPrice=Decimal("2835.00"),
             dayHigh=Decimal("2850.00"),
@@ -131,11 +130,10 @@ class TestGetStockPriceCommand:
         """Test that execute() calls the use case with the correct symbol."""
         # Arrange
         symbol = "TSLA"
-        stock_response = StockPriceResponse(
-            symbol=symbol,
+        stock_response = create_stock_price(
+            symbol,
+            Decimal("200.00"),
             name="Tesla, Inc.",
-            currentPrice=Decimal("200.00"),
-            currency="USD",
             previousClosePrice=Decimal("198.50"),
             openPrice=Decimal("199.00"),
             dayHigh=Decimal("202.00"),
@@ -159,11 +157,10 @@ class TestGetStockPriceCommand:
         """Test that execute() always returns valid JSON."""
         # Arrange
         symbol = "MSFT"
-        stock_response = StockPriceResponse(
-            symbol=symbol,
+        stock_response = create_stock_price(
+            symbol,
+            Decimal("350.50"),
             name="Microsoft Corporation",
-            currentPrice=Decimal("350.50"),
-            currency="USD",
             previousClosePrice=Decimal("348.00"),
             openPrice=Decimal("349.00"),
             dayHigh=Decimal("352.00"),
@@ -242,12 +239,7 @@ class TestGetStockPriceCommand:
     def test_execute_accepts_kwargs_for_compatibility(self):
         """Test that execute() accepts **kwargs for backward compatibility."""
         symbol = "AAPL"
-        stock_response = StockPriceResponse(
-            symbol=symbol,
-            name="Apple Inc.",
-            currentPrice=Decimal("150.25"),
-            currency="USD"
-        )
+        stock_response = create_stock_price(symbol, Decimal("150.25"), name="Apple Inc.")
         self.mock_use_case.handle.return_value = stock_response
 
         result = self.command.execute(symbol=symbol, extra_arg="ignored")

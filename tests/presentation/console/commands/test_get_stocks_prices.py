@@ -14,6 +14,7 @@ from pryces.presentation.console.commands.get_stocks_prices import (
     parse_symbols_input
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
+from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStocksPricesCommand:
@@ -28,24 +29,9 @@ class TestGetStocksPricesCommand:
         # Arrange
         symbols = "AAPL,GOOGL,MSFT"
         stock_responses = [
-            StockPriceResponse(
-                symbol="AAPL",
-                name="Apple Inc.",
-                currentPrice=Decimal("150.25"),
-                currency="USD"
-            ),
-            StockPriceResponse(
-                symbol="GOOGL",
-                name="Alphabet Inc.",
-                currentPrice=Decimal("2847.50"),
-                currency="USD"
-            ),
-            StockPriceResponse(
-                symbol="MSFT",
-                name="Microsoft Corporation",
-                currentPrice=Decimal("350.75"),
-                currency="USD"
-            )
+            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock_price("MSFT", Decimal("350.75"), name="Microsoft Corporation")
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
@@ -68,18 +54,8 @@ class TestGetStocksPricesCommand:
         # Arrange
         symbols = "AAPL,INVALID,GOOGL"
         stock_responses = [
-            StockPriceResponse(
-                symbol="AAPL",
-                name="Apple Inc.",
-                currentPrice=Decimal("150.25"),
-                currency="USD"
-            ),
-            StockPriceResponse(
-                symbol="GOOGL",
-                name="Alphabet Inc.",
-                currentPrice=Decimal("2847.50"),
-                currency="USD"
-            )
+            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc.")
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
@@ -117,12 +93,7 @@ class TestGetStocksPricesCommand:
         # Arrange
         symbols = "GOOGL"
         stock_responses = [
-            StockPriceResponse(
-                symbol="GOOGL",
-                name="Alphabet Inc.",
-                currentPrice=Decimal("2847.123456789"),
-                currency="USD"
-            )
+            create_stock_price("GOOGL", Decimal("2847.123456789"), name="Alphabet Inc.")
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
@@ -154,9 +125,9 @@ class TestGetStocksPricesCommand:
         # Arrange
         symbols = "AAPL, GOOGL, MSFT"
         stock_responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50")),
-            StockPriceResponse(symbol="MSFT", currentPrice=Decimal("350.75"))
+            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock_price("GOOGL", Decimal("2847.50")),
+            create_stock_price("MSFT", Decimal("350.75"))
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
@@ -173,8 +144,8 @@ class TestGetStocksPricesCommand:
         # Arrange
         symbols = "AAPL,GOOGL"
         stock_responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50"))
+            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock_price("GOOGL", Decimal("2847.50"))
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
@@ -213,11 +184,10 @@ class TestGetStocksPricesCommand:
         # Arrange
         symbols = "AAPL"
         complete_response = [
-            StockPriceResponse(
-                symbol="AAPL",
+            create_stock_price(
+                "AAPL",
+                Decimal("150.25"),
                 name="Apple Inc.",
-                currentPrice=Decimal("150.25"),
-                currency="USD",
                 previousClosePrice=Decimal("148.50"),
                 openPrice=Decimal("149.00"),
                 dayHigh=Decimal("151.00"),
@@ -270,8 +240,8 @@ class TestGetStocksPricesCommand:
         """Test that execute() accepts **kwargs for backward compatibility."""
         symbols = "AAPL,GOOGL"
         stock_responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50"))
+            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock_price("GOOGL", Decimal("2847.50"))
         ]
         self.mock_use_case.handle.return_value = stock_responses
 
