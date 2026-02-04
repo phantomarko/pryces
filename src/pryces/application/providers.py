@@ -11,22 +11,7 @@ from decimal import Decimal
 
 @dataclass(frozen=True)
 class StockPriceResponse:
-    """Response DTO for stock price queries.
-
-    Attributes:
-        symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL') - REQUIRED
-        currentPrice: Current stock price as a Decimal for precision - REQUIRED
-        name: Company name (e.g., 'Apple Inc.') - OPTIONAL
-        currency: Currency code (e.g., 'USD', 'EUR') - OPTIONAL
-        previousClosePrice: Previous closing price - OPTIONAL
-        openPrice: Opening price for the day - OPTIONAL
-        dayHigh: Highest price of the day - OPTIONAL
-        dayLow: Lowest price of the day - OPTIONAL
-        fiftyDayAverage: 50-day moving average - OPTIONAL
-        twoHundredDayAverage: 200-day moving average - OPTIONAL
-        fiftyTwoWeekHigh: 52-week high price - OPTIONAL
-        fiftyTwoWeekLow: 52-week low price - OPTIONAL
-    """
+    """Response DTO for stock price queries."""
     symbol: str
     currentPrice: Decimal
     name: str | None = None

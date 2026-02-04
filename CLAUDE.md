@@ -77,30 +77,48 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
 - Prefer built-in language/platform features over external libraries
 
 ### Code Comments
-**Write code that explains itself through clear naming and structure.** Only add comments when they provide value beyond what the code already communicates.
 
-**When to add comments:**
-- **WHY, not WHAT**: Explain reasoning, not mechanics
-  - Good: `# Fallback to regularMarketPrice for after-hours trading`
-  - Bad: `# Get the price from info dictionary`
-- **Non-obvious logic**: Explain heuristics, validation rules, edge cases
-  - Good: `# Yahoo Finance returns ≤3 fields for invalid symbols`
-- **Architectural decisions**: Document important design choices
-  - Good: `# Use Decimal for precision in financial calculations`
-- **Complex algorithms**: Break down multi-step logic
+**Write self-documenting code.** Use clear names, structure, and type hints. Only add comments when they explain WHY, not WHAT.
 
-**When NOT to add comments:**
-- Method names that restate the function signature
-- Docstrings that just repeat parameter names/types already shown in type hints
-- `setup_method()` docstrings in tests (the name is self-explanatory)
-- Inline comments describing obvious operations (`# Extract price`, `# Return response`)
-- Parameter documentation when type hints are clear (`provider: StockPriceProvider`)
+**Rules:**
+1. **Type hints eliminate documentation**: If a parameter has a type hint, don't document its type in a docstring
+2. **Method names should be obvious**: `get_command()`, `register()`, `validate_symbol()` need no docstring
+3. **No restating**: `def __init__()` → "Initialize X" adds zero value
+4. **Comments explain reasoning**: Use them for business logic, heuristics, or non-obvious constraints
 
-**Docstring guidelines:**
-- Module/class docstrings: Explain purpose and responsibility
-- Method docstrings: Focus on contract (inputs/outputs/side effects), not implementation
-- Test docstrings: Only if the test scenario is complex or non-obvious
-- Keep parameter docs minimal; rely on type hints when they're sufficient
+**Examples:**
+```python
+# ✗ BAD - Just restates code
+def __init__(self, provider: StockPriceProvider) -> None:
+    """Initialize with provider.
+
+    Args:
+        provider: The stock price provider
+    """
+    self._provider = provider
+
+# ✓ GOOD - Type hint is enough
+def __init__(self, provider: StockPriceProvider) -> None:
+    self._provider = provider
+
+# ✗ BAD - Restates method name
+def get_metadata(self) -> CommandMetadata:
+    """Return metadata describing this command."""
+    pass
+
+# ✓ GOOD - Signature is the contract
+@abstractmethod
+def get_metadata(self) -> CommandMetadata:
+    pass
+
+# ✓ GOOD - Explains WHY (business logic)
+if len(info) <= 3:  # Yahoo Finance returns ≤3 fields for invalid symbols
+    return None
+```
+
+**Keep these docstrings:**
+- **Module/class docstrings** explaining purpose and responsibility
+- **Method docstrings** that document contracts beyond what the signature shows (raises, side effects, special return semantics)
 
 ## Pre-Commit Requirements
 

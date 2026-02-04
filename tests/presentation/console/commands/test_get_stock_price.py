@@ -25,7 +25,6 @@ class TestGetStockPriceCommand:
         self.command = GetStockPriceCommand(self.mock_use_case)
 
     def test_execute_returns_success_json_with_stock_data(self):
-        """Test that execute() returns success JSON when stock is found."""
         # Arrange
         symbol = "AAPL"
         stock_response = create_stock_price(
@@ -55,7 +54,6 @@ class TestGetStockPriceCommand:
         assert result_data["data"]["currency"] == "USD"
 
     def test_execute_handles_decimal_precision_in_json(self):
-        """Test that execute() preserves Decimal precision in JSON output."""
         # Arrange
         symbol = "GOOGL"
         stock_response = create_stock_price(
@@ -81,7 +79,6 @@ class TestGetStockPriceCommand:
         assert result_data["data"]["currentPrice"] == "2847.123456789"
 
     def test_execute_returns_error_json_when_stock_not_found(self):
-        """Test that execute() returns error JSON when stock is not found."""
         # Arrange
         symbol = "INVALID"
         self.mock_use_case.handle.side_effect = StockNotFound(symbol)
@@ -96,7 +93,6 @@ class TestGetStockPriceCommand:
         assert symbol in result_data["error"]["message"]
 
     def test_execute_returns_error_json_when_stock_information_incomplete(self):
-        """Test that execute() returns error JSON when stock information is incomplete."""
         # Arrange
         symbol = "AAPL"
         self.mock_use_case.handle.side_effect = StockInformationIncomplete(symbol)
@@ -111,7 +107,6 @@ class TestGetStockPriceCommand:
         assert "unable to retrieve current price" in result_data["error"]["message"]
 
     def test_execute_returns_error_json_on_unexpected_exception(self):
-        """Test that execute() handles unexpected exceptions gracefully."""
         # Arrange
         symbol = "AAPL"
         error_message = "Database connection failed"
@@ -127,7 +122,6 @@ class TestGetStockPriceCommand:
         assert error_message in result_data["error"]["message"]
 
     def test_execute_calls_use_case_with_correct_symbol(self):
-        """Test that execute() calls the use case with the correct symbol."""
         # Arrange
         symbol = "TSLA"
         stock_response = create_stock_price(
@@ -154,7 +148,6 @@ class TestGetStockPriceCommand:
         assert call_args.symbol == symbol
 
     def test_execute_returns_valid_json_format(self):
-        """Test that execute() always returns valid JSON."""
         # Arrange
         symbol = "MSFT"
         stock_response = create_stock_price(
@@ -182,7 +175,6 @@ class TestGetStockPriceCommand:
             pytest.fail("Command did not return valid JSON")
 
     def test_execute_handles_response_with_minimal_fields(self):
-        """Test that execute() properly serializes response with only required fields."""
         # Arrange
         symbol = "AAPL"
         minimal_response = StockPriceResponse(
@@ -204,7 +196,6 @@ class TestGetStockPriceCommand:
         assert result_data["data"]["previousClosePrice"] is None
 
     def test_get_metadata_returns_correct_metadata(self):
-        """Test that get_metadata() returns correct command metadata."""
         metadata = self.command.get_metadata()
 
         assert isinstance(metadata, CommandMetadata)
@@ -213,7 +204,6 @@ class TestGetStockPriceCommand:
         assert "single stock symbol" in metadata.description
 
     def test_get_input_prompts_returns_symbol_prompt(self):
-        """Test that get_input_prompts() returns prompt for symbol input."""
         prompts = self.command.get_input_prompts()
 
         assert len(prompts) == 1
@@ -223,7 +213,6 @@ class TestGetStockPriceCommand:
         assert prompts[0].validator is validate_symbol
 
     def test_validate_symbol_accepts_valid_symbols(self):
-        """Test that validate_symbol() accepts valid stock symbols."""
         assert validate_symbol("AAPL") is True
         assert validate_symbol("GOOGL") is True
         assert validate_symbol("MSFT") is True
@@ -231,13 +220,11 @@ class TestGetStockPriceCommand:
         assert validate_symbol("TSM") is True
 
     def test_validate_symbol_rejects_invalid_symbols(self):
-        """Test that validate_symbol() rejects invalid stock symbols."""
         assert validate_symbol("") is False
         assert validate_symbol("   ") is False
         assert validate_symbol("TOOLONGSYMBOL") is False
 
     def test_execute_accepts_kwargs_for_compatibility(self):
-        """Test that execute() accepts **kwargs for backward compatibility."""
         symbol = "AAPL"
         stock_response = create_stock_price(symbol, Decimal("150.25"), name="Apple Inc.")
         self.mock_use_case.handle.return_value = stock_response

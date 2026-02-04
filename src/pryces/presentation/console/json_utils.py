@@ -18,10 +18,6 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def to_json(data: dict, **kwargs) -> str:
-    """Serialize data to JSON string with DecimalEncoder and formatting.
-
-    Uses DecimalEncoder by default and indents by 2 spaces for readability.
-    """
     if 'indent' not in kwargs:
         kwargs['indent'] = 2
 

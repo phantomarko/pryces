@@ -11,11 +11,9 @@ class TestCommandRegistry:
     """Test suite for CommandRegistry."""
 
     def setup_method(self):
-        """Set up test fixtures."""
         self.registry = CommandRegistry()
 
     def test_register_command_adds_to_registry(self):
-        """Test that registering a command adds it to the registry."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test_cmd",
@@ -29,7 +27,6 @@ class TestCommandRegistry:
         assert retrieved is mock_command
 
     def test_get_command_returns_registered_command(self):
-        """Test that get_command returns the correct command by ID."""
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
             id="cmd1",
@@ -51,12 +48,10 @@ class TestCommandRegistry:
         assert self.registry.get_command("cmd2") is mock_command2
 
     def test_get_command_returns_none_for_unknown_id(self):
-        """Test that get_command returns None for unknown command IDs."""
         result = self.registry.get_command("nonexistent")
         assert result is None
 
     def test_get_all_commands_returns_all_registered(self):
-        """Test that get_all_commands returns all registered commands."""
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
             id="cmd1",
@@ -81,12 +76,10 @@ class TestCommandRegistry:
         assert mock_command2 in all_commands
 
     def test_get_all_commands_returns_empty_list_when_no_commands(self):
-        """Test that get_all_commands returns empty list when no commands registered."""
         all_commands = self.registry.get_all_commands()
         assert all_commands == []
 
     def test_register_overwrites_existing_command_with_same_id(self):
-        """Test that registering a command with existing ID overwrites the previous one."""
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
             id="cmd",

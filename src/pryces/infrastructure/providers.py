@@ -18,7 +18,6 @@ class YahooFinanceProvider(StockPriceProvider):
     """
 
     def __init__(self) -> None:
-        """Initialize the provider."""
         self._logger = logging.getLogger(__name__)
 
     def _build_response(self, symbol: str, info: dict, current_price: float) -> StockPriceResponse:
@@ -40,12 +39,9 @@ class YahooFinanceProvider(StockPriceProvider):
         two_hundred_day_avg = info.get('twoHundredDayAverage')
         fifty_two_week_high = info.get('fiftyTwoWeekHigh')
         fifty_two_week_low = info.get('fiftyTwoWeekLow')
-
-        # Extract optional metadata
         company_name = info.get('longName') or info.get('shortName')
         currency = info.get('currency')
 
-        # Convert all non-None prices to Decimal for precision
         return StockPriceResponse(
             symbol=symbol.upper(),
             currentPrice=Decimal(str(current_price)),
@@ -77,16 +73,13 @@ class YahooFinanceProvider(StockPriceProvider):
         try:
             self._logger.debug(f"Fetching data for symbol: {symbol}")
 
-            # Fetch ticker information from Yahoo Finance
             ticker_obj = yf.Ticker(symbol)
             info = ticker_obj.info
 
-            # Check if we got valid data (invalid symbols return minimal/empty info)
-            if not info or len(info) <= 3:  # Minimal info indicates invalid symbol
+            if not info or len(info) <= 3:  # Yahoo Finance returns ≤3 fields for invalid symbols
                 self._logger.warning(f"No data available for symbol: {symbol}")
                 return None
 
-            # Extract required current price with fallback strategies
             current_price = None
             for price_key in ['currentPrice', 'regularMarketPrice', 'previousClose']:
                 if price_key in info and info[price_key] is not None:

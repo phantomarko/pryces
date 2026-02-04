@@ -12,11 +12,6 @@ class StockNotFound(Exception):
     """
 
     def __init__(self, symbol: str) -> None:
-        """Initialize the exception.
-
-        Args:
-            symbol: The stock symbol that was not found
-        """
         self.symbol = symbol
         super().__init__(f"Stock not found: {symbol}")
 
@@ -32,10 +27,5 @@ class StockInformationIncomplete(Exception):
     """
 
     def __init__(self, symbol: str) -> None:
-        """Initialize the exception.
-
-        Args:
-            symbol: The stock symbol with incomplete information
-        """
         self.symbol = symbol
         super().__init__(f"Stock information incomplete: unable to retrieve current price for {symbol}")

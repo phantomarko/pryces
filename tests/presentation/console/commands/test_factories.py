@@ -15,7 +15,6 @@ class TestCommandFactory:
     """Test suite for CommandFactory."""
 
     def test_init_accepts_custom_provider(self):
-        """Test that factory accepts a custom provider."""
         # Arrange
         custom_provider = Mock(spec=StockPriceProvider)
 
@@ -26,7 +25,6 @@ class TestCommandFactory:
         assert factory._stock_price_provider is custom_provider
 
     def test_create_get_stock_price_command_returns_command_instance(self):
-        """Test that factory creates GetStockPriceCommand instance."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
@@ -38,7 +36,6 @@ class TestCommandFactory:
         assert isinstance(command, GetStockPriceCommand)
 
     def test_create_get_stock_price_command_wires_dependencies_correctly(self):
-        """Test that created command works with mocked provider."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stock_price.return_value = create_stock_price(
@@ -66,7 +63,6 @@ class TestCommandFactory:
         mock_provider.get_stock_price.assert_called_once()
 
     def test_create_get_stock_price_command_with_default_provider(self):
-        """Test that command works with injected provider."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stock_price.return_value = create_stock_price(
@@ -86,7 +82,6 @@ class TestCommandFactory:
         assert "150.25" in result
 
     def test_create_command_registry_returns_registry_instance(self):
-        """Test that factory creates CommandRegistry instance."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
@@ -98,7 +93,6 @@ class TestCommandFactory:
         assert isinstance(registry, CommandRegistry)
 
     def test_registry_contains_get_stock_price_command(self):
-        """Test that registry contains GetStockPrice command."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
@@ -113,7 +107,6 @@ class TestCommandFactory:
         assert isinstance(command, GetStockPriceCommand)
 
     def test_registry_commands_are_functional(self):
-        """Test that commands in registry are properly wired and functional."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stock_price.return_value = create_stock_price(
@@ -133,7 +126,6 @@ class TestCommandFactory:
         assert "AAPL" in result
 
     def test_create_get_stocks_prices_command_returns_command_instance(self):
-        """Test that factory creates GetStocksPricesCommand instance."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
@@ -145,7 +137,6 @@ class TestCommandFactory:
         assert isinstance(command, GetStocksPricesCommand)
 
     def test_create_get_stocks_prices_command_wires_dependencies_correctly(self):
-        """Test that created command works with mocked provider."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stocks_prices.return_value = [
@@ -166,7 +157,6 @@ class TestCommandFactory:
         mock_provider.get_stocks_prices.assert_called_once()
 
     def test_registry_contains_get_stocks_prices_command(self):
-        """Test that registry contains GetStocksPrices command."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         factory = CommandFactory(stock_price_provider=mock_provider)
@@ -179,7 +169,6 @@ class TestCommandFactory:
         assert isinstance(command, GetStocksPricesCommand)
 
     def test_registry_get_stocks_prices_command_is_functional(self):
-        """Test that GetStocksPrices command in registry is properly wired."""
         # Arrange
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stocks_prices.return_value = [

@@ -14,7 +14,6 @@ class TestInteractiveMenu:
     """Test suite for InteractiveMenu."""
 
     def setup_method(self):
-        """Set up test fixtures."""
         self.registry = CommandRegistry()
         self.input_stream = StringIO()
         self.output_stream = StringIO()
@@ -25,7 +24,6 @@ class TestInteractiveMenu:
         )
 
     def test_display_menu_shows_all_commands(self):
-        """Test that display_menu shows all registered commands."""
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
             id="cmd1",
@@ -54,7 +52,6 @@ class TestInteractiveMenu:
         assert "0. Exit" in output
 
     def test_get_selection_returns_valid_number(self):
-        """Test that get_selection returns valid numeric input."""
         self.input_stream.write("1\n")
         self.input_stream.seek(0)
 
@@ -63,7 +60,6 @@ class TestInteractiveMenu:
         assert selection == 1
 
     def test_get_selection_handles_invalid_input(self):
-        """Test that get_selection handles non-numeric input."""
         self.input_stream.write("abc\n2\n")
         self.input_stream.seek(0)
 
@@ -74,7 +70,6 @@ class TestInteractiveMenu:
         assert "Invalid input" in output
 
     def test_get_selection_handles_empty_input(self):
-        """Test that get_selection re-prompts on empty input."""
         self.input_stream.write("\n\n3\n")
         self.input_stream.seek(0)
 
@@ -83,13 +78,11 @@ class TestInteractiveMenu:
         assert selection == 3
 
     def test_get_selection_returns_zero_on_eof(self):
-        """Test that get_selection returns 0 on EOF."""
         selection = self.menu._get_selection()
 
         assert selection == 0
 
     def test_collect_inputs_gathers_all_prompts(self):
-        """Test that collect_inputs gathers input for all prompts."""
         prompts = [
             InputPrompt(key="name", prompt="Enter name: ", validator=None),
             InputPrompt(key="age", prompt="Enter age: ", validator=None)
@@ -103,7 +96,6 @@ class TestInteractiveMenu:
         assert inputs == {"name": "John", "age": "25"}
 
     def test_collect_inputs_validates_input(self):
-        """Test that collect_inputs validates input using validator."""
         def validate_number(value: str) -> bool:
             return value.isdigit()
 
@@ -121,7 +113,6 @@ class TestInteractiveMenu:
         assert output.count("Invalid input format") == 2
 
     def test_collect_inputs_rejects_empty_input(self):
-        """Test that collect_inputs rejects empty input."""
         prompts = [
             InputPrompt(key="value", prompt="Enter value: ", validator=None)
         ]
@@ -136,7 +127,6 @@ class TestInteractiveMenu:
         assert "cannot be empty" in output
 
     def test_collect_inputs_returns_none_on_eof(self):
-        """Test that collect_inputs returns None on EOF."""
         prompts = [
             InputPrompt(key="value", prompt="Enter value: ", validator=None)
         ]
@@ -146,7 +136,6 @@ class TestInteractiveMenu:
         assert inputs is None
 
     def test_execute_command_collects_inputs_and_executes(self):
-        """Test that execute_command collects inputs and executes command."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",
@@ -169,7 +158,6 @@ class TestInteractiveMenu:
         assert '{"success": true}' in output
 
     def test_execute_command_handles_exception(self):
-        """Test that execute_command handles exceptions gracefully."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",
@@ -186,7 +174,6 @@ class TestInteractiveMenu:
         assert "Test error" in output
 
     def test_execute_command_handles_cancelled_input(self):
-        """Test that execute_command handles cancelled input collection."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",
@@ -204,7 +191,6 @@ class TestInteractiveMenu:
         assert "cancelled" in output
 
     def test_execute_command_prompts_to_continue(self):
-        """Test that execute_command shows press enter prompt after execution."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",
@@ -223,7 +209,6 @@ class TestInteractiveMenu:
         assert "Press Enter to continue" in output
 
     def test_run_loops_until_exit_selected(self):
-        """Test that run loops through menu until exit is selected."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",
@@ -245,7 +230,6 @@ class TestInteractiveMenu:
         assert "Goodbye" in output
 
     def test_run_handles_invalid_selection(self):
-        """Test that run handles invalid menu selections."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",
@@ -264,7 +248,6 @@ class TestInteractiveMenu:
         assert "Invalid selection: 99" in output
 
     def test_run_handles_eof_gracefully(self):
-        """Test that run handles EOF (Ctrl+D) gracefully."""
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
             id="test",

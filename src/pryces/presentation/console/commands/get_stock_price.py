@@ -10,7 +10,6 @@ from .base import Command, CommandMetadata, InputPrompt
 
 
 def validate_symbol(value: str) -> bool:
-    """Validate stock symbol input."""
     return bool(value and value.strip() and len(value.strip()) <= 10)
 
 
@@ -22,16 +21,10 @@ class GetStockPriceCommand(Command):
     """
 
     def __init__(self, get_stock_price_use_case: GetStockPrice) -> None:
-        """Initialize the command with the use case.
-
-        Args:
-            get_stock_price_use_case: GetStockPrice use case instance
-        """
         self._get_stock_price = get_stock_price_use_case
         self._logger = logging.getLogger(__name__)
 
     def get_metadata(self) -> CommandMetadata:
-        """Return metadata for menu display."""
         return CommandMetadata(
             id="get_stock_price",
             name="Get Stock Price",
@@ -39,7 +32,6 @@ class GetStockPriceCommand(Command):
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
-        """Return input prompts for collecting symbol."""
         return [
             InputPrompt(
                 key="symbol",
@@ -51,29 +43,8 @@ class GetStockPriceCommand(Command):
     def execute(self, symbol: str = None, **kwargs) -> str:
         """Execute the command to get stock price for a symbol.
 
-        Args:
-            symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
-
         Returns:
-            JSON string containing either:
-                - Success: {
-                    "success": true,
-                    "data": {
-                        "symbol": "..." (required),
-                        "currentPrice": "..." (required),
-                        "name": "..." (optional),
-                        "currency": "..." (optional),
-                        "previousClosePrice": "..." (optional),
-                        "openPrice": "..." (optional),
-                        "dayHigh": "..." (optional),
-                        "dayLow": "..." (optional),
-                        "fiftyDayAverage": "..." (optional),
-                        "twoHundredDayAverage": "..." (optional),
-                        "fiftyTwoWeekHigh": "..." (optional),
-                        "fiftyTwoWeekLow": "..." (optional)
-                    }
-                }
-                - Error: {"success": false, "error": {"code": "...", "message": "..."}}
+            JSON string with success/error structure
         """
         self._logger.info(f"Fetching stock price for symbol: {symbol}")
 

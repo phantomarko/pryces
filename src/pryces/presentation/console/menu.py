@@ -16,7 +16,6 @@ class InteractiveMenu:
         input_stream: TextIO = sys.stdin,
         output_stream: TextIO = sys.stdout
     ) -> None:
-        """Initialize the interactive menu."""
         self._registry = registry
         self._input = input_stream
         self._output = output_stream
@@ -42,7 +41,6 @@ class InteractiveMenu:
             self._output.write("\n")
 
     def _display_menu(self) -> None:
-        """Display the menu of available commands."""
         commands = self._registry.get_all_commands()
 
         self._output.write("\n" + "=" * 60 + "\n")
@@ -59,7 +57,6 @@ class InteractiveMenu:
         self._output.flush()
 
     def _get_selection(self) -> int:
-        """Get and validate user's menu selection."""
         while True:
             try:
                 self._output.write("Enter your selection: ")
@@ -83,7 +80,6 @@ class InteractiveMenu:
                 return 0
 
     def _execute_command(self, command: Command) -> None:
-        """Execute a command after collecting required inputs."""
         metadata = command.get_metadata()
         self._output.write(f"\n--- {metadata.name} ---\n\n")
 
@@ -105,13 +101,11 @@ class InteractiveMenu:
         self._wait_for_keypress()
 
     def _wait_for_keypress(self) -> None:
-        """Wait for user to press any key before continuing."""
         self._output.write("\nPress Enter to continue...")
         self._output.flush()
         self._input.readline()
 
     def _collect_inputs(self, prompts: list[InputPrompt]) -> dict | None:
-        """Collect inputs from user based on prompts."""
         inputs = {}
 
         for prompt in prompts:

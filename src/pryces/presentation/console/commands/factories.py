@@ -17,33 +17,17 @@ class CommandFactory:
     """Factory for creating console command instances with their dependencies."""
 
     def __init__(self, stock_price_provider: StockPriceProvider) -> None:
-        """Initialize the command factory."""
         self._stock_price_provider = stock_price_provider
 
     def create_get_stock_price_command(self) -> GetStockPriceCommand:
-        """Create and configure a GetStockPriceCommand instance.
-
-        Returns:
-            Configured GetStockPriceCommand with all dependencies wired up
-        """
         use_case = GetStockPrice(provider=self._stock_price_provider)
         return GetStockPriceCommand(get_stock_price_use_case=use_case)
 
     def create_get_stocks_prices_command(self) -> GetStocksPricesCommand:
-        """Create and configure a GetStocksPricesCommand instance.
-
-        Returns:
-            Configured GetStocksPricesCommand with all dependencies wired up
-        """
         use_case = GetStocksPrices(provider=self._stock_price_provider)
         return GetStocksPricesCommand(get_stocks_prices_use_case=use_case)
 
     def create_command_registry(self) -> CommandRegistry:
-        """Create a CommandRegistry with all available commands.
-
-        Returns:
-            CommandRegistry with all commands registered
-        """
         registry = CommandRegistry()
         registry.register(self.create_get_stock_price_command())
         registry.register(self.create_get_stocks_prices_command())

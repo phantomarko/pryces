@@ -19,7 +19,6 @@ class TestGetStocksPrices:
         self.mock_provider = Mock(spec=StockPriceProvider)
 
     def test_handle_returns_all_successful_results(self):
-        """All symbols found - returns complete list."""
         # Arrange
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
@@ -39,7 +38,6 @@ class TestGetStocksPrices:
         self.mock_provider.get_stocks_prices.assert_called_once_with(["AAPL", "GOOGL", "MSFT"])
 
     def test_handle_filters_out_not_found_symbols(self):
-        """Mixed results - provider returns only successful responses."""
         # Provider already filtered out None values
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
@@ -58,7 +56,6 @@ class TestGetStocksPrices:
         assert result[1].symbol == "MSFT"
 
     def test_handle_returns_empty_list_when_all_symbols_not_found(self):
-        """No symbols found - provider returns empty list."""
         self.mock_provider.get_stocks_prices.return_value = []
         request = GetStocksPricesRequest(symbols=["INVALID1", "INVALID2", "INVALID3"])
         use_case = GetStocksPrices(provider=self.mock_provider)
@@ -71,7 +68,6 @@ class TestGetStocksPrices:
         assert result == []
 
     def test_handle_returns_empty_list_for_empty_input(self):
-        """Empty input - returns empty list."""
         self.mock_provider.get_stocks_prices.return_value = []
         request = GetStocksPricesRequest(symbols=[])
         use_case = GetStocksPrices(provider=self.mock_provider)
@@ -84,7 +80,6 @@ class TestGetStocksPrices:
         self.mock_provider.get_stocks_prices.assert_called_once_with([])
 
     def test_handle_processes_duplicate_symbols(self):
-        """Duplicate symbols are processed independently."""
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
             create_stock_price("AAPL", Decimal("150.25"))
@@ -101,7 +96,6 @@ class TestGetStocksPrices:
         assert all(r.symbol == "AAPL" for r in result)
 
     def test_handle_with_responses_containing_minimal_fields(self):
-        """Responses with only required fields work correctly."""
         responses = [
             StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
             StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50"))

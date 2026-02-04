@@ -25,7 +25,6 @@ class TestGetStocksPricesCommand:
         self.command = GetStocksPricesCommand(self.mock_use_case)
 
     def test_execute_returns_success_json_with_multiple_stocks(self):
-        """Test that execute() returns success JSON with all stock data."""
         # Arrange
         symbols = "AAPL,GOOGL,MSFT"
         stock_responses = [
@@ -50,7 +49,6 @@ class TestGetStocksPricesCommand:
         assert result_data["summary"]["failed"] == 0
 
     def test_execute_handles_partial_failures(self):
-        """Test that execute() handles cases where some symbols fail."""
         # Arrange
         symbols = "AAPL,INVALID,GOOGL"
         stock_responses = [
@@ -71,7 +69,6 @@ class TestGetStocksPricesCommand:
         assert result_data["summary"]["failed"] == 1
 
     def test_execute_handles_all_failures(self):
-        """Test that execute() handles cases where all symbols fail."""
         # Arrange
         symbols = "INVALID1,INVALID2,INVALID3"
         stock_responses = []
@@ -89,7 +86,6 @@ class TestGetStocksPricesCommand:
         assert result_data["summary"]["failed"] == 3
 
     def test_execute_handles_decimal_precision_in_json(self):
-        """Test that execute() preserves Decimal precision in JSON output."""
         # Arrange
         symbols = "GOOGL"
         stock_responses = [
@@ -105,7 +101,6 @@ class TestGetStocksPricesCommand:
         assert result_data["data"][0]["currentPrice"] == "2847.123456789"
 
     def test_execute_returns_error_json_on_unexpected_exception(self):
-        """Test that execute() handles unexpected exceptions gracefully."""
         # Arrange
         symbols = "AAPL,GOOGL"
         error_message = "Network connection failed"
@@ -121,7 +116,6 @@ class TestGetStocksPricesCommand:
         assert error_message in result_data["error"]["message"]
 
     def test_execute_calls_use_case_with_correct_symbols(self):
-        """Test that execute() calls the use case with correct parsed symbols."""
         # Arrange
         symbols = "AAPL, GOOGL, MSFT"
         stock_responses = [
@@ -140,7 +134,6 @@ class TestGetStocksPricesCommand:
         assert call_args.symbols == ["AAPL", "GOOGL", "MSFT"]
 
     def test_execute_returns_valid_json_format(self):
-        """Test that execute() always returns valid JSON."""
         # Arrange
         symbols = "AAPL,GOOGL"
         stock_responses = [
@@ -159,7 +152,6 @@ class TestGetStocksPricesCommand:
             pytest.fail("Command did not return valid JSON")
 
     def test_execute_handles_responses_with_minimal_fields(self):
-        """Test that execute() properly serializes responses with only required fields."""
         # Arrange
         symbols = "AAPL,GOOGL"
         minimal_responses = [
@@ -180,7 +172,6 @@ class TestGetStocksPricesCommand:
         assert result_data["data"][0]["currency"] is None
 
     def test_execute_handles_responses_with_all_fields(self):
-        """Test that execute() includes all optional fields when present."""
         # Arrange
         symbols = "AAPL"
         complete_response = [
@@ -218,7 +209,6 @@ class TestGetStocksPricesCommand:
         assert data["fiftyTwoWeekLow"] == "120.00"
 
     def test_get_metadata_returns_correct_metadata(self):
-        """Test that get_metadata() returns correct command metadata."""
         metadata = self.command.get_metadata()
 
         assert isinstance(metadata, CommandMetadata)
@@ -227,7 +217,6 @@ class TestGetStocksPricesCommand:
         assert "multiple stock symbols" in metadata.description
 
     def test_get_input_prompts_returns_symbols_prompt(self):
-        """Test that get_input_prompts() returns prompt for symbols input."""
         prompts = self.command.get_input_prompts()
 
         assert len(prompts) == 1
@@ -237,7 +226,6 @@ class TestGetStocksPricesCommand:
         assert prompts[0].validator is validate_symbols
 
     def test_execute_accepts_kwargs_for_compatibility(self):
-        """Test that execute() accepts **kwargs for backward compatibility."""
         symbols = "AAPL,GOOGL"
         stock_responses = [
             create_stock_price("AAPL", Decimal("150.25")),
@@ -256,30 +244,24 @@ class TestValidateSymbols:
     """Test suite for validate_symbols function."""
 
     def test_accepts_valid_single_symbol(self):
-        """Test that validate_symbols() accepts a single valid symbol."""
         assert validate_symbols("AAPL") is True
 
     def test_accepts_valid_comma_separated_symbols(self):
-        """Test that validate_symbols() accepts comma-separated symbols."""
         assert validate_symbols("AAPL,GOOGL,MSFT") is True
 
     def test_accepts_symbols_with_spaces(self):
-        """Test that validate_symbols() accepts symbols with spaces around commas."""
         assert validate_symbols("AAPL, GOOGL, MSFT") is True
         assert validate_symbols("AAPL , GOOGL , MSFT") is True
 
     def test_rejects_empty_string(self):
-        """Test that validate_symbols() rejects empty strings."""
         assert validate_symbols("") is False
         assert validate_symbols("   ") is False
 
     def test_rejects_symbols_too_long(self):
-        """Test that validate_symbols() rejects symbols longer than 10 characters."""
         assert validate_symbols("TOOLONGSYMBOL") is False
         assert validate_symbols("AAPL,TOOLONGSYMBOL") is False
 
     def test_rejects_empty_symbols_in_list(self):
-        """Test that validate_symbols() rejects lists with empty symbols."""
         assert validate_symbols("AAPL,,GOOGL") is False
         assert validate_symbols(",AAPL,GOOGL") is False
         assert validate_symbols("AAPL,GOOGL,") is False
@@ -289,31 +271,25 @@ class TestParseSymbolsInput:
     """Test suite for parse_symbols_input function."""
 
     def test_parses_single_symbol(self):
-        """Test that parse_symbols_input() parses a single symbol."""
         result = parse_symbols_input("AAPL")
         assert result == ["AAPL"]
 
     def test_parses_comma_separated_symbols(self):
-        """Test that parse_symbols_input() parses comma-separated symbols."""
         result = parse_symbols_input("AAPL,GOOGL,MSFT")
         assert result == ["AAPL", "GOOGL", "MSFT"]
 
     def test_strips_whitespace(self):
-        """Test that parse_symbols_input() strips whitespace from symbols."""
         result = parse_symbols_input("AAPL, GOOGL, MSFT")
         assert result == ["AAPL", "GOOGL", "MSFT"]
 
     def test_converts_to_uppercase(self):
-        """Test that parse_symbols_input() converts symbols to uppercase."""
         result = parse_symbols_input("aapl,googl,msft")
         assert result == ["AAPL", "GOOGL", "MSFT"]
 
     def test_filters_empty_strings(self):
-        """Test that parse_symbols_input() filters out empty strings."""
         result = parse_symbols_input("AAPL,,GOOGL")
         assert result == ["AAPL", "GOOGL"]
 
     def test_handles_mixed_case_with_spaces(self):
-        """Test that parse_symbols_input() handles mixed case and spaces."""
         result = parse_symbols_input("aapl, GooGl, MsFt")
         assert result == ["AAPL", "GOOGL", "MSFT"]

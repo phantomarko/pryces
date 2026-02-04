@@ -21,7 +21,6 @@ class TestGetStockPrice:
         self.mock_provider = Mock(spec=StockPriceProvider)
 
     def test_handle_returns_stock_price_from_provider(self):
-        """Test that handle() returns the stock price from the provider."""
         # Arrange
         symbol = "AAPL"
         expected_response = create_stock_price(
@@ -50,7 +49,6 @@ class TestGetStockPrice:
         self.mock_provider.get_stock_price.assert_called_once_with(symbol)
 
     def test_handle_raises_stock_not_found_when_provider_returns_none(self):
-        """Test that handle() raises StockNotFound when provider returns None."""
         # Arrange
         symbol = "INVALID"
         self.mock_provider.get_stock_price.return_value = None
@@ -67,7 +65,6 @@ class TestGetStockPrice:
         self.mock_provider.get_stock_price.assert_called_once_with(symbol)
 
     def test_handle_propagates_stock_information_incomplete(self):
-        """Test that handle() propagates StockInformationIncomplete from provider."""
         # Arrange
         symbol = "AAPL"
         self.mock_provider.get_stock_price.side_effect = StockInformationIncomplete(symbol)
@@ -84,7 +81,6 @@ class TestGetStockPrice:
         self.mock_provider.get_stock_price.assert_called_once_with(symbol)
 
     def test_handle_accepts_response_with_minimal_fields(self):
-        """Test that handle() accepts response with only required fields."""
         # Arrange
         symbol = "AAPL"
         minimal_response = StockPriceResponse(
