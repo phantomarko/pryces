@@ -58,6 +58,48 @@ Run tests with coverage:
 pytest --cov=pryces --cov-report=html
 ```
 
+### Code Formatting with Black
+
+This project uses [Black](https://black.readthedocs.io/) for consistent code formatting.
+
+**Automatic Formatting (Recommended):**
+
+Install the pre-commit hook to automatically format code on every commit:
+```bash
+cp scripts/hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+Once installed, Black will automatically format your staged Python files and include them in your commit.
+
+**Manual Formatting:**
+
+Format all source and test files:
+```bash
+black src/ tests/
+```
+
+Check formatting without making changes:
+```bash
+black --check src/ tests/
+```
+
+Preview formatting changes:
+```bash
+black --diff src/ tests/
+```
+
+Format a specific file:
+```bash
+black src/pryces/domain/entities.py
+```
+
+**Configuration:**
+
+Black is configured in `pyproject.toml` with:
+- Line length: 100 characters
+- Target Python versions: 3.10, 3.11, 3.12
+
 ### Working with Virtual Environment
 
 Activate the virtual environment before running tests or installing dependencies:
