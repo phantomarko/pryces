@@ -4,14 +4,8 @@ from pryces.application.providers import StockPriceResponse
 
 
 def create_stock_price(
-    symbol: str = "AAPL",
-    current_price: Decimal = Decimal("150.00"),
-    **overrides
+    symbol: str = "AAPL", current_price: Decimal = Decimal("150.00"), **overrides
 ) -> StockPriceResponse:
-    """Create a StockPriceResponse with computed defaults for optional fields.
-
-    Optional fields are calculated from current_price but can be overridden via **overrides.
-    """
     defaults = {
         "name": f"{symbol} Inc.",
         "currency": "USD",
@@ -26,7 +20,5 @@ def create_stock_price(
     }
 
     return StockPriceResponse(
-        symbol=symbol,
-        currentPrice=current_price,
-        **{**defaults, **overrides}
+        symbol=symbol, currentPrice=current_price, **{**defaults, **overrides}
     )

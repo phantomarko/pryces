@@ -9,14 +9,13 @@ from pryces.application.providers import StockPriceResponse
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
-    validate_symbol
+    validate_symbol,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStockPriceCommand:
-
 
     def setup_method(self):
         self.mock_use_case = Mock(spec=GetStockPrice)
@@ -35,7 +34,7 @@ class TestGetStockPriceCommand:
             fiftyDayAverage=Decimal("145.50"),
             twoHundredDayAverage=Decimal("140.00"),
             fiftyTwoWeekHigh=Decimal("180.00"),
-            fiftyTwoWeekLow=Decimal("120.00")
+            fiftyTwoWeekLow=Decimal("120.00"),
         )
         self.mock_use_case.handle.return_value = stock_response
 
@@ -61,7 +60,7 @@ class TestGetStockPriceCommand:
             fiftyDayAverage=Decimal("2800.00"),
             twoHundredDayAverage=Decimal("2750.00"),
             fiftyTwoWeekHigh=Decimal("3000.00"),
-            fiftyTwoWeekLow=Decimal("2500.00")
+            fiftyTwoWeekLow=Decimal("2500.00"),
         )
         self.mock_use_case.handle.return_value = stock_response
 
@@ -117,7 +116,7 @@ class TestGetStockPriceCommand:
             fiftyDayAverage=Decimal("195.00"),
             twoHundredDayAverage=Decimal("190.00"),
             fiftyTwoWeekHigh=Decimal("250.00"),
-            fiftyTwoWeekLow=Decimal("150.00")
+            fiftyTwoWeekLow=Decimal("150.00"),
         )
         self.mock_use_case.handle.return_value = stock_response
 
@@ -140,7 +139,7 @@ class TestGetStockPriceCommand:
             fiftyDayAverage=Decimal("345.00"),
             twoHundredDayAverage=Decimal("340.00"),
             fiftyTwoWeekHigh=Decimal("380.00"),
-            fiftyTwoWeekLow=Decimal("300.00")
+            fiftyTwoWeekLow=Decimal("300.00"),
         )
         self.mock_use_case.handle.return_value = stock_response
 
@@ -153,10 +152,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_response_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = StockPriceResponse(
-            symbol=symbol,
-            currentPrice=Decimal("150.25")
-        )
+        minimal_response = StockPriceResponse(symbol=symbol, currentPrice=Decimal("150.25"))
         self.mock_use_case.handle.return_value = minimal_response
 
         result = self.command.execute(symbol)

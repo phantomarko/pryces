@@ -7,16 +7,13 @@ from pryces.presentation.console.commands.base import Command, CommandMetadata
 
 class TestCommandRegistry:
 
-
     def setup_method(self):
         self.registry = CommandRegistry()
 
     def test_register_command_adds_to_registry(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test_cmd",
-            name="Test Command",
-            description="A test command"
+            id="test_cmd", name="Test Command", description="A test command"
         )
 
         self.registry.register(mock_command)
@@ -27,16 +24,12 @@ class TestCommandRegistry:
     def test_get_command_returns_registered_command(self):
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
-            id="cmd1",
-            name="Command 1",
-            description="First command"
+            id="cmd1", name="Command 1", description="First command"
         )
 
         mock_command2 = Mock(spec=Command)
         mock_command2.get_metadata.return_value = CommandMetadata(
-            id="cmd2",
-            name="Command 2",
-            description="Second command"
+            id="cmd2", name="Command 2", description="Second command"
         )
 
         self.registry.register(mock_command1)
@@ -52,16 +45,12 @@ class TestCommandRegistry:
     def test_get_all_commands_returns_all_registered(self):
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
-            id="cmd1",
-            name="Command 1",
-            description="First command"
+            id="cmd1", name="Command 1", description="First command"
         )
 
         mock_command2 = Mock(spec=Command)
         mock_command2.get_metadata.return_value = CommandMetadata(
-            id="cmd2",
-            name="Command 2",
-            description="Second command"
+            id="cmd2", name="Command 2", description="Second command"
         )
 
         self.registry.register(mock_command1)
@@ -80,16 +69,12 @@ class TestCommandRegistry:
     def test_register_overwrites_existing_command_with_same_id(self):
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
-            id="cmd",
-            name="Command 1",
-            description="First command"
+            id="cmd", name="Command 1", description="First command"
         )
 
         mock_command2 = Mock(spec=Command)
         mock_command2.get_metadata.return_value = CommandMetadata(
-            id="cmd",
-            name="Command 2",
-            description="Second command"
+            id="cmd", name="Command 2", description="Second command"
         )
 
         self.registry.register(mock_command1)

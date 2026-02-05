@@ -10,30 +10,23 @@ from pryces.presentation.console.commands.registry import CommandRegistry
 
 class TestInteractiveMenu:
 
-
     def setup_method(self):
         self.registry = CommandRegistry()
         self.input_stream = StringIO()
         self.output_stream = StringIO()
         self.menu = InteractiveMenu(
-            registry=self.registry,
-            input_stream=self.input_stream,
-            output_stream=self.output_stream
+            registry=self.registry, input_stream=self.input_stream, output_stream=self.output_stream
         )
 
     def test_display_menu_shows_all_commands(self):
         mock_command1 = Mock(spec=Command)
         mock_command1.get_metadata.return_value = CommandMetadata(
-            id="cmd1",
-            name="Command One",
-            description="First test command"
+            id="cmd1", name="Command One", description="First test command"
         )
 
         mock_command2 = Mock(spec=Command)
         mock_command2.get_metadata.return_value = CommandMetadata(
-            id="cmd2",
-            name="Command Two",
-            description="Second test command"
+            id="cmd2", name="Command Two", description="Second test command"
         )
 
         self.registry.register(mock_command1)
@@ -83,7 +76,7 @@ class TestInteractiveMenu:
     def test_collect_inputs_gathers_all_prompts(self):
         prompts = [
             InputPrompt(key="name", prompt="Enter name: ", validator=None),
-            InputPrompt(key="age", prompt="Enter age: ", validator=None)
+            InputPrompt(key="age", prompt="Enter age: ", validator=None),
         ]
 
         self.input_stream.write("John\n25\n")
@@ -97,9 +90,7 @@ class TestInteractiveMenu:
         def validate_number(value: str) -> bool:
             return value.isdigit()
 
-        prompts = [
-            InputPrompt(key="count", prompt="Enter count: ", validator=validate_number)
-        ]
+        prompts = [InputPrompt(key="count", prompt="Enter count: ", validator=validate_number)]
 
         self.input_stream.write("abc\nxyz\n42\n")
         self.input_stream.seek(0)
@@ -111,9 +102,7 @@ class TestInteractiveMenu:
         assert output.count("Invalid input format") == 2
 
     def test_collect_inputs_rejects_empty_input(self):
-        prompts = [
-            InputPrompt(key="value", prompt="Enter value: ", validator=None)
-        ]
+        prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]
 
         self.input_stream.write("\n\ntest\n")
         self.input_stream.seek(0)
@@ -125,9 +114,7 @@ class TestInteractiveMenu:
         assert "cannot be empty" in output
 
     def test_collect_inputs_returns_none_on_eof(self):
-        prompts = [
-            InputPrompt(key="value", prompt="Enter value: ", validator=None)
-        ]
+        prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]
 
         inputs = self.menu._collect_inputs(prompts)
 
@@ -136,9 +123,7 @@ class TestInteractiveMenu:
     def test_execute_command_collects_inputs_and_executes(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = [
             InputPrompt(key="symbol", prompt="Enter symbol: ", validator=None)
@@ -158,9 +143,7 @@ class TestInteractiveMenu:
     def test_execute_command_handles_exception(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = []
         mock_command.execute.side_effect = Exception("Test error")
@@ -174,9 +157,7 @@ class TestInteractiveMenu:
     def test_execute_command_handles_cancelled_input(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = [
             InputPrompt(key="value", prompt="Enter value: ", validator=None)
@@ -191,9 +172,7 @@ class TestInteractiveMenu:
     def test_execute_command_prompts_to_continue(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = []
         mock_command.execute.return_value = '{"success": true}'
@@ -209,9 +188,7 @@ class TestInteractiveMenu:
     def test_run_loops_until_exit_selected(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = []
         mock_command.execute.return_value = '{"success": true}'
@@ -230,9 +207,7 @@ class TestInteractiveMenu:
     def test_run_handles_invalid_selection(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
 
         self.registry.register(mock_command)
@@ -248,9 +223,7 @@ class TestInteractiveMenu:
     def test_run_handles_eof_gracefully(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(
-            id="test",
-            name="Test Command",
-            description="Test"
+            id="test", name="Test Command", description="Test"
         )
 
         self.registry.register(mock_command)

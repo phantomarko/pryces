@@ -1,9 +1,3 @@
-"""Factories for creating console command instances.
-
-This module provides factory classes for creating command instances with
-their required dependencies properly wired up.
-"""
-
 from ....application.providers import StockPriceProvider
 from ....application.use_cases.get_stock_price import GetStockPrice
 from ....application.use_cases.get_stocks_prices import GetStocksPrices
@@ -14,8 +8,6 @@ from .registry import CommandRegistry
 
 
 class CommandFactory:
-    """Factory for creating console command instances with their dependencies."""
-
     def __init__(self, stock_price_provider: StockPriceProvider) -> None:
         self._stock_price_provider = stock_price_provider
 

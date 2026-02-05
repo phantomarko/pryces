@@ -86,40 +86,6 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
 3. **No restating**: `def __init__()` → "Initialize X" adds zero value
 4. **Comments explain reasoning**: Use them for business logic, heuristics, or non-obvious constraints
 
-**Examples:**
-```python
-# ✗ BAD - Just restates code
-def __init__(self, provider: StockPriceProvider) -> None:
-    """Initialize with provider.
-
-    Args:
-        provider: The stock price provider
-    """
-    self._provider = provider
-
-# ✓ GOOD - Type hint is enough
-def __init__(self, provider: StockPriceProvider) -> None:
-    self._provider = provider
-
-# ✗ BAD - Restates method name
-def get_metadata(self) -> CommandMetadata:
-    """Return metadata describing this command."""
-    pass
-
-# ✓ GOOD - Signature is the contract
-@abstractmethod
-def get_metadata(self) -> CommandMetadata:
-    pass
-
-# ✓ GOOD - Explains WHY (business logic)
-if len(info) <= 3:  # Yahoo Finance returns ≤3 fields for invalid symbols
-    return None
-```
-
-**Keep these docstrings:**
-- **Module/class docstrings** explaining purpose and responsibility
-- **Method docstrings** that document contracts beyond what the signature shows (raises, side effects, special return semantics)
-
 ## Pre-Commit Requirements
 
 Before creating any commit, ensure the following:

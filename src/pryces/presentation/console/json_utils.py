@@ -1,5 +1,3 @@
-"""JSON utilities for console output formatting."""
-
 import json
 from decimal import Decimal
 from typing import Any
@@ -18,9 +16,9 @@ class DecimalEncoder(json.JSONEncoder):
 
 
 def to_json(data: dict, **kwargs) -> str:
-    if 'indent' not in kwargs:
-        kwargs['indent'] = 2
+    if "indent" not in kwargs:
+        kwargs["indent"] = 2
 
-    kwargs['cls'] = DecimalEncoder
+    kwargs["cls"] = DecimalEncoder
 
     return json.dumps(data, **kwargs)

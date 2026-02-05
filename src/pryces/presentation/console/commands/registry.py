@@ -1,12 +1,8 @@
-"""Command registry for managing available console commands."""
-
 from typing import Dict
 from .base import Command
 
 
 class CommandRegistry:
-    """Registry of available console commands."""
-
     def __init__(self) -> None:
         self._commands: Dict[str, Command] = {}
 

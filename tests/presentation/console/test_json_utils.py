@@ -8,7 +8,6 @@ from pryces.presentation.console.json_utils import DecimalEncoder, to_json
 
 class TestDecimalEncoder:
 
-
     def test_encodes_decimal_as_string(self):
         data = {"price": Decimal("123.45")}
         result = json.dumps(data, cls=DecimalEncoder)
@@ -26,12 +25,7 @@ class TestDecimalEncoder:
         assert parsed == data
 
     def test_handles_nested_decimals(self):
-        data = {
-            "outer": {
-                "inner": Decimal("99.99"),
-                "list": [Decimal("1.1"), Decimal("2.2")]
-            }
-        }
+        data = {"outer": {"inner": Decimal("99.99"), "list": [Decimal("1.1"), Decimal("2.2")]}}
         result = json.dumps(data, cls=DecimalEncoder)
         parsed = json.loads(result)
         assert parsed["outer"]["inner"] == "99.99"
@@ -39,7 +33,6 @@ class TestDecimalEncoder:
 
 
 class TestToJson:
-
 
     def test_returns_formatted_json_string(self):
         data = {"key": "value"}
@@ -66,11 +59,7 @@ class TestToJson:
     def test_handles_complex_data_with_decimals(self):
         data = {
             "success": True,
-            "data": {
-                "symbol": "AAPL",
-                "price": Decimal("150.25"),
-                "change": Decimal("-2.50")
-            }
+            "data": {"symbol": "AAPL", "price": Decimal("150.25"), "change": Decimal("-2.50")},
         }
         result = to_json(data)
         parsed = json.loads(result)

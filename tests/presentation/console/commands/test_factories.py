@@ -11,7 +11,6 @@ from tests.fixtures.factories import create_stock_price
 
 class TestCommandFactory:
 
-
     def test_init_accepts_custom_provider(self):
         custom_provider = Mock(spec=StockPriceProvider)
 
@@ -40,7 +39,7 @@ class TestCommandFactory:
             fiftyDayAverage=Decimal("100.00"),
             twoHundredDayAverage=Decimal("100.00"),
             fiftyTwoWeekHigh=Decimal("120.00"),
-            fiftyTwoWeekLow=Decimal("80.00")
+            fiftyTwoWeekLow=Decimal("80.00"),
         )
         factory = CommandFactory(stock_price_provider=mock_provider)
 
@@ -54,9 +53,7 @@ class TestCommandFactory:
     def test_create_get_stock_price_command_with_default_provider(self):
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stock_price.return_value = create_stock_price(
-            "AAPL",
-            Decimal("150.25"),
-            name="Apple Inc."
+            "AAPL", Decimal("150.25"), name="Apple Inc."
         )
         factory = CommandFactory(stock_price_provider=mock_provider)
 
@@ -89,9 +86,7 @@ class TestCommandFactory:
     def test_registry_commands_are_functional(self):
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stock_price.return_value = create_stock_price(
-            "AAPL",
-            Decimal("150.25"),
-            name="Apple Inc."
+            "AAPL", Decimal("150.25"), name="Apple Inc."
         )
         factory = CommandFactory(stock_price_provider=mock_provider)
 
@@ -114,7 +109,7 @@ class TestCommandFactory:
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stocks_prices.return_value = [
             create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
-            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc.")
+            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
         ]
         factory = CommandFactory(stock_price_provider=mock_provider)
 

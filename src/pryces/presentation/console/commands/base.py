@@ -1,5 +1,3 @@
-"""Base command interface for console commands."""
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -7,7 +5,6 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class CommandMetadata:
-    """Metadata describing a command for menu display."""
     id: str
     name: str
     description: str
@@ -15,15 +12,12 @@ class CommandMetadata:
 
 @dataclass(frozen=True)
 class InputPrompt:
-    """Specification for collecting input from user."""
     key: str
     prompt: str
     validator: Callable[[str], bool] | None = None
 
 
 class Command(ABC):
-    """Base interface for all console commands."""
-
     @abstractmethod
     def get_metadata(self) -> CommandMetadata:
         pass

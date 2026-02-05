@@ -29,7 +29,7 @@ class TestGetStockPrice:
             fiftyDayAverage=Decimal("145.50"),
             twoHundredDayAverage=Decimal("140.00"),
             fiftyTwoWeekHigh=Decimal("180.00"),
-            fiftyTwoWeekLow=Decimal("120.00")
+            fiftyTwoWeekLow=Decimal("120.00"),
         )
         self.mock_provider.get_stock_price.return_value = expected_response
 
@@ -71,10 +71,7 @@ class TestGetStockPrice:
 
     def test_handle_accepts_response_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = StockPriceResponse(
-            symbol=symbol,
-            currentPrice=Decimal("150.25")
-        )
+        minimal_response = StockPriceResponse(symbol=symbol, currentPrice=Decimal("150.25"))
         self.mock_provider.get_stock_price.return_value = minimal_response
 
         use_case = GetStockPrice(provider=self.mock_provider)

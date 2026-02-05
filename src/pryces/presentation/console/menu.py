@@ -1,5 +1,3 @@
-"""Interactive menu system for console commands."""
-
 import sys
 from typing import TextIO
 
@@ -8,20 +6,17 @@ from .commands.registry import CommandRegistry
 
 
 class InteractiveMenu:
-    """Interactive menu for selecting and executing console commands."""
-
     def __init__(
         self,
         registry: CommandRegistry,
         input_stream: TextIO = sys.stdin,
-        output_stream: TextIO = sys.stdout
+        output_stream: TextIO = sys.stdout,
     ) -> None:
         self._registry = registry
         self._input = input_stream
         self._output = output_stream
 
     def run(self) -> None:
-        """Run the interactive menu loop."""
         while True:
             self._display_menu()
 

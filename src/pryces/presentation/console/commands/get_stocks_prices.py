@@ -1,5 +1,3 @@
-"""Console command for getting multiple stock prices."""
-
 import logging
 from dataclasses import asdict
 
@@ -12,22 +10,16 @@ def validate_symbols(value: str) -> bool:
     if not value or not value.strip():
         return False
 
-    symbols = [s.strip() for s in value.split(',')]
+    symbols = [s.strip() for s in value.split(",")]
     return all(symbol and len(symbol) <= 10 for symbol in symbols)
 
 
 def parse_symbols_input(value: str) -> list[str]:
-    symbols = [s.strip().upper() for s in value.split(',')]
+    symbols = [s.strip().upper() for s in value.split(",")]
     return [s for s in symbols if s]
 
 
 class GetStocksPricesCommand(Command):
-    """Console command for retrieving multiple stock prices.
-
-    This command provides a CLI interface to the GetStocksPrices use case,
-    outputting results as JSON for easy parsing and integration.
-    """
-
     def __init__(self, get_stocks_prices_use_case: GetStocksPrices) -> None:
         self._get_stocks_prices = get_stocks_prices_use_case
         self._logger = logging.getLogger(__name__)
@@ -36,7 +28,7 @@ class GetStocksPricesCommand(Command):
         return CommandMetadata(
             id="get_stocks_prices",
             name="Get Multiple Stock Prices",
-            description="Retrieve current prices for multiple stock symbols"
+            description="Retrieve current prices for multiple stock symbols",
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
@@ -44,16 +36,11 @@ class GetStocksPricesCommand(Command):
             InputPrompt(
                 key="symbols",
                 prompt="Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): ",
-                validator=validate_symbols
+                validator=validate_symbols,
             )
         ]
 
     def execute(self, symbols: str = None, **kwargs) -> str:
-        """Execute the command to get stock prices for multiple symbols.
-
-        Returns:
-            JSON string with success/error structure
-        """
         self._logger.info(f"Fetching stock prices for symbols: {symbols}")
 
         try:
@@ -61,7 +48,9 @@ class GetStocksPricesCommand(Command):
             request = GetStocksPricesRequest(symbols=symbol_list)
             responses = self._get_stocks_prices.handle(request)
 
-            self._logger.info(f"Successfully retrieved prices for {len(responses)}/{len(symbol_list)} symbols")
+            self._logger.info(
+                f"Successfully retrieved prices for {len(responses)}/{len(symbol_list)} symbols"
+            )
 
             # Build summary statistics
             requested_count = len(symbol_list)
@@ -74,8 +63,8 @@ class GetStocksPricesCommand(Command):
                 "summary": {
                     "requested": requested_count,
                     "successful": successful_count,
-                    "failed": failed_count
-                }
+                    "failed": failed_count,
+                },
             }
 
             return to_json(result)
@@ -87,8 +76,8 @@ class GetStocksPricesCommand(Command):
                 "success": False,
                 "error": {
                     "code": "INTERNAL_ERROR",
-                    "message": f"An unexpected error occurred: {str(e)}"
-                }
+                    "message": f"An unexpected error occurred: {str(e)}",
+                },
             }
 
             return to_json(result)

@@ -12,7 +12,6 @@ from tests.fixtures.factories import create_stock_price
 
 class TestGetStocksPrices:
 
-
     def setup_method(self):
         self.mock_provider = Mock(spec=StockPriceProvider)
 
@@ -20,7 +19,7 @@ class TestGetStocksPrices:
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
             create_stock_price("GOOGL", Decimal("2847.50")),
-            create_stock_price("MSFT", Decimal("350.75"))
+            create_stock_price("MSFT", Decimal("350.75")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL", "MSFT"])
@@ -36,7 +35,7 @@ class TestGetStocksPrices:
         # Provider already filtered out None values
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("MSFT", Decimal("350.75"))
+            create_stock_price("MSFT", Decimal("350.75")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "INVALID", "MSFT"])
@@ -71,7 +70,7 @@ class TestGetStocksPrices:
     def test_handle_processes_duplicate_symbols(self):
         responses = [
             create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("AAPL", Decimal("150.25"))
+            create_stock_price("AAPL", Decimal("150.25")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "AAPL"])
@@ -85,7 +84,7 @@ class TestGetStocksPrices:
     def test_handle_with_responses_containing_minimal_fields(self):
         responses = [
             StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50"))
+            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL"])
