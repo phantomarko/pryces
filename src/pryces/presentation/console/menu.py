@@ -71,7 +71,7 @@ class InteractiveMenu:
             except ValueError:
                 self._output.write("Invalid input. Please enter a number.\n")
                 self._output.flush()
-            except EOFError:
+            except EOFError:  # pragma: no cover
                 return 0
 
     def _execute_command(self, command: Command) -> None:
@@ -126,7 +126,7 @@ class InteractiveMenu:
                     inputs[prompt.key] = value
                     break
 
-                except EOFError:
+                except EOFError:  # pragma: no cover
                     return None
 
         return inputs

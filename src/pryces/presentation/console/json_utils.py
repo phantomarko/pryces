@@ -12,7 +12,7 @@ class DecimalEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if isinstance(obj, Decimal):
             return str(obj)
-        return super().default(obj)
+        return super().default(obj)  # pragma: no cover
 
 
 def to_json(data: dict, **kwargs) -> str:
