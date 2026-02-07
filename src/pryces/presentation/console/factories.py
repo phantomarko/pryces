@@ -1,12 +1,12 @@
-from ....application.messages import MessageSender
-from ....application.providers import StockPriceProvider
-from ....application.use_cases.get_stock_price import GetStockPrice
-from ....application.use_cases.get_stocks_prices import GetStocksPrices
-from ....application.use_cases.send_messages import SendMessages
-from .get_stock_price import GetStockPriceCommand
-from .get_stocks_prices import GetStocksPricesCommand
-from .registry import CommandRegistry
-from .send_messages import SendMessagesCommand
+from ...application.messages import MessageSender
+from ...application.providers import StockPriceProvider
+from ...application.use_cases.get_stock_price import GetStockPrice
+from ...application.use_cases.get_stocks_prices import GetStocksPrices
+from ...application.use_cases.send_messages import SendMessages
+from .commands.get_stock_price import GetStockPriceCommand
+from .commands.get_stocks_prices import GetStocksPricesCommand
+from .commands.registry import CommandRegistry
+from .commands.send_messages import SendMessagesCommand
 
 
 class CommandFactory:

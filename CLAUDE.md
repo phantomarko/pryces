@@ -98,7 +98,7 @@ Presentation → Application → Domain
 - `commands/get_stock_price.py` — `GetStockPriceCommand`
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
-- `commands/factories.py` — `CommandFactory` (DI + object creation)
+- `factories.py` — `CommandFactory` (DI + object creation)
 - `json_utils.py` — `DecimalEncoder`, `to_json()` helper
 
 ### Key Patterns

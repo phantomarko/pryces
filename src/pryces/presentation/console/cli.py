@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from ...infrastructure.messages import TelegramMessageSender, TelegramSettings
 from ...infrastructure.providers import YahooFinanceProvider
-from .commands.factories import CommandFactory
+from .factories import CommandFactory
 from .menu import InteractiveMenu
 
 

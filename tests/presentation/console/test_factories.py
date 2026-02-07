@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from pryces.application.messages import MessageSender
 from pryces.application.providers import StockPriceProvider, StockPriceResponse
-from pryces.presentation.console.commands.factories import CommandFactory
+from pryces.presentation.console.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.commands.registry import CommandRegistry
