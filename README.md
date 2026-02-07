@@ -38,7 +38,7 @@ This project follows clean architecture with clear separation of concerns:
 
 ### Requirements
 
-- Python 3.10 or higher
+- Python 3.11 or higher
 
 ### Installation
 
@@ -348,7 +348,7 @@ black src/pryces/domain/entities.py
 
 Black is configured in `pyproject.toml` with:
 - Line length: 100 characters
-- Target Python versions: 3.10, 3.11, 3.12
+- Target Python versions: 3.11, 3.12
 
 ### Working with Virtual Environment
 
