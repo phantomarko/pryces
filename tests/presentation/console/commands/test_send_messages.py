@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
-from pryces.application.use_cases.send_messages import SendMessages, SendMessagesResponse
+from pryces.application.interfaces import MessageSender
+from pryces.application.use_cases.send_messages import SendMessages
 from pryces.presentation.console.commands.send_messages import SendMessagesCommand
 from pryces.presentation.console.commands.base import CommandMetadata
 
@@ -8,8 +9,9 @@ from pryces.presentation.console.commands.base import CommandMetadata
 class TestSendMessagesCommand:
 
     def setup_method(self):
-        self.mock_use_case = Mock(spec=SendMessages)
-        self.command = SendMessagesCommand(self.mock_use_case)
+        self.mock_sender = Mock(spec=MessageSender)
+        use_case = SendMessages(sender=self.mock_sender)
+        self.command = SendMessagesCommand(use_case)
 
     def test_get_metadata_returns_correct_metadata(self):
         metadata = self.command.get_metadata()
@@ -25,21 +27,21 @@ class TestSendMessagesCommand:
         assert prompts == []
 
     def test_execute_returns_success_message_when_notification_sent(self):
-        self.mock_use_case.handle.return_value = SendMessagesResponse(successful=1, failed=0)
+        self.mock_sender.send_message.return_value = True
 
         result = self.command.execute()
 
         assert result == "Test notification sent successfully."
 
     def test_execute_returns_failure_message_when_notification_fails(self):
-        self.mock_use_case.handle.return_value = SendMessagesResponse(successful=0, failed=1)
+        self.mock_sender.send_message.return_value = False
 
         result = self.command.execute()
 
         assert result == "Test notification failed."
 
     def test_execute_handles_unexpected_exception(self):
-        self.mock_use_case.handle.side_effect = Exception("Connection error")
+        self.mock_sender.send_message.side_effect = Exception("Connection error")
 
         result = self.command.execute()
 

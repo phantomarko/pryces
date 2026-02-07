@@ -4,26 +4,27 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.dtos import StockPriceDTO
-from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
+from pryces.application.exceptions import StockInformationIncomplete
+from pryces.application.interfaces import StockPriceProvider
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
     validate_symbol,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
-from tests.fixtures.factories import create_stock_price_dto
+from tests.fixtures.factories import create_stock_price
 
 
 class TestGetStockPriceCommand:
 
     def setup_method(self):
-        self.mock_use_case = Mock(spec=GetStockPrice)
-        self.command = GetStockPriceCommand(self.mock_use_case)
+        self.mock_provider = Mock(spec=StockPriceProvider)
+        use_case = GetStockPrice(provider=self.mock_provider)
+        self.command = GetStockPriceCommand(use_case)
 
     def test_execute_returns_success_json_with_stock_data(self):
         symbol = "AAPL"
-        stock_response = create_stock_price_dto(
+        self.mock_provider.get_stock_price.return_value = create_stock_price(
             symbol,
             Decimal("150.25"),
             name="Apple Inc.",
@@ -36,7 +37,6 @@ class TestGetStockPriceCommand:
             fiftyTwoWeekHigh=Decimal("180.00"),
             fiftyTwoWeekLow=Decimal("120.00"),
         )
-        self.mock_use_case.handle.return_value = stock_response
 
         result = self.command.execute(symbol)
 
@@ -49,7 +49,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_decimal_precision_in_json(self):
         symbol = "GOOGL"
-        stock_response = create_stock_price_dto(
+        self.mock_provider.get_stock_price.return_value = create_stock_price(
             symbol,
             Decimal("2847.123456789"),
             name="Alphabet Inc.",
@@ -62,7 +62,6 @@ class TestGetStockPriceCommand:
             fiftyTwoWeekHigh=Decimal("3000.00"),
             fiftyTwoWeekLow=Decimal("2500.00"),
         )
-        self.mock_use_case.handle.return_value = stock_response
 
         result = self.command.execute(symbol)
 
@@ -71,7 +70,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_error_json_when_stock_not_found(self):
         symbol = "INVALID"
-        self.mock_use_case.handle.side_effect = StockNotFound(symbol)
+        self.mock_provider.get_stock_price.return_value = None
 
         result = self.command.execute(symbol)
 
@@ -82,7 +81,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_error_json_when_stock_information_incomplete(self):
         symbol = "AAPL"
-        self.mock_use_case.handle.side_effect = StockInformationIncomplete(symbol)
+        self.mock_provider.get_stock_price.side_effect = StockInformationIncomplete(symbol)
 
         result = self.command.execute(symbol)
 
@@ -94,7 +93,7 @@ class TestGetStockPriceCommand:
     def test_execute_returns_error_json_on_unexpected_exception(self):
         symbol = "AAPL"
         error_message = "Database connection failed"
-        self.mock_use_case.handle.side_effect = Exception(error_message)
+        self.mock_provider.get_stock_price.side_effect = Exception(error_message)
 
         result = self.command.execute(symbol)
 
@@ -103,32 +102,9 @@ class TestGetStockPriceCommand:
         assert result_data["error"]["code"] == "INTERNAL_ERROR"
         assert error_message in result_data["error"]["message"]
 
-    def test_execute_calls_use_case_with_correct_symbol(self):
-        symbol = "TSLA"
-        stock_response = create_stock_price_dto(
-            symbol,
-            Decimal("200.00"),
-            name="Tesla, Inc.",
-            previousClosePrice=Decimal("198.50"),
-            openPrice=Decimal("199.00"),
-            dayHigh=Decimal("202.00"),
-            dayLow=Decimal("197.00"),
-            fiftyDayAverage=Decimal("195.00"),
-            twoHundredDayAverage=Decimal("190.00"),
-            fiftyTwoWeekHigh=Decimal("250.00"),
-            fiftyTwoWeekLow=Decimal("150.00"),
-        )
-        self.mock_use_case.handle.return_value = stock_response
-
-        self.command.execute(symbol)
-
-        self.mock_use_case.handle.assert_called_once()
-        call_args = self.mock_use_case.handle.call_args[0][0]
-        assert call_args.symbol == symbol
-
     def test_execute_returns_valid_json_format(self):
         symbol = "MSFT"
-        stock_response = create_stock_price_dto(
+        self.mock_provider.get_stock_price.return_value = create_stock_price(
             symbol,
             Decimal("350.50"),
             name="Microsoft Corporation",
@@ -141,7 +117,6 @@ class TestGetStockPriceCommand:
             fiftyTwoWeekHigh=Decimal("380.00"),
             fiftyTwoWeekLow=Decimal("300.00"),
         )
-        self.mock_use_case.handle.return_value = stock_response
 
         result = self.command.execute(symbol)
 
@@ -152,8 +127,20 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_response_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = StockPriceDTO(symbol=symbol, currentPrice=Decimal("150.25"))
-        self.mock_use_case.handle.return_value = minimal_response
+        self.mock_provider.get_stock_price.return_value = create_stock_price(
+            symbol,
+            Decimal("150.25"),
+            name=None,
+            currency=None,
+            previousClosePrice=None,
+            openPrice=None,
+            dayHigh=None,
+            dayLow=None,
+            fiftyDayAverage=None,
+            twoHundredDayAverage=None,
+            fiftyTwoWeekHigh=None,
+            fiftyTwoWeekLow=None,
+        )
 
         result = self.command.execute(symbol)
 
@@ -196,8 +183,9 @@ class TestGetStockPriceCommand:
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbol = "AAPL"
-        stock_response = create_stock_price_dto(symbol, Decimal("150.25"), name="Apple Inc.")
-        self.mock_use_case.handle.return_value = stock_response
+        self.mock_provider.get_stock_price.return_value = create_stock_price(
+            symbol, Decimal("150.25"), name="Apple Inc."
+        )
 
         result = self.command.execute(symbol=symbol, extra_arg="ignored")
 
