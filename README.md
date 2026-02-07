@@ -1,6 +1,27 @@
 # Pryces
 
-A Python project built with clean architecture principles.
+A Python CLI tool for retrieving stock price information, built with clean architecture principles.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Interactive Menu](#interactive-menu)
+  - [Get Stock Price](#get-stock-price)
+  - [Get Multiple Stock Prices](#get-multiple-stock-prices)
+- [Development](#development)
+  - [Running Tests](#running-tests)
+  - [Code Formatting with Black](#code-formatting-with-black)
+  - [Working with Virtual Environment](#working-with-virtual-environment)
+- [Project Principles](#project-principles)
+
+## Overview
+
+Pryces is a stock price information system that provides real-time and historical data for stocks through an interactive command-line interface. The project demonstrates clean architecture principles with clear separation of concerns and minimal dependencies.
 
 ## Architecture
 
@@ -11,13 +32,13 @@ This project follows clean architecture with clear separation of concerns:
 - **Infrastructure**: External dependencies (databases, APIs, file systems)
 - **Presentation**: User interfaces (CLI, web, API endpoints)
 
-## Setup
+## Getting Started
 
 ### Requirements
 
 - Python 3.10 or higher
 
-### Quick Start
+### Installation
 
 1. Create and activate virtual environment:
 ```bash
@@ -34,85 +55,7 @@ This will install:
 - The `pryces` package in editable mode
 - Development dependencies (pytest, etc.)
 
-## Development
-
-### Running Tests
-
-Run all tests:
-```bash
-pytest
-```
-
-Run tests with verbose output:
-```bash
-pytest -v
-```
-
-Run specific test file:
-```bash
-pytest tests/application/use_cases/get_stock_price/test_get_stock_price.py -v
-```
-
-Run tests with coverage:
-```bash
-pytest --cov=pryces --cov-report=html
-```
-
-### Code Formatting with Black
-
-This project uses [Black](https://black.readthedocs.io/) for consistent code formatting.
-
-**Automatic Formatting (Recommended):**
-
-Install the pre-commit hook to automatically format code on every commit:
-```bash
-cp scripts/hooks/pre-commit .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
-
-Once installed, Black will automatically format your staged Python files and include them in your commit.
-
-**Manual Formatting:**
-
-Format all source and test files:
-```bash
-black src/ tests/
-```
-
-Check formatting without making changes:
-```bash
-black --check src/ tests/
-```
-
-Preview formatting changes:
-```bash
-black --diff src/ tests/
-```
-
-Format a specific file:
-```bash
-black src/pryces/domain/entities.py
-```
-
-**Configuration:**
-
-Black is configured in `pyproject.toml` with:
-- Line length: 100 characters
-- Target Python versions: 3.10, 3.11, 3.12
-
-### Working with Virtual Environment
-
-Activate the virtual environment before running tests or installing dependencies:
-```bash
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-Deactivate when done:
-```bash
-deactivate
-```
-
-## Console Commands
+## Usage
 
 ### Interactive Menu
 
@@ -296,6 +239,84 @@ Example output (partial success with some invalid symbols):
   - `requested`: Total number of symbols requested
   - `successful`: Number of symbols successfully fetched
   - `failed`: Number of symbols that failed (invalid or data unavailable)
+
+## Development
+
+### Running Tests
+
+Run all tests:
+```bash
+pytest
+```
+
+Run tests with verbose output:
+```bash
+pytest -v
+```
+
+Run specific test file:
+```bash
+pytest tests/application/use_cases/get_stock_price/test_get_stock_price.py -v
+```
+
+Run tests with coverage:
+```bash
+pytest --cov=pryces --cov-report=html
+```
+
+### Code Formatting with Black
+
+This project uses [Black](https://black.readthedocs.io/) for consistent code formatting.
+
+**Automatic Formatting (Recommended):**
+
+Install the pre-commit hook to automatically format code on every commit:
+```bash
+cp scripts/hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+Once installed, Black will automatically format your staged Python files and include them in your commit.
+
+**Manual Formatting:**
+
+Format all source and test files:
+```bash
+black src/ tests/
+```
+
+Check formatting without making changes:
+```bash
+black --check src/ tests/
+```
+
+Preview formatting changes:
+```bash
+black --diff src/ tests/
+```
+
+Format a specific file:
+```bash
+black src/pryces/domain/entities.py
+```
+
+**Configuration:**
+
+Black is configured in `pyproject.toml` with:
+- Line length: 100 characters
+- Target Python versions: 3.10, 3.11, 3.12
+
+### Working with Virtual Environment
+
+Activate the virtual environment before running tests or installing dependencies:
+```bash
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+Deactivate when done:
+```bash
+deactivate
+```
 
 ## Project Principles
 
