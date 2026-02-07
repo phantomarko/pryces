@@ -79,7 +79,8 @@ Presentation → Application → Domain
             Infrastructure (implements application ports)
 ```
 
-**Domain** (`src/pryces/domain/`) — Currently minimal. Reserved for future value objects/entities.
+**Domain** (`src/pryces/domain/`) — Core domain model:
+- `stocks.py` — `Stock` frozen dataclass (symbol, currentPrice + 10 optional price fields using Decimal)
 
 **Application** (`src/pryces/application/`) — Use cases and port interfaces:
 - `interfaces.py` — `StockProvider` ABC (port), `StockPrice` frozen dataclass (DTO with Decimal fields), `MessageSender` ABC (port)
