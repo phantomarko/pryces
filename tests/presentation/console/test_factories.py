@@ -1,13 +1,13 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.interfaces import StockPriceProvider, StockPrice, MessageSender
+from pryces.application.interfaces import StockPriceProvider, MessageSender
 from pryces.presentation.console.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.commands.registry import CommandRegistry
 from pryces.presentation.console.commands.send_messages import SendMessagesCommand
-from tests.fixtures.factories import create_stock_price
+from tests.fixtures.factories import create_stock
 
 
 class TestCommandFactory:
@@ -33,7 +33,7 @@ class TestCommandFactory:
 
     def test_create_get_stock_price_command_wires_dependencies_correctly(self):
         mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = create_stock_price(
+        mock_provider.get_stock_price.return_value = create_stock(
             "TEST",
             Decimal("100.00"),
             name="Test Company",
@@ -59,7 +59,7 @@ class TestCommandFactory:
 
     def test_create_get_stock_price_command_with_default_provider(self):
         mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = create_stock_price(
+        mock_provider.get_stock_price.return_value = create_stock(
             "AAPL", Decimal("150.25"), name="Apple Inc."
         )
         factory = CommandFactory(
@@ -98,7 +98,7 @@ class TestCommandFactory:
 
     def test_registry_commands_are_functional(self):
         mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = create_stock_price(
+        mock_provider.get_stock_price.return_value = create_stock(
             "AAPL", Decimal("150.25"), name="Apple Inc."
         )
         factory = CommandFactory(
@@ -125,8 +125,8 @@ class TestCommandFactory:
     def test_create_get_stocks_prices_command_wires_dependencies_correctly(self):
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
-            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
         ]
         factory = CommandFactory(
             stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
@@ -166,9 +166,9 @@ class TestCommandFactory:
     def test_registry_get_stocks_prices_command_is_functional(self):
         mock_provider = Mock(spec=StockPriceProvider)
         mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
-            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
-            create_stock_price("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
         ]
         factory = CommandFactory(
             stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)

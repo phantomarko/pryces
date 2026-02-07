@@ -7,8 +7,9 @@ from pryces.application.use_cases.get_stocks_prices import (
     GetStocksPrices,
     GetStocksPricesRequest,
 )
-from pryces.application.interfaces import StockPriceProvider, StockPrice
-from tests.fixtures.factories import create_stock_price
+from pryces.application.interfaces import StockPriceProvider
+from pryces.domain.stocks import Stock
+from tests.fixtures.factories import create_stock
 
 
 class TestGetStocksPrices:
@@ -18,9 +19,9 @@ class TestGetStocksPrices:
 
     def test_handle_returns_dtos_for_all_successful_results(self):
         responses = [
-            create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("GOOGL", Decimal("2847.50")),
-            create_stock_price("MSFT", Decimal("350.75")),
+            create_stock("AAPL", Decimal("150.25")),
+            create_stock("GOOGL", Decimal("2847.50")),
+            create_stock("MSFT", Decimal("350.75")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL", "MSFT"])
@@ -37,8 +38,8 @@ class TestGetStocksPrices:
 
     def test_handle_filters_out_not_found_symbols(self):
         responses = [
-            create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("MSFT", Decimal("350.75")),
+            create_stock("AAPL", Decimal("150.25")),
+            create_stock("MSFT", Decimal("350.75")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "INVALID", "MSFT"])
@@ -72,8 +73,8 @@ class TestGetStocksPrices:
 
     def test_handle_processes_duplicate_symbols(self):
         responses = [
-            create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("AAPL", Decimal("150.25")),
+            create_stock("AAPL", Decimal("150.25")),
+            create_stock("AAPL", Decimal("150.25")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "AAPL"])
@@ -87,8 +88,8 @@ class TestGetStocksPrices:
 
     def test_handle_returns_dtos_with_minimal_fields(self):
         responses = [
-            StockPrice(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPrice(symbol="GOOGL", currentPrice=Decimal("2847.50")),
+            Stock(symbol="AAPL", currentPrice=Decimal("150.25")),
+            Stock(symbol="GOOGL", currentPrice=Decimal("2847.50")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL"])

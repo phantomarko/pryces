@@ -1,12 +1,12 @@
 from decimal import Decimal
 
 from pryces.application.dtos import StockPriceDTO
-from pryces.application.interfaces import StockPrice
-from tests.fixtures.factories import create_stock_price
+from pryces.domain.stocks import Stock
+from tests.fixtures.factories import create_stock
 
 
 class TestStockPriceDTO:
-    def test_to_stock_price_returns_equivalent_stock_price(self):
+    def test_to_stock_returns_equivalent_stock(self):
         dto = StockPriceDTO(
             symbol="AAPL",
             currentPrice=Decimal("150.25"),
@@ -22,9 +22,9 @@ class TestStockPriceDTO:
             fiftyTwoWeekLow=Decimal("120.00"),
         )
 
-        result = dto.to_stock_price()
+        result = dto.to_stock()
 
-        assert isinstance(result, StockPrice)
+        assert isinstance(result, Stock)
         assert result.symbol == "AAPL"
         assert result.currentPrice == Decimal("150.25")
         assert result.name == "Apple Inc."
@@ -38,40 +38,40 @@ class TestStockPriceDTO:
         assert result.fiftyTwoWeekHigh == Decimal("180.00")
         assert result.fiftyTwoWeekLow == Decimal("120.00")
 
-    def test_to_stock_price_with_minimal_fields(self):
+    def test_to_stock_with_minimal_fields(self):
         dto = StockPriceDTO(symbol="AAPL", currentPrice=Decimal("150.25"))
 
-        result = dto.to_stock_price()
+        result = dto.to_stock()
 
-        assert isinstance(result, StockPrice)
+        assert isinstance(result, Stock)
         assert result.symbol == "AAPL"
         assert result.currentPrice == Decimal("150.25")
         assert result.name is None
         assert result.currency is None
 
-    def test_from_stock_price_returns_equivalent_dto(self):
-        stock_price = create_stock_price("AAPL", Decimal("150.25"))
+    def test_from_stock_returns_equivalent_dto(self):
+        stock = create_stock("AAPL", Decimal("150.25"))
 
-        result = StockPriceDTO.from_stock_price(stock_price)
+        result = StockPriceDTO.from_stock(stock)
 
         assert isinstance(result, StockPriceDTO)
-        assert result.symbol == stock_price.symbol
-        assert result.currentPrice == stock_price.currentPrice
-        assert result.name == stock_price.name
-        assert result.currency == stock_price.currency
-        assert result.previousClosePrice == stock_price.previousClosePrice
-        assert result.openPrice == stock_price.openPrice
-        assert result.dayHigh == stock_price.dayHigh
-        assert result.dayLow == stock_price.dayLow
-        assert result.fiftyDayAverage == stock_price.fiftyDayAverage
-        assert result.twoHundredDayAverage == stock_price.twoHundredDayAverage
-        assert result.fiftyTwoWeekHigh == stock_price.fiftyTwoWeekHigh
-        assert result.fiftyTwoWeekLow == stock_price.fiftyTwoWeekLow
+        assert result.symbol == stock.symbol
+        assert result.currentPrice == stock.currentPrice
+        assert result.name == stock.name
+        assert result.currency == stock.currency
+        assert result.previousClosePrice == stock.previousClosePrice
+        assert result.openPrice == stock.openPrice
+        assert result.dayHigh == stock.dayHigh
+        assert result.dayLow == stock.dayLow
+        assert result.fiftyDayAverage == stock.fiftyDayAverage
+        assert result.twoHundredDayAverage == stock.twoHundredDayAverage
+        assert result.fiftyTwoWeekHigh == stock.fiftyTwoWeekHigh
+        assert result.fiftyTwoWeekLow == stock.fiftyTwoWeekLow
 
-    def test_from_stock_price_with_minimal_fields(self):
-        stock_price = StockPrice(symbol="AAPL", currentPrice=Decimal("150.25"))
+    def test_from_stock_with_minimal_fields(self):
+        stock = Stock(symbol="AAPL", currentPrice=Decimal("150.25"))
 
-        result = StockPriceDTO.from_stock_price(stock_price)
+        result = StockPriceDTO.from_stock(stock)
 
         assert isinstance(result, StockPriceDTO)
         assert result.symbol == "AAPL"

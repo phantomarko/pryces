@@ -1,12 +1,12 @@
 from decimal import Decimal
 
 from pryces.application.dtos import StockPriceDTO
-from pryces.application.interfaces import StockPrice
+from pryces.domain.stocks import Stock
 
 
-def create_stock_price(
+def create_stock(
     symbol: str = "AAPL", current_price: Decimal = Decimal("150.00"), **overrides
-) -> StockPrice:
+) -> Stock:
     defaults = {
         "name": f"{symbol} Inc.",
         "currency": "USD",
@@ -20,10 +20,10 @@ def create_stock_price(
         "fiftyTwoWeekLow": current_price * Decimal("0.80"),
     }
 
-    return StockPrice(symbol=symbol, currentPrice=current_price, **{**defaults, **overrides})
+    return Stock(symbol=symbol, currentPrice=current_price, **{**defaults, **overrides})
 
 
 def create_stock_price_dto(
     symbol: str = "AAPL", current_price: Decimal = Decimal("150.00"), **overrides
 ) -> StockPriceDTO:
-    return StockPriceDTO.from_stock_price(create_stock_price(symbol, current_price, **overrides))
+    return StockPriceDTO.from_stock(create_stock(symbol, current_price, **overrides))

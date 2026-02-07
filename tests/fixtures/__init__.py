@@ -1,3 +1,3 @@
-from .factories import create_stock_price
+from .factories import create_stock
 
-__all__ = ["create_stock_price"]
+__all__ = ["create_stock"]

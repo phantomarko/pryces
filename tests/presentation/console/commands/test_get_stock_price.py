@@ -12,7 +12,7 @@ from pryces.presentation.console.commands.get_stock_price import (
     validate_symbol,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
-from tests.fixtures.factories import create_stock_price
+from tests.fixtures.factories import create_stock
 
 
 class TestGetStockPriceCommand:
@@ -24,7 +24,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_success_json_with_stock_data(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.return_value = create_stock_price(
+        self.mock_provider.get_stock_price.return_value = create_stock(
             symbol,
             Decimal("150.25"),
             name="Apple Inc.",
@@ -49,7 +49,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_decimal_precision_in_json(self):
         symbol = "GOOGL"
-        self.mock_provider.get_stock_price.return_value = create_stock_price(
+        self.mock_provider.get_stock_price.return_value = create_stock(
             symbol,
             Decimal("2847.123456789"),
             name="Alphabet Inc.",
@@ -104,7 +104,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_valid_json_format(self):
         symbol = "MSFT"
-        self.mock_provider.get_stock_price.return_value = create_stock_price(
+        self.mock_provider.get_stock_price.return_value = create_stock(
             symbol,
             Decimal("350.50"),
             name="Microsoft Corporation",
@@ -127,7 +127,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_response_with_minimal_fields(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.return_value = create_stock_price(
+        self.mock_provider.get_stock_price.return_value = create_stock(
             symbol,
             Decimal("150.25"),
             name=None,
@@ -183,7 +183,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.return_value = create_stock_price(
+        self.mock_provider.get_stock_price.return_value = create_stock(
             symbol, Decimal("150.25"), name="Apple Inc."
         )
 

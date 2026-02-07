@@ -1,13 +1,9 @@
-from __future__ import annotations
-
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from decimal import Decimal
-
-from pryces.domain.stocks import Stock
 
 
 @dataclass(frozen=True)
-class StockPriceDTO:
+class Stock:
     symbol: str
     currentPrice: Decimal
     name: str | None = None
@@ -20,10 +16,3 @@ class StockPriceDTO:
     twoHundredDayAverage: Decimal | None = None
     fiftyTwoWeekHigh: Decimal | None = None
     fiftyTwoWeekLow: Decimal | None = None
-
-    def to_stock(self) -> Stock:
-        return Stock(**asdict(self))
-
-    @staticmethod
-    def from_stock(stock: Stock) -> StockPriceDTO:
-        return StockPriceDTO(**asdict(stock))

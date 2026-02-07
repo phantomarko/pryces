@@ -5,12 +5,13 @@ import pytest
 
 from pryces.application.dtos import StockPriceDTO
 from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
-from pryces.application.interfaces import StockPriceProvider, StockPrice
+from pryces.application.interfaces import StockPriceProvider
 from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
     GetStockPriceRequest,
 )
-from tests.fixtures.factories import create_stock_price
+from pryces.domain.stocks import Stock
+from tests.fixtures.factories import create_stock
 
 
 class TestGetStockPrice:
@@ -19,7 +20,7 @@ class TestGetStockPrice:
 
     def test_handle_returns_stock_price_dto_from_provider(self):
         symbol = "AAPL"
-        provider_response = create_stock_price(
+        provider_response = create_stock(
             symbol,
             Decimal("150.25"),
             name="Apple Inc.",
@@ -76,7 +77,7 @@ class TestGetStockPrice:
 
     def test_handle_returns_dto_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = StockPrice(symbol=symbol, currentPrice=Decimal("150.25"))
+        minimal_response = Stock(symbol=symbol, currentPrice=Decimal("150.25"))
         self.mock_provider.get_stock_price.return_value = minimal_response
 
         use_case = GetStockPrice(provider=self.mock_provider)

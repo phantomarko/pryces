@@ -12,7 +12,7 @@ from pryces.presentation.console.commands.get_stocks_prices import (
     parse_symbols_input,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
-from tests.fixtures.factories import create_stock_price
+from tests.fixtures.factories import create_stock
 
 
 class TestGetStocksPricesCommand:
@@ -25,9 +25,9 @@ class TestGetStocksPricesCommand:
     def test_execute_returns_success_json_with_multiple_stocks(self):
         symbols = "AAPL,GOOGL,MSFT"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
-            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
-            create_stock_price("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
         ]
 
         result = self.command.execute(symbols)
@@ -45,8 +45,8 @@ class TestGetStocksPricesCommand:
     def test_execute_handles_partial_failures(self):
         symbols = "AAPL,INVALID,GOOGL"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("AAPL", Decimal("150.25"), name="Apple Inc."),
-            create_stock_price("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
         ]
 
         result = self.command.execute(symbols)
@@ -74,7 +74,7 @@ class TestGetStocksPricesCommand:
     def test_execute_handles_decimal_precision_in_json(self):
         symbols = "GOOGL"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("GOOGL", Decimal("2847.123456789"), name="Alphabet Inc.")
+            create_stock("GOOGL", Decimal("2847.123456789"), name="Alphabet Inc.")
         ]
 
         result = self.command.execute(symbols)
@@ -97,8 +97,8 @@ class TestGetStocksPricesCommand:
     def test_execute_returns_valid_json_format(self):
         symbols = "AAPL,GOOGL"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("GOOGL", Decimal("2847.50")),
+            create_stock("AAPL", Decimal("150.25")),
+            create_stock("GOOGL", Decimal("2847.50")),
         ]
 
         result = self.command.execute(symbols)
@@ -111,7 +111,7 @@ class TestGetStocksPricesCommand:
     def test_execute_handles_responses_with_minimal_fields(self):
         symbols = "AAPL,GOOGL"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price(
+            create_stock(
                 "AAPL",
                 Decimal("150.25"),
                 name=None,
@@ -125,7 +125,7 @@ class TestGetStocksPricesCommand:
                 fiftyTwoWeekHigh=None,
                 fiftyTwoWeekLow=None,
             ),
-            create_stock_price(
+            create_stock(
                 "GOOGL",
                 Decimal("2847.50"),
                 name=None,
@@ -153,7 +153,7 @@ class TestGetStocksPricesCommand:
     def test_execute_handles_responses_with_all_fields(self):
         symbols = "AAPL"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price(
+            create_stock(
                 "AAPL",
                 Decimal("150.25"),
                 name="Apple Inc.",
@@ -203,8 +203,8 @@ class TestGetStocksPricesCommand:
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbols = "AAPL,GOOGL"
         self.mock_provider.get_stocks_prices.return_value = [
-            create_stock_price("AAPL", Decimal("150.25")),
-            create_stock_price("GOOGL", Decimal("2847.50")),
+            create_stock("AAPL", Decimal("150.25")),
+            create_stock("GOOGL", Decimal("2847.50")),
         ]
 
         result = self.command.execute(symbols=symbols, extra_arg="ignored")

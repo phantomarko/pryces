@@ -20,4 +20,4 @@ class GetStockPrice:
         if response is None:
             raise StockNotFound(request.symbol)
 
-        return StockPriceDTO.from_stock_price(response)
+        return StockPriceDTO.from_stock(response)

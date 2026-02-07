@@ -7,7 +7,8 @@ from decimal import Decimal
 import yfinance as yf
 
 from ..application.exceptions import StockInformationIncomplete
-from ..application.interfaces import StockPriceProvider, StockPrice, MessageSender
+from ..application.interfaces import StockPriceProvider, MessageSender
+from ..domain.stocks import Stock
 
 
 @dataclass(frozen=True)
@@ -20,7 +21,7 @@ class YahooFinanceProvider(StockPriceProvider):
     def __init__(self) -> None:
         self._logger = logging.getLogger(__name__)
 
-    def _build_response(self, symbol: str, info: dict, current_price: float) -> StockPrice:
+    def _build_response(self, symbol: str, info: dict, current_price: float) -> Stock:
         previous_close = info.get("previousClose")
         open_price = info.get("open")
         day_high = info.get("dayHigh")
@@ -32,7 +33,7 @@ class YahooFinanceProvider(StockPriceProvider):
         company_name = info.get("longName") or info.get("shortName")
         currency = info.get("currency")
 
-        return StockPrice(
+        return Stock(
             symbol=symbol.upper(),
             currentPrice=Decimal(str(current_price)),
             name=company_name,
@@ -53,7 +54,7 @@ class YahooFinanceProvider(StockPriceProvider):
             ),
         )
 
-    def get_stock_price(self, symbol: str) -> StockPrice | None:
+    def get_stock_price(self, symbol: str) -> Stock | None:
         try:
             self._logger.debug(f"Fetching data for symbol: {symbol}")
 
@@ -80,7 +81,7 @@ class YahooFinanceProvider(StockPriceProvider):
             self._logger.error(f"Error fetching data for {symbol}: {e}")
             raise
 
-    def get_stocks_prices(self, symbols: list[str]) -> list[StockPrice]:
+    def get_stocks_prices(self, symbols: list[str]) -> list[Stock]:
         if not symbols:
             return []
 

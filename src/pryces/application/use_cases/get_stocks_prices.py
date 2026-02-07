@@ -15,4 +15,4 @@ class GetStocksPrices:
 
     def handle(self, request: GetStocksPricesRequest) -> list[StockPriceDTO]:
         responses = self._provider.get_stocks_prices(request.symbols)
-        return [StockPriceDTO.from_stock_price(response) for response in responses]
+        return [StockPriceDTO.from_stock(response) for response in responses]
