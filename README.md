@@ -13,6 +13,7 @@ A Python CLI tool for retrieving stock price information, built with clean archi
   - [Interactive Menu](#interactive-menu)
   - [Get Stock Price](#get-stock-price)
   - [Get Multiple Stock Prices](#get-multiple-stock-prices)
+  - [Test Notifications](#test-notifications)
 - [Development](#development)
   - [Running Tests](#running-tests)
   - [Code Formatting with Black](#code-formatting-with-black)
@@ -84,6 +85,9 @@ Available Commands:
 
   2. Get Multiple Stock Prices
      Retrieve current prices for multiple stock symbols
+
+  3. Test Notifications
+     Send a test notification message
 
   0. Exit
 
@@ -239,6 +243,28 @@ Example output (partial success with some invalid symbols):
   - `requested`: Total number of symbols requested
   - `successful`: Number of symbols successfully fetched
   - `failed`: Number of symbols that failed (invalid or data unavailable)
+
+### Test Notifications
+
+When you select option 3, a test notification message is sent automatically (no input required):
+
+```
+--- Test Notifications ---
+
+Executing...
+```
+
+Example output (success):
+```
+Test notification sent successfully.
+```
+
+Example output (failure):
+```
+Test notification failed.
+```
+
+**Note:** This command uses a temporary hardcoded message sender for testing purposes. A real message sender adapter will be implemented in a future update.
 
 ## Development
 
