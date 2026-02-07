@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
-from pryces.application.providers import StockPriceProvider, StockPriceResponse
+from pryces.application.providers import StockPriceProvider, StockPrice
 from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
     GetStockPriceRequest,
@@ -71,7 +71,7 @@ class TestGetStockPrice:
 
     def test_handle_accepts_response_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = StockPriceResponse(symbol=symbol, currentPrice=Decimal("150.25"))
+        minimal_response = StockPrice(symbol=symbol, currentPrice=Decimal("150.25"))
         self.mock_provider.get_stock_price.return_value = minimal_response
 
         use_case = GetStockPrice(provider=self.mock_provider)

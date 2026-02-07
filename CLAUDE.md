@@ -82,7 +82,7 @@ Presentation → Application → Domain
 **Domain** (`src/pryces/domain/`) — Currently minimal. Reserved for future value objects/entities.
 
 **Application** (`src/pryces/application/`) — Use cases and port interfaces:
-- `providers.py` — `StockPriceProvider` ABC (port), `StockPriceResponse` frozen dataclass (DTO with Decimal fields)
+- `providers.py` — `StockPriceProvider` ABC (port), `StockPrice` frozen dataclass (DTO with Decimal fields)
 - `messages.py` — `MessageSender` ABC (port, unused yet)
 - `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol)

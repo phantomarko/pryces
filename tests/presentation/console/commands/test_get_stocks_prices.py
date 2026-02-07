@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.providers import StockPriceResponse
+from pryces.application.providers import StockPrice
 from pryces.application.use_cases.get_stocks_prices import GetStocksPrices
 from pryces.presentation.console.commands.get_stocks_prices import (
     GetStocksPricesCommand,
@@ -130,8 +130,8 @@ class TestGetStocksPricesCommand:
     def test_execute_handles_responses_with_minimal_fields(self):
         symbols = "AAPL,GOOGL"
         minimal_responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50")),
+            StockPrice(symbol="AAPL", currentPrice=Decimal("150.25")),
+            StockPrice(symbol="GOOGL", currentPrice=Decimal("2847.50")),
         ]
         self.mock_use_case.handle.return_value = minimal_responses
 

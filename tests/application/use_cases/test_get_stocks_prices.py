@@ -6,7 +6,7 @@ from pryces.application.use_cases.get_stocks_prices import (
     GetStocksPrices,
     GetStocksPricesRequest,
 )
-from pryces.application.providers import StockPriceProvider, StockPriceResponse
+from pryces.application.providers import StockPriceProvider, StockPrice
 from tests.fixtures.factories import create_stock_price
 
 
@@ -83,8 +83,8 @@ class TestGetStocksPrices:
 
     def test_handle_with_responses_containing_minimal_fields(self):
         responses = [
-            StockPriceResponse(symbol="AAPL", currentPrice=Decimal("150.25")),
-            StockPriceResponse(symbol="GOOGL", currentPrice=Decimal("2847.50")),
+            StockPrice(symbol="AAPL", currentPrice=Decimal("150.25")),
+            StockPrice(symbol="GOOGL", currentPrice=Decimal("2847.50")),
         ]
         self.mock_provider.get_stocks_prices.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL"])

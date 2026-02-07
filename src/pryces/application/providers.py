@@ -4,7 +4,7 @@ from decimal import Decimal
 
 
 @dataclass(frozen=True)
-class StockPriceResponse:
+class StockPrice:
     symbol: str
     currentPrice: Decimal
     name: str | None = None
@@ -21,9 +21,9 @@ class StockPriceResponse:
 
 class StockPriceProvider(ABC):
     @abstractmethod
-    def get_stock_price(self, symbol: str) -> StockPriceResponse | None:
+    def get_stock_price(self, symbol: str) -> StockPrice | None:
         pass
 
     @abstractmethod
-    def get_stocks_prices(self, symbols: list[str]) -> list[StockPriceResponse]:
+    def get_stocks_prices(self, symbols: list[str]) -> list[StockPrice]:
         pass

@@ -1,11 +1,11 @@
 from decimal import Decimal
 
-from pryces.application.providers import StockPriceResponse
+from pryces.application.providers import StockPrice
 
 
 def create_stock_price(
     symbol: str = "AAPL", current_price: Decimal = Decimal("150.00"), **overrides
-) -> StockPriceResponse:
+) -> StockPrice:
     defaults = {
         "name": f"{symbol} Inc.",
         "currency": "USD",
@@ -19,6 +19,4 @@ def create_stock_price(
         "fiftyTwoWeekLow": current_price * Decimal("0.80"),
     }
 
-    return StockPriceResponse(
-        symbol=symbol, currentPrice=current_price, **{**defaults, **overrides}
-    )
+    return StockPrice(symbol=symbol, currentPrice=current_price, **{**defaults, **overrides})

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ..exceptions import StockNotFound
-from ..providers import StockPriceProvider, StockPriceResponse
+from ..providers import StockPriceProvider, StockPrice
 
 
 @dataclass(frozen=True)
@@ -13,7 +13,7 @@ class GetStockPrice:
     def __init__(self, provider: StockPriceProvider) -> None:
         self._provider = provider
 
-    def handle(self, request: GetStockPriceRequest) -> StockPriceResponse:
+    def handle(self, request: GetStockPriceRequest) -> StockPrice:
         response = self._provider.get_stock_price(request.symbol)
 
         if response is None:
