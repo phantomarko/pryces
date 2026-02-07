@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.application.providers import StockPrice
+from pryces.application.interfaces import StockPrice
 
 
 def create_stock_price(

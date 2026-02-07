@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
-from pryces.application.providers import StockPriceProvider, StockPrice
+from pryces.application.interfaces import StockPriceProvider, StockPrice
 from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
     GetStockPriceRequest,

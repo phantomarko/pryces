@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ..exceptions import StockNotFound
-from ..providers import StockPriceProvider, StockPrice
+from ..interfaces import StockPriceProvider, StockPrice
 
 
 @dataclass(frozen=True)

@@ -27,3 +27,9 @@ class StockPriceProvider(ABC):
     @abstractmethod
     def get_stocks_prices(self, symbols: list[str]) -> list[StockPrice]:
         pass
+
+
+class MessageSender(ABC):
+    @abstractmethod
+    def send_message(self, message: str) -> bool:
+        pass

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..messages import MessageSender
+from ..interfaces import MessageSender
 
 
 @dataclass(frozen=True)

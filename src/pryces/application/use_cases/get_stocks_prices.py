@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..providers import StockPriceProvider, StockPrice
+from ..interfaces import StockPriceProvider, StockPrice
 
 
 @dataclass(frozen=True)

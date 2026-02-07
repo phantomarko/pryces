@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from pryces.application.messages import MessageSender
+from pryces.application.interfaces import MessageSender
 from pryces.application.use_cases.send_messages import (
     SendMessages,
     SendMessagesRequest,

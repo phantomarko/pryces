@@ -1,8 +1,7 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.messages import MessageSender
-from pryces.application.providers import StockPriceProvider, StockPrice
+from pryces.application.interfaces import StockPriceProvider, StockPrice, MessageSender
 from pryces.presentation.console.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
