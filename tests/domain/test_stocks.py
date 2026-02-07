@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import Stock
 
 
@@ -253,3 +254,67 @@ def test_stock_optional_fields_default_to_none():
     assert stock.twoHundredDayAverage is None
     assert stock.fiftyTwoWeekHigh is None
     assert stock.fiftyTwoWeekLow is None
+
+
+def test_stock_notifications_defaults_to_empty_list():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+
+    assert stock.notifications == []
+
+
+def test_generate_milestones_notifications_adds_fifty_day_notification():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("140.00"),
+        fiftyDayAverage=Decimal("145.00"),
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.SMA50_CROSSED
+
+
+def test_generate_milestones_notifications_adds_two_hundred_day_notification():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("130.00"),
+        twoHundredDayAverage=Decimal("140.00"),
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.SMA200_CROSSED
+
+
+def test_generate_milestones_notifications_adds_both_notifications():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("130.00"),
+        fiftyDayAverage=Decimal("145.00"),
+        twoHundredDayAverage=Decimal("140.00"),
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert len(stock.notifications) == 2
+    types = {n.type for n in stock.notifications}
+    assert types == {NotificationType.SMA50_CROSSED, NotificationType.SMA200_CROSSED}
+
+
+def test_generate_milestones_notifications_adds_no_notifications_when_no_crossing():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("148.00"),
+        fiftyDayAverage=Decimal("145.00"),
+        twoHundredDayAverage=Decimal("140.00"),
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert stock.notifications == []

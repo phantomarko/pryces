@@ -26,4 +26,6 @@ class StockPriceDTO:
 
     @staticmethod
     def from_stock(stock: Stock) -> StockPriceDTO:
-        return StockPriceDTO(**asdict(stock))
+        data = asdict(stock)
+        data.pop("notifications", None)
+        return StockPriceDTO(**data)
