@@ -1,24 +1,90 @@
-from dataclasses import dataclass, field
 from decimal import Decimal
 
 from pryces.domain.notifications import Notification, NotificationType
 
 
-@dataclass(frozen=True)
 class Stock:
-    symbol: str
-    currentPrice: Decimal
-    name: str | None = None
-    currency: str | None = None
-    previousClosePrice: Decimal | None = None
-    openPrice: Decimal | None = None
-    dayHigh: Decimal | None = None
-    dayLow: Decimal | None = None
-    fiftyDayAverage: Decimal | None = None
-    twoHundredDayAverage: Decimal | None = None
-    fiftyTwoWeekHigh: Decimal | None = None
-    fiftyTwoWeekLow: Decimal | None = None
-    notifications: list[Notification] = field(default_factory=list, init=False)
+    def __init__(
+        self,
+        *,
+        symbol: str,
+        currentPrice: Decimal,
+        name: str | None = None,
+        currency: str | None = None,
+        previousClosePrice: Decimal | None = None,
+        openPrice: Decimal | None = None,
+        dayHigh: Decimal | None = None,
+        dayLow: Decimal | None = None,
+        fiftyDayAverage: Decimal | None = None,
+        twoHundredDayAverage: Decimal | None = None,
+        fiftyTwoWeekHigh: Decimal | None = None,
+        fiftyTwoWeekLow: Decimal | None = None,
+    ):
+        self._symbol = symbol
+        self._currentPrice = currentPrice
+        self._name = name
+        self._currency = currency
+        self._previousClosePrice = previousClosePrice
+        self._openPrice = openPrice
+        self._dayHigh = dayHigh
+        self._dayLow = dayLow
+        self._fiftyDayAverage = fiftyDayAverage
+        self._twoHundredDayAverage = twoHundredDayAverage
+        self._fiftyTwoWeekHigh = fiftyTwoWeekHigh
+        self._fiftyTwoWeekLow = fiftyTwoWeekLow
+        self._notifications: list[Notification] = []
+
+    @property
+    def symbol(self) -> str:
+        return self._symbol
+
+    @property
+    def currentPrice(self) -> Decimal:
+        return self._currentPrice
+
+    @property
+    def name(self) -> str | None:
+        return self._name
+
+    @property
+    def currency(self) -> str | None:
+        return self._currency
+
+    @property
+    def previousClosePrice(self) -> Decimal | None:
+        return self._previousClosePrice
+
+    @property
+    def openPrice(self) -> Decimal | None:
+        return self._openPrice
+
+    @property
+    def dayHigh(self) -> Decimal | None:
+        return self._dayHigh
+
+    @property
+    def dayLow(self) -> Decimal | None:
+        return self._dayLow
+
+    @property
+    def fiftyDayAverage(self) -> Decimal | None:
+        return self._fiftyDayAverage
+
+    @property
+    def twoHundredDayAverage(self) -> Decimal | None:
+        return self._twoHundredDayAverage
+
+    @property
+    def fiftyTwoWeekHigh(self) -> Decimal | None:
+        return self._fiftyTwoWeekHigh
+
+    @property
+    def fiftyTwoWeekLow(self) -> Decimal | None:
+        return self._fiftyTwoWeekLow
+
+    @property
+    def notifications(self) -> list[Notification]:
+        return self._notifications
 
     def has_crossed_fifty_day_average(self) -> bool:
         if self.previousClosePrice is None or self.fiftyDayAverage is None:
@@ -52,13 +118,13 @@ class Stock:
 
     def generate_milestones_notifications(self) -> None:
         if self.has_crossed_fifty_day_average():
-            self.notifications.append(
+            self._notifications.append(
                 Notification.create_fifty_day_average_crossed(
                     self.symbol, self.currentPrice, self.fiftyDayAverage
                 )
             )
         if self.has_crossed_two_hundred_day_average():
-            self.notifications.append(
+            self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
                     self.symbol, self.currentPrice, self.twoHundredDayAverage
                 )

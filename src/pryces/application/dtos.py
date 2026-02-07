@@ -26,6 +26,17 @@ class StockPriceDTO:
 
     @staticmethod
     def from_stock(stock: Stock) -> StockPriceDTO:
-        data = asdict(stock)
-        data.pop("notifications", None)
-        return StockPriceDTO(**data)
+        return StockPriceDTO(
+            symbol=stock.symbol,
+            currentPrice=stock.currentPrice,
+            name=stock.name,
+            currency=stock.currency,
+            previousClosePrice=stock.previousClosePrice,
+            openPrice=stock.openPrice,
+            dayHigh=stock.dayHigh,
+            dayLow=stock.dayLow,
+            fiftyDayAverage=stock.fiftyDayAverage,
+            twoHundredDayAverage=stock.twoHundredDayAverage,
+            fiftyTwoWeekHigh=stock.fiftyTwoWeekHigh,
+            fiftyTwoWeekLow=stock.fiftyTwoWeekLow,
+        )
