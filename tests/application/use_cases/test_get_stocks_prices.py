@@ -7,7 +7,7 @@ from pryces.application.use_cases.get_stocks_prices import (
     GetStocksPrices,
     GetStocksPricesRequest,
 )
-from pryces.application.interfaces import StockPriceProvider
+from pryces.application.interfaces import StockProvider
 from pryces.domain.stocks import Stock
 from tests.fixtures.factories import create_stock
 
@@ -15,7 +15,7 @@ from tests.fixtures.factories import create_stock
 class TestGetStocksPrices:
 
     def setup_method(self):
-        self.mock_provider = Mock(spec=StockPriceProvider)
+        self.mock_provider = Mock(spec=StockProvider)
 
     def test_handle_returns_dtos_for_all_successful_results(self):
         responses = [
@@ -23,7 +23,7 @@ class TestGetStocksPrices:
             create_stock("GOOGL", Decimal("2847.50")),
             create_stock("MSFT", Decimal("350.75")),
         ]
-        self.mock_provider.get_stocks_prices.return_value = responses
+        self.mock_provider.get_stocks.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL", "MSFT"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
@@ -34,14 +34,14 @@ class TestGetStocksPrices:
         assert result[0].symbol == "AAPL"
         assert result[1].symbol == "GOOGL"
         assert result[2].symbol == "MSFT"
-        self.mock_provider.get_stocks_prices.assert_called_once_with(["AAPL", "GOOGL", "MSFT"])
+        self.mock_provider.get_stocks.assert_called_once_with(["AAPL", "GOOGL", "MSFT"])
 
     def test_handle_filters_out_not_found_symbols(self):
         responses = [
             create_stock("AAPL", Decimal("150.25")),
             create_stock("MSFT", Decimal("350.75")),
         ]
-        self.mock_provider.get_stocks_prices.return_value = responses
+        self.mock_provider.get_stocks.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "INVALID", "MSFT"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
@@ -52,7 +52,7 @@ class TestGetStocksPrices:
         assert result[1].symbol == "MSFT"
 
     def test_handle_returns_empty_list_when_all_symbols_not_found(self):
-        self.mock_provider.get_stocks_prices.return_value = []
+        self.mock_provider.get_stocks.return_value = []
         request = GetStocksPricesRequest(symbols=["INVALID1", "INVALID2", "INVALID3"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
@@ -62,21 +62,21 @@ class TestGetStocksPrices:
         assert result == []
 
     def test_handle_returns_empty_list_for_empty_input(self):
-        self.mock_provider.get_stocks_prices.return_value = []
+        self.mock_provider.get_stocks.return_value = []
         request = GetStocksPricesRequest(symbols=[])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
         result = use_case.handle(request)
 
         assert len(result) == 0
-        self.mock_provider.get_stocks_prices.assert_called_once_with([])
+        self.mock_provider.get_stocks.assert_called_once_with([])
 
     def test_handle_processes_duplicate_symbols(self):
         responses = [
             create_stock("AAPL", Decimal("150.25")),
             create_stock("AAPL", Decimal("150.25")),
         ]
-        self.mock_provider.get_stocks_prices.return_value = responses
+        self.mock_provider.get_stocks.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "AAPL"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 
@@ -91,7 +91,7 @@ class TestGetStocksPrices:
             Stock(symbol="AAPL", currentPrice=Decimal("150.25")),
             Stock(symbol="GOOGL", currentPrice=Decimal("2847.50")),
         ]
-        self.mock_provider.get_stocks_prices.return_value = responses
+        self.mock_provider.get_stocks.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL"])
         use_case = GetStocksPrices(provider=self.mock_provider)
 

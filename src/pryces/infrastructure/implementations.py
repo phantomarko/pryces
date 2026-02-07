@@ -7,7 +7,7 @@ from decimal import Decimal
 import yfinance as yf
 
 from ..application.exceptions import StockInformationIncomplete
-from ..application.interfaces import StockPriceProvider, MessageSender
+from ..application.interfaces import StockProvider, MessageSender
 from ..domain.stocks import Stock
 
 
@@ -17,7 +17,7 @@ class TelegramSettings:
     group_id: str
 
 
-class YahooFinanceProvider(StockPriceProvider):
+class YahooFinanceProvider(StockProvider):
     def __init__(self) -> None:
         self._logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class YahooFinanceProvider(StockPriceProvider):
             ),
         )
 
-    def get_stock_price(self, symbol: str) -> Stock | None:
+    def get_stock(self, symbol: str) -> Stock | None:
         try:
             self._logger.debug(f"Fetching data for symbol: {symbol}")
 
@@ -81,7 +81,7 @@ class YahooFinanceProvider(StockPriceProvider):
             self._logger.error(f"Error fetching data for {symbol}: {e}")
             raise
 
-    def get_stocks_prices(self, symbols: list[str]) -> list[Stock]:
+    def get_stocks(self, symbols: list[str]) -> list[Stock]:
         if not symbols:
             return []
 

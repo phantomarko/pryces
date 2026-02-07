@@ -82,13 +82,13 @@ Presentation → Application → Domain
 **Domain** (`src/pryces/domain/`) — Currently minimal. Reserved for future value objects/entities.
 
 **Application** (`src/pryces/application/`) — Use cases and port interfaces:
-- `interfaces.py` — `StockPriceProvider` ABC (port), `StockPrice` frozen dataclass (DTO with Decimal fields), `MessageSender` ABC (port)
+- `interfaces.py` — `StockProvider` ABC (port), `StockPrice` frozen dataclass (DTO with Decimal fields), `MessageSender` ABC (port)
 - `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols)
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
-- `implementations.py` — `YahooFinanceProvider` implements `StockPriceProvider` via `yfinance`, `TelegramMessageSender` implements `MessageSender`
+- `implementations.py` — `YahooFinanceProvider` implements `StockProvider` via `yfinance`, `TelegramMessageSender` implements `MessageSender`
 
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
 - `cli.py` — Entry point, composition root (wires dependencies)

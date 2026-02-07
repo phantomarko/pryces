@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.application.exceptions import StockInformationIncomplete
-from pryces.application.interfaces import StockPriceProvider
+from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
@@ -18,13 +18,13 @@ from tests.fixtures.factories import create_stock
 class TestGetStockPriceCommand:
 
     def setup_method(self):
-        self.mock_provider = Mock(spec=StockPriceProvider)
+        self.mock_provider = Mock(spec=StockProvider)
         use_case = GetStockPrice(provider=self.mock_provider)
         self.command = GetStockPriceCommand(use_case)
 
     def test_execute_returns_success_json_with_stock_data(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.return_value = create_stock(
+        self.mock_provider.get_stock.return_value = create_stock(
             symbol,
             Decimal("150.25"),
             name="Apple Inc.",
@@ -49,7 +49,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_decimal_precision_in_json(self):
         symbol = "GOOGL"
-        self.mock_provider.get_stock_price.return_value = create_stock(
+        self.mock_provider.get_stock.return_value = create_stock(
             symbol,
             Decimal("2847.123456789"),
             name="Alphabet Inc.",
@@ -70,7 +70,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_error_json_when_stock_not_found(self):
         symbol = "INVALID"
-        self.mock_provider.get_stock_price.return_value = None
+        self.mock_provider.get_stock.return_value = None
 
         result = self.command.execute(symbol)
 
@@ -81,7 +81,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_error_json_when_stock_information_incomplete(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.side_effect = StockInformationIncomplete(symbol)
+        self.mock_provider.get_stock.side_effect = StockInformationIncomplete(symbol)
 
         result = self.command.execute(symbol)
 
@@ -93,7 +93,7 @@ class TestGetStockPriceCommand:
     def test_execute_returns_error_json_on_unexpected_exception(self):
         symbol = "AAPL"
         error_message = "Database connection failed"
-        self.mock_provider.get_stock_price.side_effect = Exception(error_message)
+        self.mock_provider.get_stock.side_effect = Exception(error_message)
 
         result = self.command.execute(symbol)
 
@@ -104,7 +104,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_valid_json_format(self):
         symbol = "MSFT"
-        self.mock_provider.get_stock_price.return_value = create_stock(
+        self.mock_provider.get_stock.return_value = create_stock(
             symbol,
             Decimal("350.50"),
             name="Microsoft Corporation",
@@ -127,7 +127,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_response_with_minimal_fields(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.return_value = create_stock(
+        self.mock_provider.get_stock.return_value = create_stock(
             symbol,
             Decimal("150.25"),
             name=None,
@@ -183,7 +183,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbol = "AAPL"
-        self.mock_provider.get_stock_price.return_value = create_stock(
+        self.mock_provider.get_stock.return_value = create_stock(
             symbol, Decimal("150.25"), name="Apple Inc."
         )
 

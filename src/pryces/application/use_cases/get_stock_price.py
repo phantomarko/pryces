@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from ..dtos import StockPriceDTO
 from ..exceptions import StockNotFound
-from ..interfaces import StockPriceProvider
+from ..interfaces import StockProvider
 
 
 @dataclass(frozen=True)
@@ -11,11 +11,11 @@ class GetStockPriceRequest:
 
 
 class GetStockPrice:
-    def __init__(self, provider: StockPriceProvider) -> None:
+    def __init__(self, provider: StockProvider) -> None:
         self._provider = provider
 
     def handle(self, request: GetStockPriceRequest) -> StockPriceDTO:
-        response = self._provider.get_stock_price(request.symbol)
+        response = self._provider.get_stock(request.symbol)
 
         if response is None:
             raise StockNotFound(request.symbol)

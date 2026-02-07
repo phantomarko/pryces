@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.interfaces import StockPriceProvider, MessageSender
+from pryces.application.interfaces import StockProvider, MessageSender
 from pryces.presentation.console.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
@@ -13,18 +13,18 @@ from tests.fixtures.factories import create_stock
 class TestCommandFactory:
 
     def test_init_accepts_custom_provider_and_message_sender(self):
-        custom_provider = Mock(spec=StockPriceProvider)
+        custom_provider = Mock(spec=StockProvider)
         custom_sender = Mock(spec=MessageSender)
 
-        factory = CommandFactory(stock_price_provider=custom_provider, message_sender=custom_sender)
+        factory = CommandFactory(stock_provider=custom_provider, message_sender=custom_sender)
 
-        assert factory._stock_price_provider is custom_provider
+        assert factory._stock_provider is custom_provider
         assert factory._message_sender is custom_sender
 
     def test_create_get_stock_price_command_returns_command_instance(self):
-        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         command = factory.create_get_stock_price_command()
@@ -32,8 +32,8 @@ class TestCommandFactory:
         assert isinstance(command, GetStockPriceCommand)
 
     def test_create_get_stock_price_command_wires_dependencies_correctly(self):
-        mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = create_stock(
+        mock_provider = Mock(spec=StockProvider)
+        mock_provider.get_stock.return_value = create_stock(
             "TEST",
             Decimal("100.00"),
             name="Test Company",
@@ -47,7 +47,7 @@ class TestCommandFactory:
             fiftyTwoWeekLow=Decimal("80.00"),
         )
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         command = factory.create_get_stock_price_command()
@@ -55,15 +55,15 @@ class TestCommandFactory:
 
         assert "TEST" in result
         assert "100.00" in result
-        mock_provider.get_stock_price.assert_called_once()
+        mock_provider.get_stock.assert_called_once()
 
     def test_create_get_stock_price_command_with_default_provider(self):
-        mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = create_stock(
+        mock_provider = Mock(spec=StockProvider)
+        mock_provider.get_stock.return_value = create_stock(
             "AAPL", Decimal("150.25"), name="Apple Inc."
         )
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         command = factory.create_get_stock_price_command()
@@ -74,9 +74,9 @@ class TestCommandFactory:
         assert "150.25" in result
 
     def test_create_command_registry_returns_registry_instance(self):
-        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()
@@ -84,9 +84,9 @@ class TestCommandFactory:
         assert isinstance(registry, CommandRegistry)
 
     def test_registry_contains_get_stock_price_command(self):
-        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()
@@ -97,12 +97,12 @@ class TestCommandFactory:
         assert isinstance(command, GetStockPriceCommand)
 
     def test_registry_commands_are_functional(self):
-        mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stock_price.return_value = create_stock(
+        mock_provider = Mock(spec=StockProvider)
+        mock_provider.get_stock.return_value = create_stock(
             "AAPL", Decimal("150.25"), name="Apple Inc."
         )
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()
@@ -113,9 +113,9 @@ class TestCommandFactory:
         assert "AAPL" in result
 
     def test_create_get_stocks_prices_command_returns_command_instance(self):
-        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         command = factory.create_get_stocks_prices_command()
@@ -123,13 +123,13 @@ class TestCommandFactory:
         assert isinstance(command, GetStocksPricesCommand)
 
     def test_create_get_stocks_prices_command_wires_dependencies_correctly(self):
-        mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stocks_prices.return_value = [
+        mock_provider = Mock(spec=StockProvider)
+        mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
             create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
         ]
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         command = factory.create_get_stocks_prices_command()
@@ -139,12 +139,12 @@ class TestCommandFactory:
         assert "GOOGL" in result
         assert "150.25" in result
         assert "2847.50" in result
-        mock_provider.get_stocks_prices.assert_called_once()
+        mock_provider.get_stocks.assert_called_once()
 
     def test_registry_contains_get_stocks_prices_command(self):
-        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()
@@ -153,9 +153,9 @@ class TestCommandFactory:
         assert isinstance(command, GetStocksPricesCommand)
 
     def test_registry_contains_send_messages_command(self):
-        mock_provider = Mock(spec=StockPriceProvider)
+        mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()
@@ -164,14 +164,14 @@ class TestCommandFactory:
         assert isinstance(command, SendMessagesCommand)
 
     def test_registry_get_stocks_prices_command_is_functional(self):
-        mock_provider = Mock(spec=StockPriceProvider)
-        mock_provider.get_stocks_prices.return_value = [
+        mock_provider = Mock(spec=StockProvider)
+        mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
             create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
             create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
         ]
         factory = CommandFactory(
-            stock_price_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()

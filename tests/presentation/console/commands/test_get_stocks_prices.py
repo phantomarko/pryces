@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.interfaces import StockPriceProvider
+from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stocks_prices import GetStocksPrices
 from pryces.presentation.console.commands.get_stocks_prices import (
     GetStocksPricesCommand,
@@ -18,13 +18,13 @@ from tests.fixtures.factories import create_stock
 class TestGetStocksPricesCommand:
 
     def setup_method(self):
-        self.mock_provider = Mock(spec=StockPriceProvider)
+        self.mock_provider = Mock(spec=StockProvider)
         use_case = GetStocksPrices(provider=self.mock_provider)
         self.command = GetStocksPricesCommand(use_case)
 
     def test_execute_returns_success_json_with_multiple_stocks(self):
         symbols = "AAPL,GOOGL,MSFT"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
             create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
             create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
@@ -44,7 +44,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_handles_partial_failures(self):
         symbols = "AAPL,INVALID,GOOGL"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
             create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
         ]
@@ -60,7 +60,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_handles_all_failures(self):
         symbols = "INVALID1,INVALID2,INVALID3"
-        self.mock_provider.get_stocks_prices.return_value = []
+        self.mock_provider.get_stocks.return_value = []
 
         result = self.command.execute(symbols)
 
@@ -73,7 +73,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_handles_decimal_precision_in_json(self):
         symbols = "GOOGL"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock("GOOGL", Decimal("2847.123456789"), name="Alphabet Inc.")
         ]
 
@@ -85,7 +85,7 @@ class TestGetStocksPricesCommand:
     def test_execute_returns_error_json_on_unexpected_exception(self):
         symbols = "AAPL,GOOGL"
         error_message = "Network connection failed"
-        self.mock_provider.get_stocks_prices.side_effect = Exception(error_message)
+        self.mock_provider.get_stocks.side_effect = Exception(error_message)
 
         result = self.command.execute(symbols)
 
@@ -96,7 +96,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_returns_valid_json_format(self):
         symbols = "AAPL,GOOGL"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25")),
             create_stock("GOOGL", Decimal("2847.50")),
         ]
@@ -110,7 +110,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_handles_responses_with_minimal_fields(self):
         symbols = "AAPL,GOOGL"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock(
                 "AAPL",
                 Decimal("150.25"),
@@ -152,7 +152,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_handles_responses_with_all_fields(self):
         symbols = "AAPL"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock(
                 "AAPL",
                 Decimal("150.25"),
@@ -202,7 +202,7 @@ class TestGetStocksPricesCommand:
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbols = "AAPL,GOOGL"
-        self.mock_provider.get_stocks_prices.return_value = [
+        self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25")),
             create_stock("GOOGL", Decimal("2847.50")),
         ]

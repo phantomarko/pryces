@@ -25,7 +25,7 @@ def create_menu() -> InteractiveMenu:
     message_sender = TelegramMessageSender(settings=telegram_settings)
 
     factory = CommandFactory(
-        stock_price_provider=provider,
+        stock_provider=provider,
         message_sender=message_sender,
     )
 
