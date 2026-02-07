@@ -1,13 +1,7 @@
 import logging
 
-from ....application.messages import MessageSender
 from ....application.use_cases.send_messages import SendMessages, SendMessagesRequest
 from .base import Command, CommandMetadata, InputPrompt
-
-
-class HardcodedMessageSender(MessageSender):
-    def send_message(self, message: str) -> bool:
-        return True
 
 
 class SendMessagesCommand(Command):

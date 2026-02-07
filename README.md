@@ -9,6 +9,7 @@ A Python CLI tool for retrieving stock price information, built with clean archi
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
   - [Installation](#installation)
+  - [Environment Configuration](#environment-configuration)
 - [Usage](#usage)
   - [Interactive Menu](#interactive-menu)
   - [Get Stock Price](#get-stock-price)
@@ -55,6 +56,23 @@ pip install -e ".[dev]"
 This will install:
 - The `pryces` package in editable mode
 - Development dependencies (pytest, etc.)
+
+### Environment Configuration
+
+Pryces uses environment variables for external service configuration. Copy the example file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your settings:
+
+| Variable | Description |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | Your Telegram Bot API token (from [@BotFather](https://t.me/BotFather)) |
+| `TELEGRAM_GROUP_ID` | The Telegram group/chat ID where notifications are sent |
+
+The application loads these variables automatically from `.env` on startup via `python-dotenv`.
 
 ## Usage
 
@@ -264,7 +282,7 @@ Example output (failure):
 Test notification failed.
 ```
 
-**Note:** This command uses a temporary hardcoded message sender for testing purposes. A real message sender adapter will be implemented in a future update.
+**Note:** This command sends a test message via the Telegram Bot API. Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration)).
 
 ## Development
 

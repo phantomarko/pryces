@@ -1,19 +1,8 @@
 from unittest.mock import Mock
 
 from pryces.application.use_cases.send_messages import SendMessages, SendMessagesResponse
-from pryces.presentation.console.commands.send_messages import (
-    HardcodedMessageSender,
-    SendMessagesCommand,
-)
+from pryces.presentation.console.commands.send_messages import SendMessagesCommand
 from pryces.presentation.console.commands.base import CommandMetadata
-
-
-class TestHardcodedMessageSender:
-
-    def test_send_message_returns_true(self):
-        sender = HardcodedMessageSender()
-
-        assert sender.send_message("any message") is True
 
 
 class TestSendMessagesCommand:

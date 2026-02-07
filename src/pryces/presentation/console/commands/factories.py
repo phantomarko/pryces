@@ -1,17 +1,20 @@
+from ....application.messages import MessageSender
 from ....application.providers import StockPriceProvider
 from ....application.use_cases.get_stock_price import GetStockPrice
 from ....application.use_cases.get_stocks_prices import GetStocksPrices
 from ....application.use_cases.send_messages import SendMessages
-from ....infrastructure.providers import YahooFinanceProvider
 from .get_stock_price import GetStockPriceCommand
 from .get_stocks_prices import GetStocksPricesCommand
 from .registry import CommandRegistry
-from .send_messages import HardcodedMessageSender, SendMessagesCommand
+from .send_messages import SendMessagesCommand
 
 
 class CommandFactory:
-    def __init__(self, stock_price_provider: StockPriceProvider) -> None:
+    def __init__(
+        self, stock_price_provider: StockPriceProvider, message_sender: MessageSender
+    ) -> None:
         self._stock_price_provider = stock_price_provider
+        self._message_sender = message_sender
 
     def create_get_stock_price_command(self) -> GetStockPriceCommand:
         use_case = GetStockPrice(provider=self._stock_price_provider)
@@ -22,8 +25,7 @@ class CommandFactory:
         return GetStocksPricesCommand(get_stocks_prices_use_case=use_case)
 
     def create_send_messages_command(self) -> SendMessagesCommand:
-        sender = HardcodedMessageSender()
-        use_case = SendMessages(sender=sender)
+        use_case = SendMessages(sender=self._message_sender)
         return SendMessagesCommand(send_messages_use_case=use_case)
 
     def create_command_registry(self) -> CommandRegistry:

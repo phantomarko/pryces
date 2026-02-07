@@ -13,6 +13,7 @@ authors = [
 ]
 dependencies = [
     "yfinance>=0.2.40",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
