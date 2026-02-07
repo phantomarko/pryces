@@ -32,4 +32,13 @@ echo "$STAGED_PY_FILES" | xargs black
 echo "$STAGED_PY_FILES" | xargs git add
 
 echo "✓ Black formatting complete. Files auto-staged."
+
+# Run tests
+echo "Running tests..."
+if ! pytest; then
+    echo "✗ Tests failed. Commit aborted."
+    exit 1
+fi
+echo "✓ All tests passed."
+
 exit 0

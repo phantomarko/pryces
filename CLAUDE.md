@@ -67,6 +67,51 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
 
 **Never**: Try to install the Python environment from scratch or install packages globally. The virtual environment already exists and contains all required dependencies.
 
+## Architecture Overview
+
+Pryces is a stock price CLI tool using **Ports & Adapters** (hexagonal) architecture. Only external dependency: `yfinance`.
+
+### Layers
+
+```
+Presentation → Application → Domain
+                   ↑
+            Infrastructure (implements application ports)
+```
+
+**Domain** (`src/pryces/domain/`) — Currently minimal. Reserved for future value objects/entities.
+
+**Application** (`src/pryces/application/`) — Use cases and port interfaces:
+- `providers.py` — `StockPriceProvider` ABC (port), `StockPriceResponse` frozen dataclass (DTO with Decimal fields)
+- `messages.py` — `MessageSender` ABC (port, unused yet)
+- `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
+- `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol)
+- `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols)
+
+**Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
+- `providers.py` — `YahooFinanceProvider` implements `StockPriceProvider` via `yfinance`
+
+**Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
+- `cli.py` — Entry point, composition root (wires dependencies)
+- `menu.py` — `InteractiveMenu` (main loop, I/O via injectable streams)
+- `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`
+- `commands/get_stock_price.py` — `GetStockPriceCommand`
+- `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
+- `commands/registry.py` — `CommandRegistry` (registry pattern)
+- `commands/factories.py` — `CommandFactory` (DI + object creation)
+- `json_utils.py` — `DecimalEncoder`, `to_json()` helper
+
+### Key Patterns
+- **Ports & Adapters**: Application defines ABCs, infrastructure implements them
+- **Command Pattern**: Each CLI action is a `Command` with metadata, input prompts, and execute
+- **Factory + Registry**: `CommandFactory` builds commands, `CommandRegistry` stores them
+- **Dependency Injection**: Wired at composition root in `cli.py`
+
+### Entry Point
+```bash
+python -m pryces.presentation.console.cli [--verbose]
+```
+
 ## Patterns and Conventions
 
 ### Dependency Management
@@ -85,17 +130,6 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
 2. **Method names should be obvious**: `get_command()`, `register()`, `validate_symbol()` need no docstring
 3. **No restating**: `def __init__()` → "Initialize X" adds zero value
 4. **Comments explain reasoning**: Use them for business logic, heuristics, or non-obvious constraints
-
-## Pre-Commit Requirements
-
-Before creating any commit, ensure the following:
-
-1. **Run all tests**: Execute `pytest` to verify all tests pass
-2. **Verify test coverage**: Ensure new code is adequately tested
-3. **Review changes**: Check that only intended changes are staged
-4. **Update documentation**: If adding new features, update relevant docs
-
-**Important**: Never commit code with failing tests. The test suite must pass before any commit.
 
 ## Commit Messages
 
