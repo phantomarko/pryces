@@ -1,13 +1,12 @@
 import argparse
 import logging
-import os
 import sys
 
 from dotenv import load_dotenv
 
-from ...infrastructure.messages import TelegramMessageSender, TelegramSettings
+from ...infrastructure.messages import TelegramMessageSender
 from ...infrastructure.providers import YahooFinanceProvider
-from .factories import CommandFactory
+from .factories import CommandFactory, SettingsFactory
 from .menu import InteractiveMenu
 
 
@@ -18,6 +17,21 @@ def configure_logging(verbose: bool = False) -> None:
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         stream=sys.stderr,
     )
+
+
+def create_menu() -> InteractiveMenu:
+    provider = YahooFinanceProvider()
+
+    telegram_settings = SettingsFactory.create_telegram_settings()
+    message_sender = TelegramMessageSender(settings=telegram_settings)
+
+    factory = CommandFactory(
+        stock_price_provider=provider,
+        message_sender=message_sender,
+    )
+
+    registry = factory.create_command_registry()
+    return InteractiveMenu(registry)
 
 
 def main() -> int:
@@ -37,21 +51,7 @@ def main() -> int:
     configure_logging(args.verbose)
 
     try:
-        provider = YahooFinanceProvider()
-
-        telegram_settings = TelegramSettings(
-            bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
-            group_id=os.environ["TELEGRAM_GROUP_ID"],
-        )
-        message_sender = TelegramMessageSender(settings=telegram_settings)
-
-        factory = CommandFactory(
-            stock_price_provider=provider,
-            message_sender=message_sender,
-        )
-
-        registry = factory.create_command_registry()
-        menu = InteractiveMenu(registry)
+        menu = create_menu()
         menu.run()
         return 0
 
