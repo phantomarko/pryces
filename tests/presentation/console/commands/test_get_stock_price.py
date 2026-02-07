@@ -4,15 +4,15 @@ from unittest.mock import Mock
 
 import pytest
 
+from pryces.application.dtos import StockPriceDTO
 from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
-from pryces.application.interfaces import StockPrice
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
     validate_symbol,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
-from tests.fixtures.factories import create_stock_price
+from tests.fixtures.factories import create_stock_price_dto
 
 
 class TestGetStockPriceCommand:
@@ -23,7 +23,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_success_json_with_stock_data(self):
         symbol = "AAPL"
-        stock_response = create_stock_price(
+        stock_response = create_stock_price_dto(
             symbol,
             Decimal("150.25"),
             name="Apple Inc.",
@@ -49,7 +49,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_decimal_precision_in_json(self):
         symbol = "GOOGL"
-        stock_response = create_stock_price(
+        stock_response = create_stock_price_dto(
             symbol,
             Decimal("2847.123456789"),
             name="Alphabet Inc.",
@@ -105,7 +105,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_calls_use_case_with_correct_symbol(self):
         symbol = "TSLA"
-        stock_response = create_stock_price(
+        stock_response = create_stock_price_dto(
             symbol,
             Decimal("200.00"),
             name="Tesla, Inc.",
@@ -128,7 +128,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_returns_valid_json_format(self):
         symbol = "MSFT"
-        stock_response = create_stock_price(
+        stock_response = create_stock_price_dto(
             symbol,
             Decimal("350.50"),
             name="Microsoft Corporation",
@@ -152,7 +152,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_handles_response_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = StockPrice(symbol=symbol, currentPrice=Decimal("150.25"))
+        minimal_response = StockPriceDTO(symbol=symbol, currentPrice=Decimal("150.25"))
         self.mock_use_case.handle.return_value = minimal_response
 
         result = self.command.execute(symbol)
@@ -196,7 +196,7 @@ class TestGetStockPriceCommand:
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbol = "AAPL"
-        stock_response = create_stock_price(symbol, Decimal("150.25"), name="Apple Inc.")
+        stock_response = create_stock_price_dto(symbol, Decimal("150.25"), name="Apple Inc.")
         self.mock_use_case.handle.return_value = stock_response
 
         result = self.command.execute(symbol=symbol, extra_arg="ignored")
