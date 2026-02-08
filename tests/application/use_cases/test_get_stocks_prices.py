@@ -2,7 +2,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 import pytest
 
-from pryces.application.dtos import StockPriceDTO
+from pryces.application.dtos import StockDTO
 from pryces.application.use_cases.get_stocks_prices import (
     GetStocksPrices,
     GetStocksPricesRequest,
@@ -30,7 +30,7 @@ class TestGetStocksPrices:
         result = use_case.handle(request)
 
         assert len(result) == 3
-        assert all(isinstance(r, StockPriceDTO) for r in result)
+        assert all(isinstance(r, StockDTO) for r in result)
         assert result[0].symbol == "AAPL"
         assert result[1].symbol == "GOOGL"
         assert result[2].symbol == "MSFT"
@@ -83,7 +83,7 @@ class TestGetStocksPrices:
         result = use_case.handle(request)
 
         assert len(result) == 2
-        assert all(isinstance(r, StockPriceDTO) for r in result)
+        assert all(isinstance(r, StockDTO) for r in result)
         assert all(r.symbol == "AAPL" for r in result)
 
     def test_handle_returns_dtos_with_minimal_fields(self):
@@ -98,6 +98,6 @@ class TestGetStocksPrices:
         result = use_case.handle(request)
 
         assert len(result) == 2
-        assert all(isinstance(r, StockPriceDTO) for r in result)
+        assert all(isinstance(r, StockDTO) for r in result)
         assert result[0].name is None
         assert result[0].currency is None

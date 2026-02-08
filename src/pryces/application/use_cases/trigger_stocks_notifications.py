@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from ..dtos import StockPriceDTO
+from ..dtos import StockDTO
 from ..interfaces import MessageSender, StockProvider
 
 
@@ -20,7 +20,7 @@ class TriggerStocksNotifications:
         self._provider = provider
         self._sender = sender
 
-    def handle(self, request: TriggerStocksNotificationsRequest) -> list[StockPriceDTO]:
+    def handle(self, request: TriggerStocksNotificationsRequest) -> list[StockDTO]:
         stocks = self._provider.get_stocks(request.symbols)
 
         if request.type == TriggerType.MILESTONES:
@@ -29,4 +29,4 @@ class TriggerStocksNotifications:
                 for notification in stock.notifications:
                     self._sender.send_message(notification.message)
 
-        return [StockPriceDTO.from_stock(stock) for stock in stocks]
+        return [StockDTO.from_stock(stock) for stock in stocks]

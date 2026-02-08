@@ -7,7 +7,7 @@ from pryces.domain.stocks import Stock
 
 
 @dataclass(frozen=True)
-class StockPriceDTO:
+class StockDTO:
     symbol: str
     currentPrice: Decimal
     name: str | None = None
@@ -23,8 +23,8 @@ class StockPriceDTO:
     notifications: list[str] = field(default_factory=list)
 
     @staticmethod
-    def from_stock(stock: Stock) -> StockPriceDTO:
-        return StockPriceDTO(
+    def from_stock(stock: Stock) -> StockDTO:
+        return StockDTO(
             symbol=stock.symbol,
             currentPrice=stock.currentPrice,
             name=stock.name,

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.application.dtos import StockPriceDTO
+from pryces.application.dtos import StockDTO
 from pryces.domain.stocks import Stock
 
 
@@ -61,7 +61,7 @@ def create_stock_no_crossing(symbol: str = "AAPL") -> Stock:
     )
 
 
-def create_stock_price_dto(
+def create_stock_dto(
     symbol: str = "AAPL", current_price: Decimal = Decimal("150.00"), **overrides
-) -> StockPriceDTO:
-    return StockPriceDTO.from_stock(create_stock(symbol, current_price, **overrides))
+) -> StockDTO:
+    return StockDTO.from_stock(create_stock(symbol, current_price, **overrides))

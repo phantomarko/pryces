@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.dtos import StockPriceDTO
+from pryces.application.dtos import StockDTO
 from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
 from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stock_price import (
@@ -40,7 +40,7 @@ class TestGetStockPrice:
 
         result = use_case.handle(request)
 
-        assert isinstance(result, StockPriceDTO)
+        assert isinstance(result, StockDTO)
         assert result.symbol == provider_response.symbol
         assert result.currentPrice == provider_response.currentPrice
         assert result.name == provider_response.name
@@ -85,7 +85,7 @@ class TestGetStockPrice:
 
         result = use_case.handle(request)
 
-        assert isinstance(result, StockPriceDTO)
+        assert isinstance(result, StockDTO)
         assert result.symbol == symbol
         assert result.currentPrice == Decimal("150.25")
         assert result.name is None

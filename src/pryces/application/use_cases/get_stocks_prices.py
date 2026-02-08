@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..dtos import StockPriceDTO
+from ..dtos import StockDTO
 from ..interfaces import StockProvider
 
 
@@ -13,6 +13,6 @@ class GetStocksPrices:
     def __init__(self, provider: StockProvider) -> None:
         self._provider = provider
 
-    def handle(self, request: GetStocksPricesRequest) -> list[StockPriceDTO]:
+    def handle(self, request: GetStocksPricesRequest) -> list[StockDTO]:
         responses = self._provider.get_stocks(request.symbols)
-        return [StockPriceDTO.from_stock(response) for response in responses]
+        return [StockDTO.from_stock(response) for response in responses]

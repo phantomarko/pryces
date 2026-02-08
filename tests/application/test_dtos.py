@@ -1,18 +1,18 @@
 from decimal import Decimal
 
-from pryces.application.dtos import StockPriceDTO
+from pryces.application.dtos import StockDTO
 from pryces.domain.stocks import Stock
 from tests.fixtures.factories import create_stock
 
 
-class TestStockPriceDTO:
+class TestStockDTO:
 
     def test_from_stock_returns_equivalent_dto(self):
         stock = create_stock("AAPL", Decimal("150.25"))
 
-        result = StockPriceDTO.from_stock(stock)
+        result = StockDTO.from_stock(stock)
 
-        assert isinstance(result, StockPriceDTO)
+        assert isinstance(result, StockDTO)
         assert result.symbol == stock.symbol
         assert result.currentPrice == stock.currentPrice
         assert result.name == stock.name
@@ -30,9 +30,9 @@ class TestStockPriceDTO:
     def test_from_stock_with_minimal_fields(self):
         stock = Stock(symbol="AAPL", currentPrice=Decimal("150.25"))
 
-        result = StockPriceDTO.from_stock(stock)
+        result = StockDTO.from_stock(stock)
 
-        assert isinstance(result, StockPriceDTO)
+        assert isinstance(result, StockDTO)
         assert result.symbol == "AAPL"
         assert result.currentPrice == Decimal("150.25")
         assert result.name is None

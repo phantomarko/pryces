@@ -1,7 +1,7 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.dtos import StockPriceDTO
+from pryces.application.dtos import StockDTO
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
@@ -112,7 +112,7 @@ class TestTriggerStocksNotifications:
         result = self.use_case.handle(request)
 
         assert len(result) == 2
-        assert all(isinstance(r, StockPriceDTO) for r in result)
+        assert all(isinstance(r, StockDTO) for r in result)
         assert result[0].symbol == "AAPL"
         assert result[1].symbol == "GOOGL"
         assert len(result[0].notifications) == 1
