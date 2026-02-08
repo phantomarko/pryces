@@ -1,9 +1,8 @@
 import logging
-from dataclasses import asdict
 
 from ....application.exceptions import StockNotFound
 from ....application.use_cases.get_stock_price import GetStockPrice, GetStockPriceRequest
-from ..json_utils import to_json
+from ..formatters import format_stock
 from .base import Command, CommandMetadata, InputPrompt
 
 
@@ -41,26 +40,14 @@ class GetStockPriceCommand(Command):
 
             self._logger.info(f"Successfully retrieved price for {symbol}")
 
-            result = {"success": True, "data": asdict(response)}
-
-            return to_json(result)
+            return format_stock(response)
 
         except StockNotFound as e:
             self._logger.error(f"Stock not found: {symbol}")
 
-            result = {"success": False, "error": {"code": "STOCK_NOT_FOUND", "message": str(e)}}
-
-            return to_json(result)
+            return f"Error: {e}"
 
         except Exception as e:
             self._logger.exception(f"Unexpected error while fetching stock price for {symbol}")
 
-            result = {
-                "success": False,
-                "error": {
-                    "code": "INTERNAL_ERROR",
-                    "message": f"An unexpected error occurred: {str(e)}",
-                },
-            }
-
-            return to_json(result)
+            return f"Error: An unexpected error occurred: {e}"

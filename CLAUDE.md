@@ -10,7 +10,7 @@ Pryces is a Python project built with clean architecture principles, emphasizing
 
 ### Update README.md After Changes
 **IMPORTANT**: Whenever you make significant changes to the codebase (new features, API changes, new fields, renamed parameters, etc.), you MUST update the README.md to reflect these changes:
-- Update example outputs to match current JSON structure
+- Update example outputs to match current output format
 - Update command examples if CLI arguments change
 - Add documentation for new features
 - Ensure all examples are accurate and tested
@@ -100,7 +100,7 @@ Presentation → Application → Domain
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
 - `factories.py` — `CommandFactory` (DI + object creation)
-- `json_utils.py` — `DecimalEncoder`, `to_json()` helper
+- `formatters.py` — `format_stock()`, `format_stock_list()` for human-readable output
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them

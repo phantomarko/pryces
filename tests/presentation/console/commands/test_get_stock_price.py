@@ -1,4 +1,3 @@
-import json
 from decimal import Decimal
 from unittest.mock import Mock
 
@@ -22,7 +21,7 @@ class TestGetStockPriceCommand:
         use_case = GetStockPrice(provider=self.mock_provider)
         self.command = GetStockPriceCommand(use_case)
 
-    def test_execute_returns_success_json_with_stock_data(self):
+    def test_execute_returns_formatted_stock_data(self):
         symbol = "AAPL"
         self.mock_provider.get_stock.return_value = create_stock(
             symbol,
@@ -40,14 +39,13 @@ class TestGetStockPriceCommand:
 
         result = self.command.execute(symbol)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert result_data["data"]["symbol"] == symbol
-        assert result_data["data"]["currentPrice"] == "150.25"
-        assert result_data["data"]["name"] == "Apple Inc."
-        assert result_data["data"]["currency"] == "USD"
+        assert "AAPL - Apple Inc. (USD)" in result
+        assert "Current Price:" in result
+        assert "150.25" in result
+        assert "Previous Close:" in result
+        assert "148.50" in result
 
-    def test_execute_handles_decimal_precision_in_json(self):
+    def test_execute_preserves_decimal_precision(self):
         symbol = "GOOGL"
         self.mock_provider.get_stock.return_value = create_stock(
             symbol,
@@ -65,65 +63,35 @@ class TestGetStockPriceCommand:
 
         result = self.command.execute(symbol)
 
-        result_data = json.loads(result)
-        assert result_data["data"]["currentPrice"] == "2847.123456789"
+        assert "2847.123456789" in result
 
-    def test_execute_returns_error_json_when_stock_not_found(self):
+    def test_execute_returns_error_when_stock_not_found(self):
         symbol = "INVALID"
         self.mock_provider.get_stock.return_value = None
 
         result = self.command.execute(symbol)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is False
-        assert result_data["error"]["code"] == "STOCK_NOT_FOUND"
-        assert symbol in result_data["error"]["message"]
+        assert result.startswith("Error:")
+        assert symbol in result
 
-    def test_execute_returns_error_json_when_stock_information_incomplete(self):
+    def test_execute_returns_error_when_stock_information_incomplete(self):
         symbol = "AAPL"
         self.mock_provider.get_stock.side_effect = StockInformationIncomplete(symbol)
 
         result = self.command.execute(symbol)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is False
-        assert result_data["error"]["code"] == "INTERNAL_ERROR"
-        assert "unable to retrieve current price" in result_data["error"]["message"]
+        assert result.startswith("Error:")
+        assert "unexpected error occurred" in result.lower()
 
-    def test_execute_returns_error_json_on_unexpected_exception(self):
+    def test_execute_returns_error_on_unexpected_exception(self):
         symbol = "AAPL"
         error_message = "Database connection failed"
         self.mock_provider.get_stock.side_effect = Exception(error_message)
 
         result = self.command.execute(symbol)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is False
-        assert result_data["error"]["code"] == "INTERNAL_ERROR"
-        assert error_message in result_data["error"]["message"]
-
-    def test_execute_returns_valid_json_format(self):
-        symbol = "MSFT"
-        self.mock_provider.get_stock.return_value = create_stock(
-            symbol,
-            Decimal("350.50"),
-            name="Microsoft Corporation",
-            previousClosePrice=Decimal("348.00"),
-            openPrice=Decimal("349.00"),
-            dayHigh=Decimal("352.00"),
-            dayLow=Decimal("347.00"),
-            fiftyDayAverage=Decimal("345.00"),
-            twoHundredDayAverage=Decimal("340.00"),
-            fiftyTwoWeekHigh=Decimal("380.00"),
-            fiftyTwoWeekLow=Decimal("300.00"),
-        )
-
-        result = self.command.execute(symbol)
-
-        try:
-            json.loads(result)
-        except json.JSONDecodeError:
-            pytest.fail("Command did not return valid JSON")
+        assert result.startswith("Error:")
+        assert error_message in result
 
     def test_execute_handles_response_with_minimal_fields(self):
         symbol = "AAPL"
@@ -144,13 +112,10 @@ class TestGetStockPriceCommand:
 
         result = self.command.execute(symbol)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert result_data["data"]["symbol"] == symbol
-        assert result_data["data"]["currentPrice"] == "150.25"
-        assert result_data["data"]["name"] is None
-        assert result_data["data"]["currency"] is None
-        assert result_data["data"]["previousClosePrice"] is None
+        assert result.startswith("AAPL\n")
+        assert "Current Price:" in result
+        assert "150.25" in result
+        assert "Previous Close:" not in result
 
     def test_get_metadata_returns_correct_metadata(self):
         metadata = self.command.get_metadata()
@@ -189,6 +154,5 @@ class TestGetStockPriceCommand:
 
         result = self.command.execute(symbol=symbol, extra_arg="ignored")
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert result_data["data"]["symbol"] == symbol
+        assert "AAPL - Apple Inc. (USD)" in result
+        assert "Current Price:" in result

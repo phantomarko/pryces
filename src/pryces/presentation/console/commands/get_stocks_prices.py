@@ -1,8 +1,7 @@
 import logging
-from dataclasses import asdict
 
 from ....application.use_cases.get_stocks_prices import GetStocksPrices, GetStocksPricesRequest
-from ..json_utils import to_json
+from ..formatters import format_stock_list
 from .base import Command, CommandMetadata, InputPrompt
 
 
@@ -52,32 +51,9 @@ class GetStocksPricesCommand(Command):
                 f"Successfully retrieved prices for {len(responses)}/{len(symbol_list)} symbols"
             )
 
-            # Build summary statistics
-            requested_count = len(symbol_list)
-            successful_count = len(responses)
-            failed_count = requested_count - successful_count
-
-            result = {
-                "success": True,
-                "data": [asdict(response) for response in responses],
-                "summary": {
-                    "requested": requested_count,
-                    "successful": successful_count,
-                    "failed": failed_count,
-                },
-            }
-
-            return to_json(result)
+            return format_stock_list(responses, requested_count=len(symbol_list))
 
         except Exception as e:
             self._logger.exception(f"Unexpected error while fetching stock prices for {symbols}")
 
-            result = {
-                "success": False,
-                "error": {
-                    "code": "INTERNAL_ERROR",
-                    "message": f"An unexpected error occurred: {str(e)}",
-                },
-            }
-
-            return to_json(result)
+            return f"Error: An unexpected error occurred: {e}"

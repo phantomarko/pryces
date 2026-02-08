@@ -1,4 +1,3 @@
-import json
 from decimal import Decimal
 from unittest.mock import Mock
 
@@ -22,7 +21,7 @@ class TestGetStocksPricesCommand:
         use_case = GetStocksPrices(provider=self.mock_provider)
         self.command = GetStocksPricesCommand(use_case)
 
-    def test_execute_returns_success_json_with_multiple_stocks(self):
+    def test_execute_returns_formatted_multiple_stocks(self):
         symbols = "AAPL,GOOGL,MSFT"
         self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
@@ -32,15 +31,10 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert len(result_data["data"]) == 3
-        assert result_data["data"][0]["symbol"] == "AAPL"
-        assert result_data["data"][1]["symbol"] == "GOOGL"
-        assert result_data["data"][2]["symbol"] == "MSFT"
-        assert result_data["summary"]["requested"] == 3
-        assert result_data["summary"]["successful"] == 3
-        assert result_data["summary"]["failed"] == 0
+        assert "AAPL - Apple Inc. (USD)" in result
+        assert "GOOGL - Alphabet Inc. (USD)" in result
+        assert "MSFT - Microsoft Corporation (USD)" in result
+        assert "Summary: 3 requested, 3 successful, 0 failed" in result
 
     def test_execute_handles_partial_failures(self):
         symbols = "AAPL,INVALID,GOOGL"
@@ -51,12 +45,9 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert len(result_data["data"]) == 2
-        assert result_data["summary"]["requested"] == 3
-        assert result_data["summary"]["successful"] == 2
-        assert result_data["summary"]["failed"] == 1
+        assert "AAPL - Apple Inc. (USD)" in result
+        assert "GOOGL - Alphabet Inc. (USD)" in result
+        assert "Summary: 3 requested, 2 successful, 1 failed" in result
 
     def test_execute_handles_all_failures(self):
         symbols = "INVALID1,INVALID2,INVALID3"
@@ -64,14 +55,9 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert len(result_data["data"]) == 0
-        assert result_data["summary"]["requested"] == 3
-        assert result_data["summary"]["successful"] == 0
-        assert result_data["summary"]["failed"] == 3
+        assert "Summary: 3 requested, 0 successful, 3 failed" in result
 
-    def test_execute_handles_decimal_precision_in_json(self):
+    def test_execute_preserves_decimal_precision(self):
         symbols = "GOOGL"
         self.mock_provider.get_stocks.return_value = [
             create_stock("GOOGL", Decimal("2847.123456789"), name="Alphabet Inc.")
@@ -79,34 +65,17 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        assert result_data["data"][0]["currentPrice"] == "2847.123456789"
+        assert "2847.123456789" in result
 
-    def test_execute_returns_error_json_on_unexpected_exception(self):
+    def test_execute_returns_error_on_unexpected_exception(self):
         symbols = "AAPL,GOOGL"
         error_message = "Network connection failed"
         self.mock_provider.get_stocks.side_effect = Exception(error_message)
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is False
-        assert result_data["error"]["code"] == "INTERNAL_ERROR"
-        assert error_message in result_data["error"]["message"]
-
-    def test_execute_returns_valid_json_format(self):
-        symbols = "AAPL,GOOGL"
-        self.mock_provider.get_stocks.return_value = [
-            create_stock("AAPL", Decimal("150.25")),
-            create_stock("GOOGL", Decimal("2847.50")),
-        ]
-
-        result = self.command.execute(symbols)
-
-        try:
-            json.loads(result)
-        except json.JSONDecodeError:
-            pytest.fail("Command did not return valid JSON")
+        assert result.startswith("Error:")
+        assert error_message in result
 
     def test_execute_handles_responses_with_minimal_fields(self):
         symbols = "AAPL,GOOGL"
@@ -143,12 +112,10 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert result_data["data"][0]["symbol"] == "AAPL"
-        assert result_data["data"][0]["currentPrice"] == "150.25"
-        assert result_data["data"][0]["name"] is None
-        assert result_data["data"][0]["currency"] is None
+        assert "AAPL\n" in result
+        assert "GOOGL\n" in result
+        assert "Current Price:" in result
+        assert "Previous Close:" not in result
 
     def test_execute_handles_responses_with_all_fields(self):
         symbols = "AAPL"
@@ -170,18 +137,23 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        result_data = json.loads(result)
-        data = result_data["data"][0]
-        assert data["name"] == "Apple Inc."
-        assert data["currency"] == "USD"
-        assert data["previousClosePrice"] == "148.50"
-        assert data["openPrice"] == "149.00"
-        assert data["dayHigh"] == "151.00"
-        assert data["dayLow"] == "148.00"
-        assert data["fiftyDayAverage"] == "145.50"
-        assert data["twoHundredDayAverage"] == "140.00"
-        assert data["fiftyTwoWeekHigh"] == "180.00"
-        assert data["fiftyTwoWeekLow"] == "120.00"
+        assert "AAPL - Apple Inc. (USD)" in result
+        assert "Previous Close:" in result
+        assert "148.50" in result
+        assert "Open:" in result
+        assert "149.00" in result
+        assert "Day High:" in result
+        assert "151.00" in result
+        assert "Day Low:" in result
+        assert "148.00" in result
+        assert "50-Day Average:" in result
+        assert "145.50" in result
+        assert "200-Day Average:" in result
+        assert "140.00" in result
+        assert "52-Week High:" in result
+        assert "180.00" in result
+        assert "52-Week Low:" in result
+        assert "120.00" in result
 
     def test_get_metadata_returns_correct_metadata(self):
         metadata = self.command.get_metadata()
@@ -209,9 +181,9 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols=symbols, extra_arg="ignored")
 
-        result_data = json.loads(result)
-        assert result_data["success"] is True
-        assert len(result_data["data"]) == 2
+        assert "AAPL" in result
+        assert "GOOGL" in result
+        assert "Summary: 2 requested, 2 successful, 0 failed" in result
 
 
 class TestValidateSymbols:

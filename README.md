@@ -154,37 +154,25 @@ Executing...
 ```
 
 Example output (success):
-```json
-{
-  "success": true,
-  "data": {
-    "symbol": "AAPL",
-    "currentPrice": "269.48",
-    "name": "Apple Inc.",
-    "currency": "USD",
-    "previousClosePrice": "269.955",
-    "openPrice": "269.13",
-    "dayHigh": "271.875",
-    "dayLow": "267.61",
-    "fiftyDayAverage": "268.3466",
-    "twoHundredDayAverage": "236.9913",
-    "fiftyTwoWeekHigh": "288.62",
-    "fiftyTwoWeekLow": "169.21"
-  }
-}
+```
+AAPL - Apple Inc. (USD)
+
+  Current Price:       269.48
+  Previous Close:      269.955
+  Open:                269.13
+  Day High:            271.875
+  Day Low:             267.61
+  50-Day Average:      268.3466
+  200-Day Average:     236.9913
+  52-Week High:        288.62
+  52-Week Low:         169.21
 ```
 
-**Note:** Only `symbol` and `currentPrice` are required fields. All other fields are optional and may be `null` if data is unavailable.
+**Note:** Only `symbol` and `currentPrice` are required fields. All other fields are optional and will be omitted if data is unavailable.
 
 Example output (error):
-```json
-{
-  "success": false,
-  "error": {
-    "code": "STOCK_NOT_FOUND",
-    "message": "Stock not found: INVALID"
-  }
-}
+```
+Error: Stock not found: INVALID
 ```
 
 After each command execution, the menu returns to the main selection screen. Select `0` to exit the program.
@@ -201,96 +189,72 @@ Executing...
 ```
 
 Example output (success with all symbols found):
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "symbol": "AAPL",
-      "currentPrice": "269.48",
-      "name": "Apple Inc.",
-      "currency": "USD",
-      "previousClosePrice": "269.955",
-      "openPrice": "269.13",
-      "dayHigh": "271.875",
-      "dayLow": "267.61",
-      "fiftyDayAverage": "268.3466",
-      "twoHundredDayAverage": "236.9913",
-      "fiftyTwoWeekHigh": "288.62",
-      "fiftyTwoWeekLow": "169.21"
-    },
-    {
-      "symbol": "GOOGL",
-      "currentPrice": "202.63",
-      "name": "Alphabet Inc.",
-      "currency": "USD",
-      "previousClosePrice": "202.75",
-      "openPrice": "202.13",
-      "dayHigh": "204.06",
-      "dayLow": "201.32",
-      "fiftyDayAverage": "194.5574",
-      "twoHundredDayAverage": "178.4237",
-      "fiftyTwoWeekHigh": "207.18",
-      "fiftyTwoWeekLow": "137.82"
-    },
-    {
-      "symbol": "MSFT",
-      "currentPrice": "434.28",
-      "name": "Microsoft Corporation",
-      "currency": "USD",
-      "previousClosePrice": "435.47",
-      "openPrice": "432.40",
-      "dayHigh": "435.95",
-      "dayLow": "429.90",
-      "fiftyDayAverage": "436.8654",
-      "twoHundredDayAverage": "433.2095",
-      "fiftyTwoWeekHigh": "468.35",
-      "fiftyTwoWeekLow": "385.58"
-    }
-  ],
-  "summary": {
-    "requested": 3,
-    "successful": 3,
-    "failed": 0
-  }
-}
+```
+AAPL - Apple Inc. (USD)
+
+  Current Price:       269.48
+  Previous Close:      269.955
+  Open:                269.13
+  Day High:            271.875
+  Day Low:             267.61
+  50-Day Average:      268.3466
+  200-Day Average:     236.9913
+  52-Week High:        288.62
+  52-Week Low:         169.21
+
+------------------------------------------------------------
+
+GOOGL - Alphabet Inc. (USD)
+
+  Current Price:       202.63
+  Previous Close:      202.75
+  Open:                202.13
+  Day High:            204.06
+  Day Low:             201.32
+  50-Day Average:      194.5574
+  200-Day Average:     178.4237
+  52-Week High:        207.18
+  52-Week Low:         137.82
+
+------------------------------------------------------------
+
+MSFT - Microsoft Corporation (USD)
+
+  Current Price:       434.28
+  Previous Close:      435.47
+  Open:                432.40
+  Day High:            435.95
+  Day Low:             429.90
+  50-Day Average:      436.8654
+  200-Day Average:     433.2095
+  52-Week High:        468.35
+  52-Week Low:         385.58
+
+============================================================
+Summary: 3 requested, 3 successful, 0 failed
 ```
 
 Example output (partial success with some invalid symbols):
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "symbol": "AAPL",
-      "currentPrice": "269.48",
-      "name": "Apple Inc.",
-      "currency": "USD",
-      "previousClosePrice": "269.955",
-      "openPrice": "269.13",
-      "dayHigh": "271.875",
-      "dayLow": "267.61",
-      "fiftyDayAverage": "268.3466",
-      "twoHundredDayAverage": "236.9913",
-      "fiftyTwoWeekHigh": "288.62",
-      "fiftyTwoWeekLow": "169.21"
-    }
-  ],
-  "summary": {
-    "requested": 3,
-    "successful": 1,
-    "failed": 2
-  }
-}
+```
+AAPL - Apple Inc. (USD)
+
+  Current Price:       269.48
+  Previous Close:      269.955
+  Open:                269.13
+  Day High:            271.875
+  Day Low:             267.61
+  50-Day Average:      268.3466
+  200-Day Average:     236.9913
+  52-Week High:        288.62
+  52-Week Low:         169.21
+
+============================================================
+Summary: 3 requested, 1 successful, 2 failed
 ```
 
 **Notes:**
-- Only `symbol` and `currentPrice` are required fields. All other fields are optional and may be `null` if data is unavailable.
-- Invalid symbols are silently skipped and do not cause errors. Check the `summary` section to see how many symbols succeeded vs. failed.
-- The `summary` includes:
-  - `requested`: Total number of symbols requested
-  - `successful`: Number of symbols successfully fetched
-  - `failed`: Number of symbols that failed (invalid or data unavailable)
+- Only `symbol` and `currentPrice` are required fields. All other fields are optional and will be omitted if data is unavailable.
+- Invalid symbols are silently skipped and do not cause errors. Check the summary line to see how many symbols succeeded vs. failed.
 
 ### Test Notifications
 

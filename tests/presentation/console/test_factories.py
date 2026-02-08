@@ -70,8 +70,7 @@ class TestCommandFactory:
         command = factory.create_get_stock_price_command()
         result = command.execute("AAPL")
 
-        assert '"success": true' in result
-        assert "AAPL" in result
+        assert "AAPL - Apple Inc. (USD)" in result
         assert "150.25" in result
 
     def test_create_command_registry_returns_registry_instance(self):
@@ -110,8 +109,7 @@ class TestCommandFactory:
         command = registry.get_command("get_stock_price")
         result = command.execute(symbol="AAPL")
 
-        assert '"success": true' in result
-        assert "AAPL" in result
+        assert "AAPL - Apple Inc. (USD)" in result
 
     def test_create_get_stocks_prices_command_returns_command_instance(self):
         mock_provider = Mock(spec=StockProvider)
@@ -179,10 +177,10 @@ class TestCommandFactory:
         command = registry.get_command("get_stocks_prices")
         result = command.execute(symbols="AAPL,GOOGL,MSFT")
 
-        assert '"success": true' in result
-        assert "AAPL" in result
-        assert "GOOGL" in result
-        assert "MSFT" in result
+        assert "AAPL - Apple Inc. (USD)" in result
+        assert "GOOGL - Alphabet Inc. (USD)" in result
+        assert "MSFT - Microsoft Corporation (USD)" in result
+        assert "Summary: 3 requested, 3 successful, 0 failed" in result
 
     def test_registry_contains_monitor_stocks_command(self):
         mock_provider = Mock(spec=StockProvider)
