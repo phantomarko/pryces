@@ -55,8 +55,8 @@ class MonitorStocksCommand(Command):
             total_notifications = 0
             for dto in results:
                 if dto.notifications:
-                    for message in dto.notifications:
-                        self._logger.info(f"Notification: {message}")
+                    for notification in dto.notifications:
+                        self._logger.info(f"Notification: {notification.message}")
                     total_notifications += len(dto.notifications)
                 else:
                     self._logger.info(f"No notifications for {dto.symbol}")

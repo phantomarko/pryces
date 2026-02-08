@@ -1,8 +1,35 @@
 from decimal import Decimal
 
-from pryces.application.dtos import StockDTO
+from pryces.application.dtos import NotificationDTO, StockDTO
+from pryces.domain.notifications import Notification, NotificationType
 from pryces.domain.stocks import Stock
 from tests.fixtures.factories import create_stock
+
+
+class TestNotificationDTO:
+
+    def test_from_notification_maps_type_and_message(self):
+        notification = Notification.create_fifty_day_average_crossed(
+            "AAPL", Decimal("101"), Decimal("100")
+        )
+
+        result = NotificationDTO.from_notification(notification)
+
+        assert isinstance(result, NotificationDTO)
+        assert result.type == "SMA50_CROSSED"
+        assert "AAPL" in result.message
+        assert "50-day" in result.message
+
+    def test_from_notification_maps_two_hundred_day_type(self):
+        notification = Notification.create_two_hundred_day_average_crossed(
+            "GOOGL", Decimal("201"), Decimal("200")
+        )
+
+        result = NotificationDTO.from_notification(notification)
+
+        assert result.type == "SMA200_CROSSED"
+        assert "GOOGL" in result.message
+        assert "200-day" in result.message
 
 
 class TestStockDTO:
@@ -38,3 +65,19 @@ class TestStockDTO:
         assert result.name is None
         assert result.currency is None
         assert result.notifications == []
+
+    def test_from_stock_maps_notifications_to_notification_dtos(self):
+        stock = Stock(
+            symbol="AAPL",
+            currentPrice=Decimal("101"),
+            previousClosePrice=Decimal("99"),
+            fiftyDayAverage=Decimal("100"),
+        )
+        stock.generate_milestones_notifications()
+
+        result = StockDTO.from_stock(stock)
+
+        assert len(result.notifications) == 1
+        assert isinstance(result.notifications[0], NotificationDTO)
+        assert result.notifications[0].type == "SMA50_CROSSED"
+        assert "50-day" in result.notifications[0].message

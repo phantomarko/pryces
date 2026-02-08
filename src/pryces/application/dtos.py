@@ -3,7 +3,21 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from pryces.domain.notifications import Notification
 from pryces.domain.stocks import Stock
+
+
+@dataclass(frozen=True)
+class NotificationDTO:
+    type: str
+    message: str
+
+    @staticmethod
+    def from_notification(notification: Notification) -> NotificationDTO:
+        return NotificationDTO(
+            type=notification.type.value,
+            message=notification.message,
+        )
 
 
 @dataclass(frozen=True)
@@ -20,7 +34,7 @@ class StockDTO:
     twoHundredDayAverage: Decimal | None = None
     fiftyTwoWeekHigh: Decimal | None = None
     fiftyTwoWeekLow: Decimal | None = None
-    notifications: list[str] = field(default_factory=list)
+    notifications: list[NotificationDTO] = field(default_factory=list)
 
     @staticmethod
     def from_stock(stock: Stock) -> StockDTO:
@@ -37,5 +51,5 @@ class StockDTO:
             twoHundredDayAverage=stock.twoHundredDayAverage,
             fiftyTwoWeekHigh=stock.fiftyTwoWeekHigh,
             fiftyTwoWeekLow=stock.fiftyTwoWeekLow,
-            notifications=[n.message for n in stock.notifications],
+            notifications=[NotificationDTO.from_notification(n) for n in stock.notifications],
         )
