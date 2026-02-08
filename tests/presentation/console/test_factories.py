@@ -5,6 +5,7 @@ from pryces.application.interfaces import StockProvider, MessageSender
 from pryces.presentation.console.factories import CommandFactory
 from pryces.presentation.console.commands.get_stock_price import GetStockPriceCommand
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
+from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
 from pryces.presentation.console.commands.registry import CommandRegistry
 from pryces.presentation.console.commands.send_messages import SendMessagesCommand
 from tests.fixtures.factories import create_stock
@@ -182,3 +183,25 @@ class TestCommandFactory:
         assert "AAPL" in result
         assert "GOOGL" in result
         assert "MSFT" in result
+
+    def test_registry_contains_monitor_stocks_command(self):
+        mock_provider = Mock(spec=StockProvider)
+        factory = CommandFactory(
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+        )
+
+        registry = factory.create_command_registry()
+        command = registry.get_command("monitor_stocks")
+
+        assert isinstance(command, MonitorStocksCommand)
+
+    def test_monitor_stocks_is_first_command_in_registry(self):
+        mock_provider = Mock(spec=StockProvider)
+        factory = CommandFactory(
+            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+        )
+
+        registry = factory.create_command_registry()
+        all_commands = registry.get_all_commands()
+
+        assert all_commands[0].get_metadata().id == "monitor_stocks"

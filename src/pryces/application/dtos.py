@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from pryces.domain.stocks import Stock
@@ -20,9 +20,7 @@ class StockPriceDTO:
     twoHundredDayAverage: Decimal | None = None
     fiftyTwoWeekHigh: Decimal | None = None
     fiftyTwoWeekLow: Decimal | None = None
-
-    def to_stock(self) -> Stock:
-        return Stock(**asdict(self))
+    notifications: list[str] = field(default_factory=list)
 
     @staticmethod
     def from_stock(stock: Stock) -> StockPriceDTO:
@@ -39,4 +37,5 @@ class StockPriceDTO:
             twoHundredDayAverage=stock.twoHundredDayAverage,
             fiftyTwoWeekHigh=stock.fiftyTwoWeekHigh,
             fiftyTwoWeekLow=stock.fiftyTwoWeekLow,
+            notifications=[n.message for n in stock.notifications],
         )

@@ -115,6 +115,9 @@ class TestTriggerStocksNotifications:
         assert all(isinstance(r, StockPriceDTO) for r in result)
         assert result[0].symbol == "AAPL"
         assert result[1].symbol == "GOOGL"
+        assert len(result[0].notifications) == 1
+        assert "50-day" in result[0].notifications[0]
+        assert result[1].notifications == []
 
     def test_handle_returns_empty_list_for_empty_symbols(self):
         self.mock_provider.get_stocks.return_value = []
@@ -145,3 +148,5 @@ class TestTriggerStocksNotifications:
 
         assert result[0].currentPrice == Decimal("101")
         assert result[0].symbol == "AAPL"
+        assert len(result[0].notifications) == 1
+        assert "50-day" in result[0].notifications[0]

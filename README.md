@@ -12,6 +12,7 @@ A Python CLI tool for retrieving stock price information, built with clean archi
   - [Environment Configuration](#environment-configuration)
 - [Usage](#usage)
   - [Interactive Menu](#interactive-menu)
+  - [Monitor Stocks](#monitor-stocks)
   - [Get Stock Price](#get-stock-price)
   - [Get Multiple Stock Prices](#get-multiple-stock-prices)
   - [Test Notifications](#test-notifications)
@@ -98,13 +99,16 @@ PRYCES - Stock Price Information System
 
 Available Commands:
 
-  1. Get Stock Price
+  1. Monitor Stocks
+     Monitor stocks for relevant price notifications
+
+  2. Get Stock Price
      Retrieve current price and details for a single stock symbol
 
-  2. Get Multiple Stock Prices
+  3. Get Multiple Stock Prices
      Retrieve current prices for multiple stock symbols
 
-  3. Test Notifications
+  4. Test Notifications
      Send a test notification message
 
   0. Exit
@@ -112,9 +116,35 @@ Available Commands:
 Enter your selection:
 ```
 
+### Monitor Stocks
+
+When you select option 1, you'll be prompted to enter comma-separated stock symbols to monitor for relevant price notifications:
+
+```
+--- Monitor Stocks ---
+
+Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL
+Executing...
+```
+
+Example output (with notifications):
+```
+Monitoring complete. 2 stocks checked, 1 notifications sent.
+```
+
+Example output (no notifications):
+```
+Monitoring complete. 2 stocks checked, 0 notifications sent.
+```
+
+**Notes:**
+- This command checks if stock prices have crossed their 50-day or 200-day moving averages
+- When a crossing is detected, a notification is automatically sent via Telegram
+- Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
+
 ### Get Stock Price
 
-When you select option 1, you'll be prompted to enter a stock symbol:
+When you select option 2, you'll be prompted to enter a stock symbol:
 
 ```
 --- Get Stock Price ---
@@ -161,7 +191,7 @@ After each command execution, the menu returns to the main selection screen. Sel
 
 ### Get Multiple Stock Prices
 
-When you select option 2, you'll be prompted to enter comma-separated stock symbols:
+When you select option 3, you'll be prompted to enter comma-separated stock symbols:
 
 ```
 --- Get Multiple Stock Prices ---
@@ -264,7 +294,7 @@ Example output (partial success with some invalid symbols):
 
 ### Test Notifications
 
-When you select option 3, a test notification message is sent automatically (no input required):
+When you select option 4, a test notification message is sent automatically (no input required):
 
 ```
 --- Test Notifications ---
