@@ -84,6 +84,7 @@ Presentation → Application → Domain
 
 **Application** (`src/pryces/application/`) — Use cases and port interfaces:
 - `interfaces.py` — `StockProvider` ABC (port), `StockPrice` frozen dataclass (DTO with Decimal fields), `MessageSender` ABC (port)
+- `dtos.py` — `NotificationDTO` (type + message), `StockDTO` (maps domain `Stock` to application layer)
 - `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols)
