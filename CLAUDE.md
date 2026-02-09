@@ -91,7 +91,7 @@ Presentation → Application → Domain
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)
-- `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers milestone notifications via NotificationService)
+- `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers notifications via NotificationService)
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
 - `implementations.py` — `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API

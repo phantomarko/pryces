@@ -3,7 +3,6 @@ import time
 from ....application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
-    TriggerType,
 )
 from .base import Command, CommandMetadata, InputPrompt
 
@@ -66,9 +65,7 @@ class MonitorStocksCommand(Command):
 
         try:
             symbol_list = parse_symbols_input(symbols)
-            request = TriggerStocksNotificationsRequest(
-                type=TriggerType.MILESTONES, symbols=symbol_list
-            )
+            request = TriggerStocksNotificationsRequest(symbols=symbol_list)
 
             total_notifications = 0
 

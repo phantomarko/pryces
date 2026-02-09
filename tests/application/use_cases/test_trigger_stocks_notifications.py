@@ -6,7 +6,6 @@ from pryces.application.services import NotificationService
 from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
-    TriggerType,
 )
 from tests.fixtures.factories import (
     create_stock_crossing_both_averages,
@@ -29,7 +28,7 @@ class TestTriggerStocksNotifications:
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):
         stock = create_stock_crossing_fifty_day("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
-        request = TriggerStocksNotificationsRequest(type=TriggerType.MILESTONES, symbols=["AAPL"])
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
         result = self.use_case.handle(request)
 
@@ -41,7 +40,7 @@ class TestTriggerStocksNotifications:
     def test_handle_sends_milestone_notification_for_two_hundred_day_crossing(self):
         stock = create_stock_crossing_two_hundred_day("GOOGL")
         self.mock_provider.get_stocks.return_value = [stock]
-        request = TriggerStocksNotificationsRequest(type=TriggerType.MILESTONES, symbols=["GOOGL"])
+        request = TriggerStocksNotificationsRequest(symbols=["GOOGL"])
 
         result = self.use_case.handle(request)
 
@@ -53,7 +52,7 @@ class TestTriggerStocksNotifications:
     def test_handle_sends_both_notifications_when_both_averages_crossed(self):
         stock = create_stock_crossing_both_averages("MSFT")
         self.mock_provider.get_stocks.return_value = [stock]
-        request = TriggerStocksNotificationsRequest(type=TriggerType.MILESTONES, symbols=["MSFT"])
+        request = TriggerStocksNotificationsRequest(symbols=["MSFT"])
 
         result = self.use_case.handle(request)
 
@@ -65,7 +64,7 @@ class TestTriggerStocksNotifications:
     def test_handle_sends_market_open_even_when_no_crossings(self):
         stock = create_stock_no_crossing("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
-        request = TriggerStocksNotificationsRequest(type=TriggerType.MILESTONES, symbols=["AAPL"])
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
         result = self.use_case.handle(request)
 
@@ -76,9 +75,7 @@ class TestTriggerStocksNotifications:
         crossing_stock = create_stock_crossing_fifty_day("AAPL")
         non_crossing_stock = create_stock_no_crossing("GOOGL")
         self.mock_provider.get_stocks.return_value = [crossing_stock, non_crossing_stock]
-        request = TriggerStocksNotificationsRequest(
-            type=TriggerType.MILESTONES, symbols=["AAPL", "GOOGL"]
-        )
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL"])
 
         result = self.use_case.handle(request)
 
@@ -89,9 +86,7 @@ class TestTriggerStocksNotifications:
         stock1 = create_stock_crossing_fifty_day("AAPL")
         stock2 = create_stock_crossing_two_hundred_day("GOOGL")
         self.mock_provider.get_stocks.return_value = [stock1, stock2]
-        request = TriggerStocksNotificationsRequest(
-            type=TriggerType.MILESTONES, symbols=["AAPL", "GOOGL"]
-        )
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL"])
 
         result = self.use_case.handle(request)
 
@@ -104,7 +99,7 @@ class TestTriggerStocksNotifications:
     def test_handle_returns_notification_dtos(self):
         stock = create_stock_crossing_fifty_day("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
-        request = TriggerStocksNotificationsRequest(type=TriggerType.MILESTONES, symbols=["AAPL"])
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
         result = self.use_case.handle(request)
 
@@ -113,7 +108,7 @@ class TestTriggerStocksNotifications:
 
     def test_handle_returns_empty_list_for_empty_symbols(self):
         self.mock_provider.get_stocks.return_value = []
-        request = TriggerStocksNotificationsRequest(type=TriggerType.MILESTONES, symbols=[])
+        request = TriggerStocksNotificationsRequest(symbols=[])
 
         result = self.use_case.handle(request)
 
@@ -123,9 +118,7 @@ class TestTriggerStocksNotifications:
 
     def test_handle_calls_provider_with_correct_symbols(self):
         self.mock_provider.get_stocks.return_value = []
-        request = TriggerStocksNotificationsRequest(
-            type=TriggerType.MILESTONES, symbols=["AAPL", "GOOGL", "MSFT"]
-        )
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL", "MSFT"])
 
         self.use_case.handle(request)
 
