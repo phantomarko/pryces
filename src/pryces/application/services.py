@@ -13,7 +13,8 @@ class NotificationService:
     def notifications_sent(self) -> dict[str, list[Notification]]:
         return self._notifications_sent
 
-    def send_stock_notifications(self, stock: Stock) -> list[Notification]:
+    def send_stock_milestones_notifications(self, stock: Stock) -> list[Notification]:
+        stock.generate_milestones_notifications()
         sent: list[Notification] = []
 
         for notification in stock.notifications:
