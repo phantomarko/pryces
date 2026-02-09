@@ -66,6 +66,51 @@ def test_equals_returns_false_for_different_type():
     assert notification1.equals(notification2) is False
 
 
+def test_create_regular_market_open_sets_type():
+    notification = Notification.create_regular_market_open("AAPL", Decimal("150.00"), None)
+
+    assert notification.type == NotificationType.REGULAR_MARKET_OPEN
+
+
+def test_create_regular_market_open_sets_message():
+    notification = Notification.create_regular_market_open("AAPL", Decimal("150.00"), None)
+
+    assert isinstance(notification.message, str)
+    assert len(notification.message) > 0
+
+
+def test_create_regular_market_open_with_last_close_price_sets_type():
+    notification = Notification.create_regular_market_open(
+        "AAPL", Decimal("150.00"), Decimal("148.00")
+    )
+
+    assert notification.type == NotificationType.REGULAR_MARKET_OPEN
+
+
+def test_create_regular_market_open_with_last_close_price_sets_message():
+    notification = Notification.create_regular_market_open(
+        "AAPL", Decimal("150.00"), Decimal("148.00")
+    )
+
+    assert isinstance(notification.message, str)
+    assert len(notification.message) > 0
+
+
+def test_create_regular_market_closed_sets_type():
+    notification = Notification.create_regular_market_closed("AAPL")
+
+    assert notification.type == NotificationType.REGULAR_MARKET_CLOSED
+
+
+def test_create_regular_market_closed_sets_message():
+    notification = Notification.create_regular_market_closed("AAPL")
+
+    assert isinstance(notification.message, str)
+    assert len(notification.message) > 0
+
+
 def test_notification_type_enum_has_expected_values():
     assert NotificationType.SMA50_CROSSED.value == "SMA50_CROSSED"
     assert NotificationType.SMA200_CROSSED.value == "SMA200_CROSSED"
+    assert NotificationType.REGULAR_MARKET_OPEN.value == "REGULAR_MARKET_OPEN"
+    assert NotificationType.REGULAR_MARKET_CLOSED.value == "REGULAR_MARKET_CLOSED"

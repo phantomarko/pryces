@@ -5,6 +5,8 @@ from enum import Enum
 class NotificationType(Enum):
     SMA50_CROSSED = "SMA50_CROSSED"
     SMA200_CROSSED = "SMA200_CROSSED"
+    REGULAR_MARKET_OPEN = "REGULAR_MARKET_OPEN"
+    REGULAR_MARKET_CLOSED = "REGULAR_MARKET_CLOSED"
 
 
 class Notification:
@@ -46,3 +48,22 @@ class Notification:
             f"Current price: {current_price}"
         )
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
+
+    @staticmethod
+    def create_regular_market_open(
+        symbol: str, open_price: Decimal, last_close_price: Decimal | None
+    ) -> "Notification":
+        message = f"{symbol} regular market is now open. Opening price: {open_price}"
+        if last_close_price is not None:
+            change_percentage = ((open_price - last_close_price) / last_close_price) * 100
+            message += f". Previous close: {last_close_price}" f" ({change_percentage:+.2f}%)"
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_OPEN, message
+        )
+
+    @staticmethod
+    def create_regular_market_closed(symbol: str) -> "Notification":
+        message = f"{symbol} regular market is now closed"
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_CLOSED, message
+        )
