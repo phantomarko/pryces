@@ -142,6 +142,34 @@ class Stock:
     def is_market_state_post(self) -> bool:
         return self._marketState == MarketState.POST
 
+    def _generate_percentage_change_notification(
+        self, change_percentage: Decimal
+    ) -> Notification | None:
+        args = (self.symbol, self.currentPrice, self.previousClosePrice, change_percentage)
+
+        if change_percentage > 0:
+            thresholds = (
+                (Decimal("20"), Notification.create_twenty_percent_increase),
+                (Decimal("15"), Notification.create_fifteen_percent_increase),
+                (Decimal("10"), Notification.create_ten_percent_increase),
+                (Decimal("5"), Notification.create_five_percent_increase),
+            )
+            for threshold, factory in thresholds:
+                if change_percentage >= threshold:
+                    return factory(*args)
+        elif change_percentage < 0:
+            thresholds = (
+                (Decimal("-20"), Notification.create_twenty_percent_decrease),
+                (Decimal("-15"), Notification.create_fifteen_percent_decrease),
+                (Decimal("-10"), Notification.create_ten_percent_decrease),
+                (Decimal("-5"), Notification.create_five_percent_decrease),
+            )
+            for threshold, factory in thresholds:
+                if change_percentage <= threshold:
+                    return factory(*args)
+
+        return None
+
     def generate_milestones_notifications(self) -> None:
         if self.is_market_state_open():
             self._notifications.append(
@@ -163,6 +191,13 @@ class Stock:
                         self.symbol, self.currentPrice, self.twoHundredDayAverage
                     )
                 )
+            change_percentage = self.change_percentage_from_previous_close()
+            if change_percentage is not None:
+                percentage_notification = self._generate_percentage_change_notification(
+                    change_percentage
+                )
+                if percentage_notification is not None:
+                    self._notifications.append(percentage_notification)
         elif self.is_market_state_post():
             self._notifications.append(
                 Notification.create_regular_market_closed(
