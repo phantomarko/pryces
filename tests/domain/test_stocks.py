@@ -53,21 +53,21 @@ def test_stock_is_immutable():
 
 def test_has_crossed_fifty_day_average_returns_false_when_fields_are_missing():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
-    assert stock.has_crossed_fifty_day_average() is False
+    assert stock._has_crossed_fifty_day_average() is False
 
     stock_with_previous = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         previousClosePrice=Decimal("140.00"),
     )
-    assert stock_with_previous.has_crossed_fifty_day_average() is False
+    assert stock_with_previous._has_crossed_fifty_day_average() is False
 
     stock_with_average = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock_with_average.has_crossed_fifty_day_average() is False
+    assert stock_with_average._has_crossed_fifty_day_average() is False
 
 
 def test_has_crossed_fifty_day_average_detects_crossing_above():
@@ -77,7 +77,7 @@ def test_has_crossed_fifty_day_average_detects_crossing_above():
         previousClosePrice=Decimal("140.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock.has_crossed_fifty_day_average() is True
+    assert stock._has_crossed_fifty_day_average() is True
 
 
 def test_has_crossed_fifty_day_average_detects_crossing_below():
@@ -87,7 +87,7 @@ def test_has_crossed_fifty_day_average_detects_crossing_below():
         previousClosePrice=Decimal("150.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock.has_crossed_fifty_day_average() is True
+    assert stock._has_crossed_fifty_day_average() is True
 
 
 def test_has_crossed_fifty_day_average_returns_false_when_no_crossing():
@@ -97,7 +97,7 @@ def test_has_crossed_fifty_day_average_returns_false_when_no_crossing():
         previousClosePrice=Decimal("148.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock_both_above.has_crossed_fifty_day_average() is False
+    assert stock_both_above._has_crossed_fifty_day_average() is False
 
     stock_both_below = Stock(
         symbol="AAPL",
@@ -105,7 +105,7 @@ def test_has_crossed_fifty_day_average_returns_false_when_no_crossing():
         previousClosePrice=Decimal("142.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock_both_below.has_crossed_fifty_day_average() is False
+    assert stock_both_below._has_crossed_fifty_day_average() is False
 
 
 def test_has_crossed_fifty_day_average_detects_crossing_above_when_current_equals_average():
@@ -115,7 +115,7 @@ def test_has_crossed_fifty_day_average_detects_crossing_above_when_current_equal
         previousClosePrice=Decimal("140.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock.has_crossed_fifty_day_average() is True
+    assert stock._has_crossed_fifty_day_average() is True
 
 
 def test_has_crossed_fifty_day_average_detects_crossing_below_when_current_equals_average():
@@ -125,7 +125,7 @@ def test_has_crossed_fifty_day_average_detects_crossing_below_when_current_equal
         previousClosePrice=Decimal("150.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock.has_crossed_fifty_day_average() is True
+    assert stock._has_crossed_fifty_day_average() is True
 
 
 def test_has_crossed_fifty_day_average_returns_false_when_previous_equals_average():
@@ -135,7 +135,7 @@ def test_has_crossed_fifty_day_average_returns_false_when_previous_equals_averag
         previousClosePrice=Decimal("145.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock_current_above.has_crossed_fifty_day_average() is False
+    assert stock_current_above._has_crossed_fifty_day_average() is False
 
     stock_current_below = Stock(
         symbol="AAPL",
@@ -143,26 +143,26 @@ def test_has_crossed_fifty_day_average_returns_false_when_previous_equals_averag
         previousClosePrice=Decimal("145.00"),
         fiftyDayAverage=Decimal("145.00"),
     )
-    assert stock_current_below.has_crossed_fifty_day_average() is False
+    assert stock_current_below._has_crossed_fifty_day_average() is False
 
 
 def test_has_crossed_two_hundred_day_average_returns_false_when_fields_are_missing():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
-    assert stock.has_crossed_two_hundred_day_average() is False
+    assert stock._has_crossed_two_hundred_day_average() is False
 
     stock_with_previous = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         previousClosePrice=Decimal("130.00"),
     )
-    assert stock_with_previous.has_crossed_two_hundred_day_average() is False
+    assert stock_with_previous._has_crossed_two_hundred_day_average() is False
 
     stock_with_average = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock_with_average.has_crossed_two_hundred_day_average() is False
+    assert stock_with_average._has_crossed_two_hundred_day_average() is False
 
 
 def test_has_crossed_two_hundred_day_average_detects_crossing_above():
@@ -172,7 +172,7 @@ def test_has_crossed_two_hundred_day_average_detects_crossing_above():
         previousClosePrice=Decimal("130.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock.has_crossed_two_hundred_day_average() is True
+    assert stock._has_crossed_two_hundred_day_average() is True
 
 
 def test_has_crossed_two_hundred_day_average_detects_crossing_below():
@@ -182,7 +182,7 @@ def test_has_crossed_two_hundred_day_average_detects_crossing_below():
         previousClosePrice=Decimal("150.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock.has_crossed_two_hundred_day_average() is True
+    assert stock._has_crossed_two_hundred_day_average() is True
 
 
 def test_has_crossed_two_hundred_day_average_returns_false_when_no_crossing():
@@ -192,7 +192,7 @@ def test_has_crossed_two_hundred_day_average_returns_false_when_no_crossing():
         previousClosePrice=Decimal("148.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock_both_above.has_crossed_two_hundred_day_average() is False
+    assert stock_both_above._has_crossed_two_hundred_day_average() is False
 
     stock_both_below = Stock(
         symbol="AAPL",
@@ -200,7 +200,7 @@ def test_has_crossed_two_hundred_day_average_returns_false_when_no_crossing():
         previousClosePrice=Decimal("135.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock_both_below.has_crossed_two_hundred_day_average() is False
+    assert stock_both_below._has_crossed_two_hundred_day_average() is False
 
 
 def test_has_crossed_two_hundred_day_average_detects_crossing_above_when_current_equals_average():
@@ -210,7 +210,7 @@ def test_has_crossed_two_hundred_day_average_detects_crossing_above_when_current
         previousClosePrice=Decimal("130.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock.has_crossed_two_hundred_day_average() is True
+    assert stock._has_crossed_two_hundred_day_average() is True
 
 
 def test_has_crossed_two_hundred_day_average_detects_crossing_below_when_current_equals_average():
@@ -220,7 +220,7 @@ def test_has_crossed_two_hundred_day_average_detects_crossing_below_when_current
         previousClosePrice=Decimal("150.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock.has_crossed_two_hundred_day_average() is True
+    assert stock._has_crossed_two_hundred_day_average() is True
 
 
 def test_has_crossed_two_hundred_day_average_returns_false_when_previous_equals_average():
@@ -230,7 +230,7 @@ def test_has_crossed_two_hundred_day_average_returns_false_when_previous_equals_
         previousClosePrice=Decimal("140.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock_current_above.has_crossed_two_hundred_day_average() is False
+    assert stock_current_above._has_crossed_two_hundred_day_average() is False
 
     stock_current_below = Stock(
         symbol="AAPL",
@@ -238,13 +238,13 @@ def test_has_crossed_two_hundred_day_average_returns_false_when_previous_equals_
         previousClosePrice=Decimal("140.00"),
         twoHundredDayAverage=Decimal("140.00"),
     )
-    assert stock_current_below.has_crossed_two_hundred_day_average() is False
+    assert stock_current_below._has_crossed_two_hundred_day_average() is False
 
 
 def test_change_percentage_from_previous_close_returns_none_when_previous_close_is_none():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
 
-    assert stock.change_percentage_from_previous_close() is None
+    assert stock._change_percentage_from_previous_close() is None
 
 
 def test_change_percentage_from_previous_close_returns_positive_percentage():
@@ -254,7 +254,7 @@ def test_change_percentage_from_previous_close_returns_positive_percentage():
         previousClosePrice=Decimal("100.00"),
     )
 
-    assert stock.change_percentage_from_previous_close() == Decimal("50.00")
+    assert stock._change_percentage_from_previous_close() == Decimal("50.00")
 
 
 def test_change_percentage_from_previous_close_returns_negative_percentage():
@@ -264,7 +264,7 @@ def test_change_percentage_from_previous_close_returns_negative_percentage():
         previousClosePrice=Decimal("100.00"),
     )
 
-    assert stock.change_percentage_from_previous_close() == Decimal("-10.00")
+    assert stock._change_percentage_from_previous_close() == Decimal("-10.00")
 
 
 def test_change_percentage_from_previous_close_returns_zero_when_prices_are_equal():
@@ -274,7 +274,7 @@ def test_change_percentage_from_previous_close_returns_zero_when_prices_are_equa
         previousClosePrice=Decimal("100.00"),
     )
 
-    assert stock.change_percentage_from_previous_close() == Decimal("0.00")
+    assert stock._change_percentage_from_previous_close() == Decimal("0.00")
 
 
 def test_stock_optional_fields_default_to_none():
@@ -385,7 +385,7 @@ def test_is_market_state_open_returns_true_when_market_state_is_open():
         marketState=MarketState.OPEN,
     )
 
-    assert stock.is_market_state_open() is True
+    assert stock._is_market_state_open() is True
 
 
 def test_is_market_state_open_returns_false_when_market_state_is_closed():
@@ -395,13 +395,13 @@ def test_is_market_state_open_returns_false_when_market_state_is_closed():
         marketState=MarketState.CLOSED,
     )
 
-    assert stock.is_market_state_open() is False
+    assert stock._is_market_state_open() is False
 
 
 def test_is_market_state_open_returns_false_when_market_state_is_none():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
 
-    assert stock.is_market_state_open() is False
+    assert stock._is_market_state_open() is False
 
 
 def test_generate_milestones_notifications_adds_regular_market_open_notification():
@@ -454,7 +454,7 @@ def test_is_market_state_post_returns_true_when_market_state_is_post():
         marketState=MarketState.POST,
     )
 
-    assert stock.is_market_state_post() is True
+    assert stock._is_market_state_post() is True
 
 
 def test_is_market_state_post_returns_false_for_other_states():
@@ -464,13 +464,13 @@ def test_is_market_state_post_returns_false_for_other_states():
             currentPrice=Decimal("150.00"),
             marketState=state,
         )
-        assert stock.is_market_state_post() is False
+        assert stock._is_market_state_post() is False
 
 
 def test_is_market_state_post_returns_false_when_market_state_is_none():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
 
-    assert stock.is_market_state_post() is False
+    assert stock._is_market_state_post() is False
 
 
 def test_generate_milestones_notifications_adds_regular_market_closed_when_post():

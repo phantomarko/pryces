@@ -100,7 +100,7 @@ class Stock:
     def notifications(self) -> list[Notification]:
         return self._notifications
 
-    def has_crossed_fifty_day_average(self) -> bool:
+    def _has_crossed_fifty_day_average(self) -> bool:
         if self.previousClosePrice is None or self.fiftyDayAverage is None:
             return False
 
@@ -115,7 +115,7 @@ class Stock:
 
         return crossed_above or crossed_below
 
-    def has_crossed_two_hundred_day_average(self) -> bool:
+    def _has_crossed_two_hundred_day_average(self) -> bool:
         if self.previousClosePrice is None or self.twoHundredDayAverage is None:
             return False
 
@@ -130,16 +130,16 @@ class Stock:
 
         return crossed_above or crossed_below
 
-    def change_percentage_from_previous_close(self) -> Decimal | None:
+    def _change_percentage_from_previous_close(self) -> Decimal | None:
         if self.previousClosePrice is None:
             return None
 
         return (self.currentPrice - self.previousClosePrice) / self.previousClosePrice * 100
 
-    def is_market_state_open(self) -> bool:
+    def _is_market_state_open(self) -> bool:
         return self._marketState == MarketState.OPEN
 
-    def is_market_state_post(self) -> bool:
+    def _is_market_state_post(self) -> bool:
         return self._marketState == MarketState.POST
 
     def _generate_percentage_change_notification(
@@ -170,35 +170,38 @@ class Stock:
 
         return None
 
-    def generate_milestones_notifications(self) -> None:
-        if self.is_market_state_open():
+    def _generate_market_open_notifications(self) -> None:
+        self._notifications.append(
+            Notification.create_regular_market_open(
+                self.symbol,
+                self.openPrice if self.openPrice is not None else self.currentPrice,
+                self.previousClosePrice,
+            )
+        )
+        if self._has_crossed_fifty_day_average():
             self._notifications.append(
-                Notification.create_regular_market_open(
-                    self.symbol,
-                    self.openPrice if self.openPrice is not None else self.currentPrice,
-                    self.previousClosePrice,
+                Notification.create_fifty_day_average_crossed(
+                    self.symbol, self.currentPrice, self.fiftyDayAverage
                 )
             )
-            if self.has_crossed_fifty_day_average():
-                self._notifications.append(
-                    Notification.create_fifty_day_average_crossed(
-                        self.symbol, self.currentPrice, self.fiftyDayAverage
-                    )
+        if self._has_crossed_two_hundred_day_average():
+            self._notifications.append(
+                Notification.create_two_hundred_day_average_crossed(
+                    self.symbol, self.currentPrice, self.twoHundredDayAverage
                 )
-            if self.has_crossed_two_hundred_day_average():
-                self._notifications.append(
-                    Notification.create_two_hundred_day_average_crossed(
-                        self.symbol, self.currentPrice, self.twoHundredDayAverage
-                    )
-                )
-            change_percentage = self.change_percentage_from_previous_close()
-            if change_percentage is not None:
-                percentage_notification = self._generate_percentage_change_notification(
-                    change_percentage
-                )
-                if percentage_notification is not None:
-                    self._notifications.append(percentage_notification)
-        elif self.is_market_state_post():
+            )
+        change_percentage = self._change_percentage_from_previous_close()
+        if change_percentage is not None:
+            percentage_notification = self._generate_percentage_change_notification(
+                change_percentage
+            )
+            if percentage_notification is not None:
+                self._notifications.append(percentage_notification)
+
+    def generate_milestones_notifications(self) -> None:
+        if self._is_market_state_open():
+            self._generate_market_open_notifications()
+        elif self._is_market_state_post():
             self._notifications.append(
                 Notification.create_regular_market_closed(
                     self.symbol, self.currentPrice, self.openPrice
