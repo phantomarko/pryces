@@ -21,6 +21,7 @@ A Python CLI tool for retrieving stock price information, built with clean archi
   - [Code Formatting with Black](#code-formatting-with-black)
   - [Working with Virtual Environment](#working-with-virtual-environment)
 - [Project Principles](#project-principles)
+- [License](#license)
 
 ## Overview
 
@@ -368,3 +369,7 @@ deactivate
 ## Project Principles
 
 See [CLAUDE.md](CLAUDE.md) for detailed conventions and architectural guidelines.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
