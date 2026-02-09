@@ -80,17 +80,21 @@ Presentation → Application → Domain
 ```
 
 **Domain** (`src/pryces/domain/`) — Core domain model:
-- `stocks.py` — `Stock` frozen dataclass (symbol, currentPrice + 10 optional price fields using Decimal)
+- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice, marketState + 10 optional Decimal price fields; generates milestone notifications via `generate_milestones_notifications()`)
+- `notifications.py` — `NotificationType` enum (SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED), `Notification` class (factory-based construction with static creators)
 
-**Application** (`src/pryces/application/`) — Use cases and port interfaces:
-- `interfaces.py` — `StockProvider` ABC (port), `StockPrice` frozen dataclass (DTO with Decimal fields), `MessageSender` ABC (port)
-- `dtos.py` — `NotificationDTO` (type + message), `StockDTO` (maps domain `Stock` to application layer)
+**Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
+- `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port)
+- `dtos.py` — `NotificationDTO` (type + message, from_notification factory), `StockDTO` (maps domain Stock to DTO, includes marketState + notifications list)
 - `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
-- `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol)
-- `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols)
+- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender, tracks already-sent per symbol to avoid duplicates)
+- `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
+- `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
+- `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)
+- `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers milestone notifications via NotificationService)
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
-- `implementations.py` — `YahooFinanceProvider` implements `StockProvider` via `yfinance`, `TelegramMessageSender` implements `MessageSender`
+- `implementations.py` — `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API
 
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
 - `cli.py` — Entry point, composition root (wires dependencies)
@@ -98,9 +102,10 @@ Presentation → Application → Domain
 - `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`
 - `commands/get_stock_price.py` — `GetStockPriceCommand`
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
+- `commands/monitor_stocks.py` — `MonitorStocksCommand` (loops N repetitions with interval, triggers notifications per cycle)
+- `commands/send_messages.py` — `SendMessagesCommand` (sends test notification via Telegram)
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
-- `factories.py` — `CommandFactory` (DI + object creation)
-- `formatters.py` — `format_stock()`, `format_stock_list()` for human-readable output
+- `factories.py` — `CommandFactory` (DI + object creation), `SettingsFactory` (reads Telegram env vars)
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them
