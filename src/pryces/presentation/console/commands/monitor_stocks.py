@@ -7,7 +7,7 @@ from ....application.use_cases.trigger_stocks_notifications import (
 from .base import Command, CommandMetadata, InputPrompt
 
 
-def validate_symbols(value: str) -> bool:
+def _validate_symbols(value: str) -> bool:
     if not value or not value.strip():
         return False
 
@@ -15,14 +15,14 @@ def validate_symbols(value: str) -> bool:
     return all(symbol and len(symbol) <= 10 for symbol in symbols)
 
 
-def validate_positive_integer(value: str) -> bool:
+def _validate_positive_integer(value: str) -> bool:
     try:
         return int(value) > 0
     except (ValueError, TypeError):
         return False
 
 
-def parse_symbols_input(value: str) -> list[str]:
+def _parse_symbols_input(value: str) -> list[str]:
     symbols = [s.strip().upper() for s in value.split(",")]
     return [s for s in symbols if s]
 
@@ -43,17 +43,17 @@ class MonitorStocksCommand(Command):
             InputPrompt(
                 key="symbols",
                 prompt="Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): ",
-                validator=validate_symbols,
+                validator=_validate_symbols,
             ),
             InputPrompt(
                 key="interval",
                 prompt="Enter interval between checks in seconds (e.g., 90): ",
-                validator=validate_positive_integer,
+                validator=_validate_positive_integer,
             ),
             InputPrompt(
                 key="repetitions",
                 prompt="Enter number of repetitions (e.g., 525): ",
-                validator=validate_positive_integer,
+                validator=_validate_positive_integer,
             ),
         ]
 
@@ -64,7 +64,7 @@ class MonitorStocksCommand(Command):
         repetition_count = int(repetitions)
 
         try:
-            symbol_list = parse_symbols_input(symbols)
+            symbol_list = _parse_symbols_input(symbols)
             request = TriggerStocksNotificationsRequest(symbols=symbol_list)
 
             total_notifications = 0

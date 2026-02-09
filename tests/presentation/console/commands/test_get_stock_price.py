@@ -8,7 +8,7 @@ from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
     GetStockPriceCommand,
-    validate_symbol,
+    _validate_symbol,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from tests.fixtures.factories import create_stock
@@ -132,19 +132,19 @@ class TestGetStockPriceCommand:
         assert isinstance(prompts[0], InputPrompt)
         assert prompts[0].key == "symbol"
         assert "stock symbol" in prompts[0].prompt.lower()
-        assert prompts[0].validator is validate_symbol
+        assert prompts[0].validator is _validate_symbol
 
     def test_validate_symbol_accepts_valid_symbols(self):
-        assert validate_symbol("AAPL") is True
-        assert validate_symbol("GOOGL") is True
-        assert validate_symbol("MSFT") is True
-        assert validate_symbol("BRK.B") is True
-        assert validate_symbol("TSM") is True
+        assert _validate_symbol("AAPL") is True
+        assert _validate_symbol("GOOGL") is True
+        assert _validate_symbol("MSFT") is True
+        assert _validate_symbol("BRK.B") is True
+        assert _validate_symbol("TSM") is True
 
     def test_validate_symbol_rejects_invalid_symbols(self):
-        assert validate_symbol("") is False
-        assert validate_symbol("   ") is False
-        assert validate_symbol("TOOLONGSYMBOL") is False
+        assert _validate_symbol("") is False
+        assert _validate_symbol("   ") is False
+        assert _validate_symbol("TOOLONGSYMBOL") is False
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbol = "AAPL"

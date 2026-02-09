@@ -9,7 +9,7 @@ from .factories import CommandFactory, SettingsFactory
 from .menu import InteractiveMenu
 
 
-def configure_logging(verbose: bool = False) -> None:
+def _configure_logging(verbose: bool = False) -> None:
     log_level = logging.INFO if verbose else logging.WARNING
     logging.basicConfig(
         level=log_level,
@@ -18,7 +18,7 @@ def configure_logging(verbose: bool = False) -> None:
     )
 
 
-def create_menu() -> InteractiveMenu:
+def _create_menu() -> InteractiveMenu:
     provider = YahooFinanceProvider()
 
     telegram_settings = SettingsFactory.create_telegram_settings()
@@ -47,10 +47,10 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    configure_logging(args.verbose)
+    _configure_logging(args.verbose)
 
     try:
-        menu = create_menu()
+        menu = _create_menu()
         menu.run()
         return 0
 

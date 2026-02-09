@@ -4,7 +4,7 @@ from ..formatters import format_stock
 from .base import Command, CommandMetadata, InputPrompt
 
 
-def validate_symbol(value: str) -> bool:
+def _validate_symbol(value: str) -> bool:
     return bool(value and value.strip() and len(value.strip()) <= 10)
 
 
@@ -24,7 +24,7 @@ class GetStockPriceCommand(Command):
             InputPrompt(
                 key="symbol",
                 prompt="Enter stock symbol (e.g., AAPL, GOOGL): ",
-                validator=validate_symbol,
+                validator=_validate_symbol,
             )
         ]
 

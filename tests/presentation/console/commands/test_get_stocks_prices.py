@@ -7,8 +7,8 @@ from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stocks_prices import GetStocksPrices
 from pryces.presentation.console.commands.get_stocks_prices import (
     GetStocksPricesCommand,
-    validate_symbols,
-    parse_symbols_input,
+    _validate_symbols,
+    _parse_symbols_input,
 )
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from tests.fixtures.factories import create_stock
@@ -170,7 +170,7 @@ class TestGetStocksPricesCommand:
         assert isinstance(prompts[0], InputPrompt)
         assert prompts[0].key == "symbols"
         assert "commas" in prompts[0].prompt.lower()
-        assert prompts[0].validator is validate_symbols
+        assert prompts[0].validator is _validate_symbols
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         symbols = "AAPL,GOOGL"
@@ -189,51 +189,51 @@ class TestGetStocksPricesCommand:
 class TestValidateSymbols:
 
     def test_accepts_valid_single_symbol(self):
-        assert validate_symbols("AAPL") is True
+        assert _validate_symbols("AAPL") is True
 
     def test_accepts_valid_comma_separated_symbols(self):
-        assert validate_symbols("AAPL,GOOGL,MSFT") is True
+        assert _validate_symbols("AAPL,GOOGL,MSFT") is True
 
     def test_accepts_symbols_with_spaces(self):
-        assert validate_symbols("AAPL, GOOGL, MSFT") is True
-        assert validate_symbols("AAPL , GOOGL , MSFT") is True
+        assert _validate_symbols("AAPL, GOOGL, MSFT") is True
+        assert _validate_symbols("AAPL , GOOGL , MSFT") is True
 
     def test_rejects_empty_string(self):
-        assert validate_symbols("") is False
-        assert validate_symbols("   ") is False
+        assert _validate_symbols("") is False
+        assert _validate_symbols("   ") is False
 
     def test_rejects_symbols_too_long(self):
-        assert validate_symbols("TOOLONGSYMBOL") is False
-        assert validate_symbols("AAPL,TOOLONGSYMBOL") is False
+        assert _validate_symbols("TOOLONGSYMBOL") is False
+        assert _validate_symbols("AAPL,TOOLONGSYMBOL") is False
 
     def test_rejects_empty_symbols_in_list(self):
-        assert validate_symbols("AAPL,,GOOGL") is False
-        assert validate_symbols(",AAPL,GOOGL") is False
-        assert validate_symbols("AAPL,GOOGL,") is False
+        assert _validate_symbols("AAPL,,GOOGL") is False
+        assert _validate_symbols(",AAPL,GOOGL") is False
+        assert _validate_symbols("AAPL,GOOGL,") is False
 
 
 class TestParseSymbolsInput:
 
     def test_parses_single_symbol(self):
-        result = parse_symbols_input("AAPL")
+        result = _parse_symbols_input("AAPL")
         assert result == ["AAPL"]
 
     def test_parses_comma_separated_symbols(self):
-        result = parse_symbols_input("AAPL,GOOGL,MSFT")
+        result = _parse_symbols_input("AAPL,GOOGL,MSFT")
         assert result == ["AAPL", "GOOGL", "MSFT"]
 
     def test_strips_whitespace(self):
-        result = parse_symbols_input("AAPL, GOOGL, MSFT")
+        result = _parse_symbols_input("AAPL, GOOGL, MSFT")
         assert result == ["AAPL", "GOOGL", "MSFT"]
 
     def test_converts_to_uppercase(self):
-        result = parse_symbols_input("aapl,googl,msft")
+        result = _parse_symbols_input("aapl,googl,msft")
         assert result == ["AAPL", "GOOGL", "MSFT"]
 
     def test_filters_empty_strings(self):
-        result = parse_symbols_input("AAPL,,GOOGL")
+        result = _parse_symbols_input("AAPL,,GOOGL")
         assert result == ["AAPL", "GOOGL"]
 
     def test_handles_mixed_case_with_spaces(self):
-        result = parse_symbols_input("aapl, GooGl, MsFt")
+        result = _parse_symbols_input("aapl, GooGl, MsFt")
         assert result == ["AAPL", "GOOGL", "MSFT"]

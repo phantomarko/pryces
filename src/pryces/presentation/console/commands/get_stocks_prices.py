@@ -3,7 +3,7 @@ from ..formatters import format_stock_list
 from .base import Command, CommandMetadata, InputPrompt
 
 
-def validate_symbols(value: str) -> bool:
+def _validate_symbols(value: str) -> bool:
     if not value or not value.strip():
         return False
 
@@ -11,7 +11,7 @@ def validate_symbols(value: str) -> bool:
     return all(symbol and len(symbol) <= 10 for symbol in symbols)
 
 
-def parse_symbols_input(value: str) -> list[str]:
+def _parse_symbols_input(value: str) -> list[str]:
     symbols = [s.strip().upper() for s in value.split(",")]
     return [s for s in symbols if s]
 
@@ -32,13 +32,13 @@ class GetStocksPricesCommand(Command):
             InputPrompt(
                 key="symbols",
                 prompt="Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): ",
-                validator=validate_symbols,
+                validator=_validate_symbols,
             )
         ]
 
     def execute(self, symbols: str = None, **kwargs) -> str:
         try:
-            symbol_list = parse_symbols_input(symbols)
+            symbol_list = _parse_symbols_input(symbols)
             request = GetStocksPricesRequest(symbols=symbol_list)
             responses = self._get_stocks_prices.handle(request)
 

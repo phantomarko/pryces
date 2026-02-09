@@ -19,31 +19,31 @@ class CommandFactory:
         self._stock_provider = stock_provider
         self._message_sender = message_sender
 
-    def create_monitor_stocks_command(self) -> MonitorStocksCommand:
+    def _create_monitor_stocks_command(self) -> MonitorStocksCommand:
         notification_service = NotificationService(self._message_sender)
         use_case = TriggerStocksNotifications(
             provider=self._stock_provider, notification_service=notification_service
         )
         return MonitorStocksCommand(trigger_stocks_notifications_use_case=use_case)
 
-    def create_get_stock_price_command(self) -> GetStockPriceCommand:
+    def _create_get_stock_price_command(self) -> GetStockPriceCommand:
         use_case = GetStockPrice(provider=self._stock_provider)
         return GetStockPriceCommand(get_stock_price_use_case=use_case)
 
-    def create_get_stocks_prices_command(self) -> GetStocksPricesCommand:
+    def _create_get_stocks_prices_command(self) -> GetStocksPricesCommand:
         use_case = GetStocksPrices(provider=self._stock_provider)
         return GetStocksPricesCommand(get_stocks_prices_use_case=use_case)
 
-    def create_send_messages_command(self) -> SendMessagesCommand:
+    def _create_send_messages_command(self) -> SendMessagesCommand:
         use_case = SendMessages(sender=self._message_sender)
         return SendMessagesCommand(send_messages_use_case=use_case)
 
     def create_command_registry(self) -> CommandRegistry:
         registry = CommandRegistry()
-        registry.register(self.create_monitor_stocks_command())
-        registry.register(self.create_get_stock_price_command())
-        registry.register(self.create_get_stocks_prices_command())
-        registry.register(self.create_send_messages_command())
+        registry.register(self._create_monitor_stocks_command())
+        registry.register(self._create_get_stock_price_command())
+        registry.register(self._create_get_stocks_prices_command())
+        registry.register(self._create_send_messages_command())
         return registry
 
 

@@ -22,17 +22,17 @@ class TestCommandFactory:
         assert factory._stock_provider is custom_provider
         assert factory._message_sender is custom_sender
 
-    def test_create_get_stock_price_command_returns_command_instance(self):
+    def test__create_get_stock_price_command_returns_command_instance(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
             stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
-        command = factory.create_get_stock_price_command()
+        command = factory._create_get_stock_price_command()
 
         assert isinstance(command, GetStockPriceCommand)
 
-    def test_create_get_stock_price_command_wires_dependencies_correctly(self):
+    def test__create_get_stock_price_command_wires_dependencies_correctly(self):
         mock_provider = Mock(spec=StockProvider)
         mock_provider.get_stock.return_value = create_stock(
             "TEST",
@@ -51,14 +51,14 @@ class TestCommandFactory:
             stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
-        command = factory.create_get_stock_price_command()
+        command = factory._create_get_stock_price_command()
         result = command.execute("TEST")
 
         assert "TEST" in result
         assert "100.00" in result
         mock_provider.get_stock.assert_called_once()
 
-    def test_create_get_stock_price_command_with_default_provider(self):
+    def test__create_get_stock_price_command_with_default_provider(self):
         mock_provider = Mock(spec=StockProvider)
         mock_provider.get_stock.return_value = create_stock(
             "AAPL", Decimal("150.25"), name="Apple Inc."
@@ -67,7 +67,7 @@ class TestCommandFactory:
             stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
-        command = factory.create_get_stock_price_command()
+        command = factory._create_get_stock_price_command()
         result = command.execute("AAPL")
 
         assert "AAPL - Apple Inc. (USD)" in result
@@ -111,17 +111,17 @@ class TestCommandFactory:
 
         assert "AAPL - Apple Inc. (USD)" in result
 
-    def test_create_get_stocks_prices_command_returns_command_instance(self):
+    def test__create_get_stocks_prices_command_returns_command_instance(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
             stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
-        command = factory.create_get_stocks_prices_command()
+        command = factory._create_get_stocks_prices_command()
 
         assert isinstance(command, GetStocksPricesCommand)
 
-    def test_create_get_stocks_prices_command_wires_dependencies_correctly(self):
+    def test__create_get_stocks_prices_command_wires_dependencies_correctly(self):
         mock_provider = Mock(spec=StockProvider)
         mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
@@ -131,7 +131,7 @@ class TestCommandFactory:
             stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
-        command = factory.create_get_stocks_prices_command()
+        command = factory._create_get_stocks_prices_command()
         result = command.execute("AAPL,GOOGL")
 
         assert "AAPL" in result
