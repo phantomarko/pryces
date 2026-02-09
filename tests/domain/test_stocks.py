@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.domain.notifications import NotificationType
-from pryces.domain.stocks import Stock
+from pryces.domain.stocks import MarketState, Stock
 
 
 def test_stock_creation_with_required_fields():
@@ -313,6 +313,61 @@ def test_generate_milestones_notifications_adds_no_notifications_when_no_crossin
         previousClosePrice=Decimal("148.00"),
         fiftyDayAverage=Decimal("145.00"),
         twoHundredDayAverage=Decimal("140.00"),
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert stock.notifications == []
+
+
+def test_is_market_state_open_returns_true_when_market_state_is_open():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    assert stock.is_market_state_open() is True
+
+
+def test_is_market_state_open_returns_false_when_market_state_is_closed():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        marketState=MarketState.CLOSED,
+    )
+
+    assert stock.is_market_state_open() is False
+
+
+def test_is_market_state_open_returns_false_when_market_state_is_none():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+
+    assert stock.is_market_state_open() is False
+
+
+def test_generate_milestones_notifications_adds_regular_market_open_notification():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        openPrice=Decimal("149.75"),
+        previousClosePrice=Decimal("148.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+
+
+def test_generate_milestones_notifications_does_not_add_regular_market_open_when_market_closed():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        openPrice=Decimal("149.75"),
+        previousClosePrice=Decimal("148.00"),
+        marketState=MarketState.CLOSED,
     )
 
     stock.generate_milestones_notifications()

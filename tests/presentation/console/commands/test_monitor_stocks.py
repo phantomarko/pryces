@@ -57,18 +57,18 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "1 notifications sent" in result
-        self.mock_sender.send_message.assert_called_once()
+        assert "2 notifications sent" in result
+        assert self.mock_sender.send_message.call_count == 2
 
-    def test_execute_without_notifications_returns_zero_notifications(self):
+    def test_execute_without_crossings_returns_market_open_notification(self):
         stock = create_stock_no_crossing("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
 
         result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "0 notifications sent" in result
-        self.mock_sender.send_message.assert_not_called()
+        assert "1 notifications sent" in result
+        self.mock_sender.send_message.assert_called_once()
 
     def test_execute_with_mixed_stocks(self):
         crossing_stock = create_stock_crossing_fifty_day("AAPL")
@@ -78,8 +78,8 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL,GOOGL", interval="1", repetitions="1")
 
         assert "2 stocks checked" in result
-        assert "1 notifications sent" in result
-        self.mock_sender.send_message.assert_called_once()
+        assert "3 notifications sent" in result
+        assert self.mock_sender.send_message.call_count == 3
 
     def test_execute_with_both_crossings(self):
         stock = create_stock_crossing_both_averages("MSFT")
@@ -88,8 +88,8 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="MSFT", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "2 notifications sent" in result
-        assert self.mock_sender.send_message.call_count == 2
+        assert "3 notifications sent" in result
+        assert self.mock_sender.send_message.call_count == 3
 
     def test_execute_with_two_hundred_day_crossing(self):
         stock = create_stock_crossing_two_hundred_day("GOOGL")
@@ -98,8 +98,8 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="GOOGL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "1 notifications sent" in result
-        self.mock_sender.send_message.assert_called_once()
+        assert "2 notifications sent" in result
+        assert self.mock_sender.send_message.call_count == 2
 
     def test_execute_returns_failure_message_on_exception(self):
         error_message = "Network connection failed"
@@ -154,7 +154,7 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL", interval="10", repetitions="3")
 
         assert "1 stocks checked" in result
-        assert "2 notifications sent" in result
+        assert "3 notifications sent" in result
         assert "3 repetitions" in result
 
 

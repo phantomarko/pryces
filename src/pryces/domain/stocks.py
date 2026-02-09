@@ -130,7 +130,16 @@ class Stock:
 
         return crossed_above or crossed_below
 
+    def is_market_state_open(self) -> bool:
+        return self._marketState == MarketState.OPEN
+
     def generate_milestones_notifications(self) -> None:
+        if self.is_market_state_open() and self.openPrice is not None:
+            self._notifications.append(
+                Notification.create_regular_market_open(
+                    self.symbol, self.openPrice, self.previousClosePrice
+                )
+            )
         if self.has_crossed_fifty_day_average():
             self._notifications.append(
                 Notification.create_fifty_day_average_crossed(
