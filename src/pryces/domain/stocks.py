@@ -130,6 +130,12 @@ class Stock:
 
         return crossed_above or crossed_below
 
+    def change_percentage_from_previous_close(self) -> Decimal | None:
+        if self.previousClosePrice is None:
+            return None
+
+        return (self.currentPrice - self.previousClosePrice) / self.previousClosePrice * 100
+
     def is_market_state_open(self) -> bool:
         return self._marketState == MarketState.OPEN
 
@@ -145,19 +151,19 @@ class Stock:
                     self.previousClosePrice,
                 )
             )
-        if self.has_crossed_fifty_day_average():
-            self._notifications.append(
-                Notification.create_fifty_day_average_crossed(
-                    self.symbol, self.currentPrice, self.fiftyDayAverage
+            if self.has_crossed_fifty_day_average():
+                self._notifications.append(
+                    Notification.create_fifty_day_average_crossed(
+                        self.symbol, self.currentPrice, self.fiftyDayAverage
+                    )
                 )
-            )
-        if self.has_crossed_two_hundred_day_average():
-            self._notifications.append(
-                Notification.create_two_hundred_day_average_crossed(
-                    self.symbol, self.currentPrice, self.twoHundredDayAverage
+            if self.has_crossed_two_hundred_day_average():
+                self._notifications.append(
+                    Notification.create_two_hundred_day_average_crossed(
+                        self.symbol, self.currentPrice, self.twoHundredDayAverage
+                    )
                 )
-            )
-        if self.is_market_state_post():
+        elif self.is_market_state_post():
             self._notifications.append(
                 Notification.create_regular_market_closed(
                     self.symbol, self.currentPrice, self.openPrice

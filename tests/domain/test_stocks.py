@@ -241,6 +241,42 @@ def test_has_crossed_two_hundred_day_average_returns_false_when_previous_equals_
     assert stock_current_below.has_crossed_two_hundred_day_average() is False
 
 
+def test_change_percentage_from_previous_close_returns_none_when_previous_close_is_none():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+
+    assert stock.change_percentage_from_previous_close() is None
+
+
+def test_change_percentage_from_previous_close_returns_positive_percentage():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("100.00"),
+    )
+
+    assert stock.change_percentage_from_previous_close() == Decimal("50.00")
+
+
+def test_change_percentage_from_previous_close_returns_negative_percentage():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("90.00"),
+        previousClosePrice=Decimal("100.00"),
+    )
+
+    assert stock.change_percentage_from_previous_close() == Decimal("-10.00")
+
+
+def test_change_percentage_from_previous_close_returns_zero_when_prices_are_equal():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("100.00"),
+    )
+
+    assert stock.change_percentage_from_previous_close() == Decimal("0.00")
+
+
 def test_stock_optional_fields_default_to_none():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
 
@@ -268,12 +304,14 @@ def test_generate_milestones_notifications_adds_fifty_day_notification():
         currentPrice=Decimal("150.00"),
         previousClosePrice=Decimal("140.00"),
         fiftyDayAverage=Decimal("145.00"),
+        marketState=MarketState.OPEN,
     )
 
     stock.generate_milestones_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.SMA50_CROSSED
+    assert len(stock.notifications) == 2
+    types = {n.type for n in stock.notifications}
+    assert types == {NotificationType.REGULAR_MARKET_OPEN, NotificationType.SMA50_CROSSED}
 
 
 def test_generate_milestones_notifications_adds_two_hundred_day_notification():
@@ -282,12 +320,14 @@ def test_generate_milestones_notifications_adds_two_hundred_day_notification():
         currentPrice=Decimal("150.00"),
         previousClosePrice=Decimal("130.00"),
         twoHundredDayAverage=Decimal("140.00"),
+        marketState=MarketState.OPEN,
     )
 
     stock.generate_milestones_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.SMA200_CROSSED
+    assert len(stock.notifications) == 2
+    types = {n.type for n in stock.notifications}
+    assert types == {NotificationType.REGULAR_MARKET_OPEN, NotificationType.SMA200_CROSSED}
 
 
 def test_generate_milestones_notifications_adds_both_notifications():
@@ -297,13 +337,18 @@ def test_generate_milestones_notifications_adds_both_notifications():
         previousClosePrice=Decimal("130.00"),
         fiftyDayAverage=Decimal("145.00"),
         twoHundredDayAverage=Decimal("140.00"),
+        marketState=MarketState.OPEN,
     )
 
     stock.generate_milestones_notifications()
 
-    assert len(stock.notifications) == 2
+    assert len(stock.notifications) == 3
     types = {n.type for n in stock.notifications}
-    assert types == {NotificationType.SMA50_CROSSED, NotificationType.SMA200_CROSSED}
+    assert types == {
+        NotificationType.REGULAR_MARKET_OPEN,
+        NotificationType.SMA50_CROSSED,
+        NotificationType.SMA200_CROSSED,
+    }
 
 
 def test_generate_milestones_notifications_adds_no_notifications_when_no_crossing():
@@ -313,11 +358,15 @@ def test_generate_milestones_notifications_adds_no_notifications_when_no_crossin
         previousClosePrice=Decimal("148.00"),
         fiftyDayAverage=Decimal("145.00"),
         twoHundredDayAverage=Decimal("140.00"),
+        marketState=MarketState.OPEN,
     )
 
     stock.generate_milestones_notifications()
 
-    assert stock.notifications == []
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+    sma_types = {NotificationType.SMA50_CROSSED, NotificationType.SMA200_CROSSED}
+    assert not any(n.type in sma_types for n in stock.notifications)
 
 
 def test_is_market_state_open_returns_true_when_market_state_is_open():

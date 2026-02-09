@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from pryces.application.dtos import NotificationDTO, StockDTO
 from pryces.domain.notifications import Notification, NotificationType
-from pryces.domain.stocks import Stock
+from pryces.domain.stocks import MarketState, Stock
 from tests.fixtures.factories import create_stock
 
 
@@ -72,12 +72,16 @@ class TestStockDTO:
             currentPrice=Decimal("101"),
             previousClosePrice=Decimal("99"),
             fiftyDayAverage=Decimal("100"),
+            marketState=MarketState.OPEN,
         )
         stock.generate_milestones_notifications()
 
         result = StockDTO.from_stock(stock)
 
-        assert len(result.notifications) == 1
-        assert isinstance(result.notifications[0], NotificationDTO)
-        assert result.notifications[0].type == "SMA50_CROSSED"
-        assert "50-day" in result.notifications[0].message
+        assert len(result.notifications) == 2
+        notification_types = {n.type for n in result.notifications}
+        assert "REGULAR_MARKET_OPEN" in notification_types
+        assert "SMA50_CROSSED" in notification_types
+        sma_notification = next(n for n in result.notifications if n.type == "SMA50_CROSSED")
+        assert isinstance(sma_notification, NotificationDTO)
+        assert "50-day" in sma_notification.message
