@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from pryces.application.dtos import NotificationDTO
 from pryces.application.interfaces import MessageSender, StockProvider
@@ -8,6 +8,7 @@ from pryces.presentation.console.commands.base import CommandMetadata, InputProm
 from pryces.presentation.console.commands.monitor_stocks import (
     MonitorStocksCommand,
     validate_symbols,
+    validate_positive_integer,
     parse_symbols_input,
 )
 from tests.fixtures.factories import (
@@ -36,20 +37,24 @@ class TestMonitorStocksCommand:
         assert metadata.id == "monitor_stocks"
         assert metadata.name == "Monitor Stocks"
 
-    def test_get_input_prompts_returns_symbols_prompt(self):
+    def test_get_input_prompts_returns_symbols_interval_and_repetitions(self):
         prompts = self.command.get_input_prompts()
 
-        assert len(prompts) == 1
+        assert len(prompts) == 3
         assert isinstance(prompts[0], InputPrompt)
         assert prompts[0].key == "symbols"
         assert "commas" in prompts[0].prompt.lower()
         assert prompts[0].validator is validate_symbols
+        assert prompts[1].key == "interval"
+        assert prompts[1].validator is validate_positive_integer
+        assert prompts[2].key == "repetitions"
+        assert prompts[2].validator is validate_positive_integer
 
     def test_execute_with_notifications_returns_correct_summary(self):
         stock = create_stock_crossing_fifty_day("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
 
-        result = self.command.execute("AAPL")
+        result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
         assert "1 notifications sent" in result
@@ -59,7 +64,7 @@ class TestMonitorStocksCommand:
         stock = create_stock_no_crossing("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
 
-        result = self.command.execute("AAPL")
+        result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
         assert "0 notifications sent" in result
@@ -70,7 +75,7 @@ class TestMonitorStocksCommand:
         no_crossing_stock = create_stock_no_crossing("GOOGL")
         self.mock_provider.get_stocks.return_value = [crossing_stock, no_crossing_stock]
 
-        result = self.command.execute("AAPL,GOOGL")
+        result = self.command.execute(symbols="AAPL,GOOGL", interval="1", repetitions="1")
 
         assert "2 stocks checked" in result
         assert "1 notifications sent" in result
@@ -80,7 +85,7 @@ class TestMonitorStocksCommand:
         stock = create_stock_crossing_both_averages("MSFT")
         self.mock_provider.get_stocks.return_value = [stock]
 
-        result = self.command.execute("MSFT")
+        result = self.command.execute(symbols="MSFT", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
         assert "2 notifications sent" in result
@@ -90,7 +95,7 @@ class TestMonitorStocksCommand:
         stock = create_stock_crossing_two_hundred_day("GOOGL")
         self.mock_provider.get_stocks.return_value = [stock]
 
-        result = self.command.execute("GOOGL")
+        result = self.command.execute(symbols="GOOGL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
         assert "1 notifications sent" in result
@@ -100,7 +105,7 @@ class TestMonitorStocksCommand:
         error_message = "Network connection failed"
         self.mock_provider.get_stocks.side_effect = Exception(error_message)
 
-        result = self.command.execute("AAPL")
+        result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "Monitoring failed:" in result
         assert error_message in result
@@ -108,7 +113,7 @@ class TestMonitorStocksCommand:
     def test_execute_with_empty_results(self):
         self.mock_provider.get_stocks.return_value = []
 
-        result = self.command.execute("INVALID")
+        result = self.command.execute(symbols="INVALID", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
         assert "0 notifications sent" in result
@@ -117,9 +122,40 @@ class TestMonitorStocksCommand:
         stock = create_stock_no_crossing("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
 
-        result = self.command.execute(symbols="AAPL", extra_arg="ignored")
+        result = self.command.execute(
+            symbols="AAPL", interval="1", repetitions="1", extra_arg="ignored"
+        )
 
         assert "Monitoring complete" in result
+
+    @patch("pryces.presentation.console.commands.monitor_stocks.time.sleep")
+    def test_execute_with_multiple_repetitions(self, mock_sleep):
+        stock = create_stock_crossing_fifty_day("AAPL")
+        self.mock_provider.get_stocks.return_value = [stock]
+
+        result = self.command.execute(symbols="AAPL", interval="60", repetitions="3")
+
+        assert self.mock_provider.get_stocks.call_count == 3
+        assert mock_sleep.call_count == 2
+        mock_sleep.assert_called_with(60)
+        assert "3 repetitions" in result
+
+    @patch("pryces.presentation.console.commands.monitor_stocks.time.sleep")
+    def test_execute_accumulates_notifications_across_repetitions(self, mock_sleep):
+        crossing_fifty = create_stock_crossing_fifty_day("AAPL")
+        crossing_two_hundred = create_stock_crossing_two_hundred_day("AAPL")
+        no_crossing = create_stock_no_crossing("AAPL")
+        self.mock_provider.get_stocks.side_effect = [
+            [crossing_fifty],
+            [no_crossing],
+            [crossing_two_hundred],
+        ]
+
+        result = self.command.execute(symbols="AAPL", interval="10", repetitions="3")
+
+        assert "1 stocks checked" in result
+        assert "2 notifications sent" in result
+        assert "3 repetitions" in result
 
 
 class TestValidateSymbols:
@@ -146,6 +182,29 @@ class TestValidateSymbols:
         assert validate_symbols("AAPL,,GOOGL") is False
         assert validate_symbols(",AAPL,GOOGL") is False
         assert validate_symbols("AAPL,GOOGL,") is False
+
+
+class TestValidatePositiveInteger:
+
+    def test_accepts_positive_integers(self):
+        assert validate_positive_integer("1") is True
+        assert validate_positive_integer("10") is True
+        assert validate_positive_integer("300") is True
+
+    def test_rejects_zero(self):
+        assert validate_positive_integer("0") is False
+
+    def test_rejects_negative_numbers(self):
+        assert validate_positive_integer("-1") is False
+        assert validate_positive_integer("-100") is False
+
+    def test_rejects_non_numeric(self):
+        assert validate_positive_integer("abc") is False
+        assert validate_positive_integer("") is False
+        assert validate_positive_integer("1.5") is False
+
+    def test_rejects_none(self):
+        assert validate_positive_integer(None) is False
 
 
 class TestParseSymbolsInput:

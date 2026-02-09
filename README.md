@@ -118,28 +118,33 @@ Enter your selection:
 
 ### Monitor Stocks
 
-When you select option 1, you'll be prompted to enter comma-separated stock symbols to monitor for relevant price notifications:
+When you select option 1, you'll be prompted to enter comma-separated stock symbols, an interval between checks (in seconds), and the number of repetitions:
 
 ```
 --- Monitor Stocks ---
 
 Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL
+Enter interval between checks in seconds (e.g., 300): 300
+Enter number of repetitions (e.g., 6): 6
 Executing...
 ```
 
 Example output (with notifications):
 ```
-Monitoring complete. 2 stocks checked, 1 notifications sent.
+Monitoring complete. 2 stocks checked, 1 notifications sent over 6 repetitions.
 ```
 
 Example output (no notifications):
 ```
-Monitoring complete. 2 stocks checked, 0 notifications sent.
+Monitoring complete. 2 stocks checked, 0 notifications sent over 6 repetitions.
 ```
 
 **Notes:**
 - This command checks if stock prices have crossed their 50-day or 200-day moving averages
 - When a crossing is detected, a notification is automatically sent via Telegram
+- The command repeats the check at the specified interval, useful for covering market open hours (e.g., every 5 minutes for 30 minutes = interval 300, repetitions 6)
+- Duplicate notifications are automatically prevented — only new crossings trigger messages
+- Use `--verbose` to see each notification as it is sent in real time
 - Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ### Get Stock Price
