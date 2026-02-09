@@ -1,7 +1,8 @@
-from decimal import Decimal
 from unittest.mock import Mock
 
+from pryces.application.dtos import NotificationDTO
 from pryces.application.interfaces import MessageSender, StockProvider
+from pryces.application.services import NotificationService
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from pryces.presentation.console.commands.monitor_stocks import (
@@ -22,7 +23,10 @@ class TestMonitorStocksCommand:
     def setup_method(self):
         self.mock_provider = Mock(spec=StockProvider)
         self.mock_sender = Mock(spec=MessageSender)
-        use_case = TriggerStocksNotifications(provider=self.mock_provider, sender=self.mock_sender)
+        self.mock_notification_service = NotificationService(self.mock_sender)
+        use_case = TriggerStocksNotifications(
+            provider=self.mock_provider, notification_service=self.mock_notification_service
+        )
         self.command = MonitorStocksCommand(use_case)
 
     def test_get_metadata_returns_correct_metadata(self):
@@ -106,7 +110,7 @@ class TestMonitorStocksCommand:
 
         result = self.command.execute("INVALID")
 
-        assert "0 stocks checked" in result
+        assert "1 stocks checked" in result
         assert "0 notifications sent" in result
 
     def test_execute_accepts_kwargs_for_compatibility(self):

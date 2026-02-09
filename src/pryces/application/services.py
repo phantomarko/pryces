@@ -13,7 +13,9 @@ class NotificationService:
     def notifications_sent(self) -> dict[str, list[Notification]]:
         return self._notifications_sent
 
-    def send_stock_notifications(self, stock: Stock) -> None:
+    def send_stock_notifications(self, stock: Stock) -> list[Notification]:
+        sent: list[Notification] = []
+
         for notification in stock.notifications:
             if self._already_sent(stock.symbol, notification):
                 continue
@@ -23,6 +25,9 @@ class NotificationService:
             if stock.symbol not in self._notifications_sent:
                 self._notifications_sent[stock.symbol] = []
             self._notifications_sent[stock.symbol].append(notification)
+            sent.append(notification)
+
+        return sent
 
     def _already_sent(self, symbol: str, notification: Notification) -> bool:
         if symbol not in self._notifications_sent:

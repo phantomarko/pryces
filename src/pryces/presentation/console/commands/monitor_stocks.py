@@ -50,25 +50,19 @@ class MonitorStocksCommand(Command):
             request = TriggerStocksNotificationsRequest(
                 type=TriggerType.MILESTONES, symbols=symbol_list
             )
-            results = self._trigger_stocks_notifications.handle(request)
+            notifications = self._trigger_stocks_notifications.handle(request)
 
-            total_notifications = 0
-            for dto in results:
-                if dto.notifications:
-                    for notification in dto.notifications:
-                        self._logger.info(f"Notification: {notification.message}")
-                    total_notifications += len(dto.notifications)
-                else:
-                    self._logger.info(f"No notifications for {dto.symbol}")
+            for notification in notifications:
+                self._logger.info(f"Notification: {notification.message}")
 
             self._logger.info(
-                f"Monitoring complete: {len(results)} stocks checked, "
-                f"{total_notifications} notifications sent"
+                f"Monitoring complete: {len(symbol_list)} stocks checked, "
+                f"{len(notifications)} notifications sent"
             )
 
             return (
-                f"Monitoring complete. {len(results)} stocks checked, "
-                f"{total_notifications} notifications sent."
+                f"Monitoring complete. {len(symbol_list)} stocks checked, "
+                f"{len(notifications)} notifications sent."
             )
 
         except Exception as e:

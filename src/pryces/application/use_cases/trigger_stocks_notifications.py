@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from ..dtos import StockDTO
-from ..interfaces import MessageSender, StockProvider
+from ..dtos import NotificationDTO
+from ..interfaces import StockProvider
+from ..services import NotificationService
 
 
 class TriggerType(str, Enum):
@@ -16,17 +17,18 @@ class TriggerStocksNotificationsRequest:
 
 
 class TriggerStocksNotifications:
-    def __init__(self, provider: StockProvider, sender: MessageSender) -> None:
+    def __init__(self, provider: StockProvider, notification_service: NotificationService) -> None:
         self._provider = provider
-        self._sender = sender
+        self._notification_service = notification_service
 
-    def handle(self, request: TriggerStocksNotificationsRequest) -> list[StockDTO]:
+    def handle(self, request: TriggerStocksNotificationsRequest) -> list[NotificationDTO]:
         stocks = self._provider.get_stocks(request.symbols)
+        sent_notifications: list[NotificationDTO] = []
 
         if request.type == TriggerType.MILESTONES:
             for stock in stocks:
                 stock.generate_milestones_notifications()
-                for notification in stock.notifications:
-                    self._sender.send_message(notification.message)
+                sent = self._notification_service.send_stock_notifications(stock)
+                sent_notifications.extend(NotificationDTO.from_notification(n) for n in sent)
 
-        return [StockDTO.from_stock(stock) for stock in stocks]
+        return sent_notifications

@@ -1,6 +1,7 @@
 import os
 
 from ...application.interfaces import StockProvider, MessageSender
+from ...application.services import NotificationService
 from ...application.use_cases.get_stock_price import GetStockPrice
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
@@ -19,8 +20,9 @@ class CommandFactory:
         self._message_sender = message_sender
 
     def create_monitor_stocks_command(self) -> MonitorStocksCommand:
+        notification_service = NotificationService(self._message_sender)
         use_case = TriggerStocksNotifications(
-            provider=self._stock_provider, sender=self._message_sender
+            provider=self._stock_provider, notification_service=notification_service
         )
         return MonitorStocksCommand(trigger_stocks_notifications_use_case=use_case)
 
