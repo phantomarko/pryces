@@ -62,8 +62,13 @@ class Notification:
         )
 
     @staticmethod
-    def create_regular_market_closed(symbol: str) -> "Notification":
-        message = f"{symbol} regular market is now closed"
+    def create_regular_market_closed(
+        symbol: str, closing_price: Decimal, opening_price: Decimal | None
+    ) -> "Notification":
+        message = f"{symbol} regular market is now closed. Closing price: {closing_price}"
+        if opening_price is not None:
+            change_percentage = ((closing_price - opening_price) / opening_price) * 100
+            message += f". Opening price: {opening_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_CLOSED, message
         )

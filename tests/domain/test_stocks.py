@@ -373,3 +373,42 @@ def test_generate_milestones_notifications_does_not_add_regular_market_open_when
     stock.generate_milestones_notifications()
 
     assert stock.notifications == []
+
+
+def test_is_market_state_post_returns_true_when_market_state_is_post():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        marketState=MarketState.POST,
+    )
+
+    assert stock.is_market_state_post() is True
+
+
+def test_is_market_state_post_returns_false_for_other_states():
+    for state in [MarketState.OPEN, MarketState.PRE, MarketState.CLOSED]:
+        stock = Stock(
+            symbol="AAPL",
+            currentPrice=Decimal("150.00"),
+            marketState=state,
+        )
+        assert stock.is_market_state_post() is False
+
+
+def test_is_market_state_post_returns_false_when_market_state_is_none():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+
+    assert stock.is_market_state_post() is False
+
+
+def test_generate_milestones_notifications_adds_regular_market_closed_when_post():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        marketState=MarketState.POST,
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_CLOSED

@@ -97,13 +97,30 @@ def test_create_regular_market_open_with_last_close_price_sets_message():
 
 
 def test_create_regular_market_closed_sets_type():
-    notification = Notification.create_regular_market_closed("AAPL")
+    notification = Notification.create_regular_market_closed("AAPL", Decimal("150.00"), None)
 
     assert notification.type == NotificationType.REGULAR_MARKET_CLOSED
 
 
 def test_create_regular_market_closed_sets_message():
-    notification = Notification.create_regular_market_closed("AAPL")
+    notification = Notification.create_regular_market_closed("AAPL", Decimal("150.00"), None)
+
+    assert isinstance(notification.message, str)
+    assert "150.00" in notification.message
+
+
+def test_create_regular_market_closed_with_opening_price_sets_type():
+    notification = Notification.create_regular_market_closed(
+        "AAPL", Decimal("150.00"), Decimal("148.00")
+    )
+
+    assert notification.type == NotificationType.REGULAR_MARKET_CLOSED
+
+
+def test_create_regular_market_closed_with_opening_price_sets_message():
+    notification = Notification.create_regular_market_closed(
+        "AAPL", Decimal("150.00"), Decimal("148.00")
+    )
 
     assert isinstance(notification.message, str)
     assert len(notification.message) > 0

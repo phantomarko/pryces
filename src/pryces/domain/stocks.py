@@ -133,6 +133,9 @@ class Stock:
     def is_market_state_open(self) -> bool:
         return self._marketState == MarketState.OPEN
 
+    def is_market_state_post(self) -> bool:
+        return self._marketState == MarketState.POST
+
     def generate_milestones_notifications(self) -> None:
         if self.is_market_state_open() and self.openPrice is not None:
             self._notifications.append(
@@ -150,5 +153,11 @@ class Stock:
             self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
                     self.symbol, self.currentPrice, self.twoHundredDayAverage
+                )
+            )
+        if self.is_market_state_post():
+            self._notifications.append(
+                Notification.create_regular_market_closed(
+                    self.symbol, self.currentPrice, self.openPrice
                 )
             )
