@@ -27,7 +27,7 @@ class TriggerStocksNotifications:
 
         if request.type == TriggerType.MILESTONES:
             for stock in stocks:
-                sent = self._notification_service.send_stock_milestones_notifications(stock)
+                sent = self._notification_service.send_stock_notifications(stock)
                 sent_notifications.extend(NotificationDTO.from_notification(n) for n in sent)
 
         return sent_notifications

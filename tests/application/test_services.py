@@ -19,7 +19,7 @@ class TestNotificationService:
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
 
-        self.service.send_stock_milestones_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
         assert self.mock_sender.send_message.call_count == 2
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
@@ -28,7 +28,7 @@ class TestNotificationService:
     def test_returns_sent_notifications(self):
         stock = create_stock_crossing_fifty_day("AAPL")
 
-        result = self.service.send_stock_milestones_notifications(stock)
+        result = self.service.send_stock_notifications(stock)
 
         assert len(result) == 2
         assert result[0] is stock.notifications[0]
@@ -37,7 +37,7 @@ class TestNotificationService:
     def test_adds_sent_notifications_to_dictionary(self):
         stock = create_stock_crossing_fifty_day("AAPL")
 
-        self.service.send_stock_milestones_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
         assert "AAPL" in self.service.notifications_sent
         assert len(self.service.notifications_sent["AAPL"]) == 2
@@ -46,8 +46,8 @@ class TestNotificationService:
         stock1 = create_stock_crossing_fifty_day("AAPL")
         stock2 = create_stock_crossing_fifty_day("AAPL")
 
-        self.service.send_stock_milestones_notifications(stock1)
-        result = self.service.send_stock_milestones_notifications(stock2)
+        self.service.send_stock_notifications(stock1)
+        result = self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 2
         assert len(self.service.notifications_sent["AAPL"]) == 2
@@ -57,8 +57,8 @@ class TestNotificationService:
         stock1 = create_stock_crossing_fifty_day("AAPL")
         stock2 = create_stock_crossing_fifty_day("GOOGL")
 
-        result1 = self.service.send_stock_milestones_notifications(stock1)
-        result2 = self.service.send_stock_milestones_notifications(stock2)
+        result1 = self.service.send_stock_notifications(stock1)
+        result2 = self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 4
         assert "AAPL" in self.service.notifications_sent
@@ -69,7 +69,7 @@ class TestNotificationService:
     def test_handles_stock_with_no_crossing_notifications(self):
         stock = create_stock_no_crossing("AAPL")
 
-        result = self.service.send_stock_milestones_notifications(stock)
+        result = self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called_once()
         assert "AAPL" in self.service.notifications_sent
@@ -77,10 +77,10 @@ class TestNotificationService:
 
     def test_sends_unsent_notification_type_even_if_other_type_already_sent(self):
         stock_fifty = create_stock_crossing_fifty_day("AAPL")
-        result1 = self.service.send_stock_milestones_notifications(stock_fifty)
+        result1 = self.service.send_stock_notifications(stock_fifty)
 
         stock_both = create_stock_crossing_both_averages("AAPL")
-        result2 = self.service.send_stock_milestones_notifications(stock_both)
+        result2 = self.service.send_stock_notifications(stock_both)
 
         assert self.mock_sender.send_message.call_count == 3
         assert len(self.service.notifications_sent["AAPL"]) == 3

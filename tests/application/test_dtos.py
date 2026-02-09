@@ -74,7 +74,7 @@ class TestStockDTO:
             fiftyDayAverage=Decimal("100"),
             marketState=MarketState.OPEN,
         )
-        stock.generate_milestones_notifications()
+        stock.generate_notifications()
 
         result = StockDTO.from_stock(stock)
 

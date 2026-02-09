@@ -198,7 +198,7 @@ class Stock:
             if percentage_notification is not None:
                 self._notifications.append(percentage_notification)
 
-    def generate_milestones_notifications(self) -> None:
+    def generate_notifications(self) -> None:
         if self._is_market_state_open():
             self._generate_market_open_notifications()
         elif self._is_market_state_post():

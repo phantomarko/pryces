@@ -80,7 +80,7 @@ Presentation → Application → Domain
 ```
 
 **Domain** (`src/pryces/domain/`) — Core domain model:
-- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice, marketState + 10 optional Decimal price fields; generates milestone notifications via `generate_milestones_notifications()`)
+- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice, marketState + 10 optional Decimal price fields; generates milestone notifications via `generate_notifications()`)
 - `notifications.py` — `NotificationType` enum (SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED), `Notification` class (factory-based construction with static creators)
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:

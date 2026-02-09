@@ -298,7 +298,7 @@ def test_stock_notifications_defaults_to_empty_list():
     assert stock.notifications == []
 
 
-def test_generate_milestones_notifications_adds_fifty_day_notification():
+def test_generate_notifications_adds_fifty_day_notification():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -307,7 +307,7 @@ def test_generate_milestones_notifications_adds_fifty_day_notification():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 3
     types = {n.type for n in stock.notifications}
@@ -318,7 +318,7 @@ def test_generate_milestones_notifications_adds_fifty_day_notification():
     }
 
 
-def test_generate_milestones_notifications_adds_two_hundred_day_notification():
+def test_generate_notifications_adds_two_hundred_day_notification():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -327,7 +327,7 @@ def test_generate_milestones_notifications_adds_two_hundred_day_notification():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 3
     types = {n.type for n in stock.notifications}
@@ -338,7 +338,7 @@ def test_generate_milestones_notifications_adds_two_hundred_day_notification():
     }
 
 
-def test_generate_milestones_notifications_adds_both_notifications():
+def test_generate_notifications_adds_both_notifications():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -348,7 +348,7 @@ def test_generate_milestones_notifications_adds_both_notifications():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 4
     types = {n.type for n in stock.notifications}
@@ -360,7 +360,7 @@ def test_generate_milestones_notifications_adds_both_notifications():
     }
 
 
-def test_generate_milestones_notifications_adds_no_notifications_when_no_crossing():
+def test_generate_notifications_adds_no_notifications_when_no_crossing():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -370,7 +370,7 @@ def test_generate_milestones_notifications_adds_no_notifications_when_no_crossin
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
@@ -404,7 +404,7 @@ def test_is_market_state_open_returns_false_when_market_state_is_none():
     assert stock._is_market_state_open() is False
 
 
-def test_generate_milestones_notifications_adds_regular_market_open_notification():
+def test_generate_notifications_adds_regular_market_open_notification():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -413,13 +413,13 @@ def test_generate_milestones_notifications_adds_regular_market_open_notification
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
 
 
-def test_generate_milestones_notifications_adds_regular_market_open_with_current_price_fallback():
+def test_generate_notifications_adds_regular_market_open_with_current_price_fallback():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -427,13 +427,13 @@ def test_generate_milestones_notifications_adds_regular_market_open_with_current
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
 
 
-def test_generate_milestones_notifications_does_not_add_regular_market_open_when_market_closed():
+def test_generate_notifications_does_not_add_regular_market_open_when_market_closed():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
@@ -442,7 +442,7 @@ def test_generate_milestones_notifications_does_not_add_regular_market_open_when
         marketState=MarketState.CLOSED,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert stock.notifications == []
 
@@ -473,20 +473,20 @@ def test_is_market_state_post_returns_false_when_market_state_is_none():
     assert stock._is_market_state_post() is False
 
 
-def test_generate_milestones_notifications_adds_regular_market_closed_when_post():
+def test_generate_notifications_adds_regular_market_closed_when_post():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         marketState=MarketState.POST,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_CLOSED
 
 
-def test_generate_milestones_notifications_adds_twenty_percent_increase():
+def test_generate_notifications_adds_twenty_percent_increase():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("121.00"),
@@ -494,7 +494,7 @@ def test_generate_milestones_notifications_adds_twenty_percent_increase():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -504,7 +504,7 @@ def test_generate_milestones_notifications_adds_twenty_percent_increase():
     }
 
 
-def test_generate_milestones_notifications_adds_fifteen_percent_increase():
+def test_generate_notifications_adds_fifteen_percent_increase():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("116.00"),
@@ -512,7 +512,7 @@ def test_generate_milestones_notifications_adds_fifteen_percent_increase():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -522,7 +522,7 @@ def test_generate_milestones_notifications_adds_fifteen_percent_increase():
     }
 
 
-def test_generate_milestones_notifications_adds_ten_percent_increase():
+def test_generate_notifications_adds_ten_percent_increase():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("111.00"),
@@ -530,7 +530,7 @@ def test_generate_milestones_notifications_adds_ten_percent_increase():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -540,7 +540,7 @@ def test_generate_milestones_notifications_adds_ten_percent_increase():
     }
 
 
-def test_generate_milestones_notifications_adds_five_percent_increase():
+def test_generate_notifications_adds_five_percent_increase():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("106.00"),
@@ -548,7 +548,7 @@ def test_generate_milestones_notifications_adds_five_percent_increase():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -558,7 +558,7 @@ def test_generate_milestones_notifications_adds_five_percent_increase():
     }
 
 
-def test_generate_milestones_notifications_adds_twenty_percent_decrease():
+def test_generate_notifications_adds_twenty_percent_decrease():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("79.00"),
@@ -566,7 +566,7 @@ def test_generate_milestones_notifications_adds_twenty_percent_decrease():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -576,7 +576,7 @@ def test_generate_milestones_notifications_adds_twenty_percent_decrease():
     }
 
 
-def test_generate_milestones_notifications_adds_fifteen_percent_decrease():
+def test_generate_notifications_adds_fifteen_percent_decrease():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("84.00"),
@@ -584,7 +584,7 @@ def test_generate_milestones_notifications_adds_fifteen_percent_decrease():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -594,7 +594,7 @@ def test_generate_milestones_notifications_adds_fifteen_percent_decrease():
     }
 
 
-def test_generate_milestones_notifications_adds_ten_percent_decrease():
+def test_generate_notifications_adds_ten_percent_decrease():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("89.00"),
@@ -602,7 +602,7 @@ def test_generate_milestones_notifications_adds_ten_percent_decrease():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -612,7 +612,7 @@ def test_generate_milestones_notifications_adds_ten_percent_decrease():
     }
 
 
-def test_generate_milestones_notifications_adds_five_percent_decrease():
+def test_generate_notifications_adds_five_percent_decrease():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("94.00"),
@@ -620,7 +620,7 @@ def test_generate_milestones_notifications_adds_five_percent_decrease():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -630,7 +630,7 @@ def test_generate_milestones_notifications_adds_five_percent_decrease():
     }
 
 
-def test_generate_milestones_notifications_no_percentage_below_threshold():
+def test_generate_notifications_no_percentage_below_threshold():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("104.00"),
@@ -638,13 +638,13 @@ def test_generate_milestones_notifications_no_percentage_below_threshold():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
 
 
-def test_generate_milestones_notifications_percentage_at_exact_threshold():
+def test_generate_notifications_percentage_at_exact_threshold():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("105.00"),
@@ -652,7 +652,7 @@ def test_generate_milestones_notifications_percentage_at_exact_threshold():
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 2
     types = {n.type for n in stock.notifications}
@@ -662,14 +662,14 @@ def test_generate_milestones_notifications_percentage_at_exact_threshold():
     }
 
 
-def test_generate_milestones_notifications_no_percentage_when_previous_close_none():
+def test_generate_notifications_no_percentage_when_previous_close_none():
     stock = Stock(
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         marketState=MarketState.OPEN,
     )
 
-    stock.generate_milestones_notifications()
+    stock.generate_notifications()
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
