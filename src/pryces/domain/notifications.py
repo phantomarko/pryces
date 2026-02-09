@@ -7,6 +7,14 @@ class NotificationType(Enum):
     SMA200_CROSSED = "SMA200_CROSSED"
     REGULAR_MARKET_OPEN = "REGULAR_MARKET_OPEN"
     REGULAR_MARKET_CLOSED = "REGULAR_MARKET_CLOSED"
+    FIVE_PERCENT_INCREASE = "FIVE_PERCENT_INCREASE"
+    TEN_PERCENT_INCREASE = "TEN_PERCENT_INCREASE"
+    FIFTEEN_PERCENT_INCREASE = "FIFTEEN_PERCENT_INCREASE"
+    TWENTY_PERCENT_INCREASE = "TWENTY_PERCENT_INCREASE"
+    FIVE_PERCENT_DECREASE = "FIVE_PERCENT_DECREASE"
+    TEN_PERCENT_DECREASE = "TEN_PERCENT_DECREASE"
+    FIFTEEN_PERCENT_DECREASE = "FIFTEEN_PERCENT_DECREASE"
+    TWENTY_PERCENT_DECREASE = "TWENTY_PERCENT_DECREASE"
 
 
 class Notification:
@@ -71,4 +79,100 @@ class Notification:
             message += f". Opening price: {opening_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_CLOSED, message
+        )
+
+    @staticmethod
+    def create_five_percent_increase(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price increased more than 5% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_INCREASE, message
+        )
+
+    @staticmethod
+    def create_ten_percent_increase(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price increased more than 10% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.TEN_PERCENT_INCREASE, message
+        )
+
+    @staticmethod
+    def create_fifteen_percent_increase(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price increased more than 15% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_INCREASE, message
+        )
+
+    @staticmethod
+    def create_twenty_percent_increase(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price increased more than 20% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_INCREASE, message
+        )
+
+    @staticmethod
+    def create_five_percent_decrease(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price decreased more than 5% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_DECREASE, message
+        )
+
+    @staticmethod
+    def create_ten_percent_decrease(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price decreased more than 10% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.TEN_PERCENT_DECREASE, message
+        )
+
+    @staticmethod
+    def create_fifteen_percent_decrease(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price decreased more than 15% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_DECREASE, message
+        )
+
+    @staticmethod
+    def create_twenty_percent_decrease(
+        symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        message = (
+            f"{symbol} price decreased more than 20% ({change_percentage:+.2f}%). "
+            f"Current price: {current_price}. Previous close: {last_close_price}"
+        )
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_DECREASE, message
         )
