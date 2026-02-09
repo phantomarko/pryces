@@ -137,10 +137,12 @@ class Stock:
         return self._marketState == MarketState.POST
 
     def generate_milestones_notifications(self) -> None:
-        if self.is_market_state_open() and self.openPrice is not None:
+        if self.is_market_state_open():
             self._notifications.append(
                 Notification.create_regular_market_open(
-                    self.symbol, self.openPrice, self.previousClosePrice
+                    self.symbol,
+                    self.openPrice if self.openPrice is not None else self.currentPrice,
+                    self.previousClosePrice,
                 )
             )
         if self.has_crossed_fifty_day_average():

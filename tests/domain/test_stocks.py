@@ -361,6 +361,20 @@ def test_generate_milestones_notifications_adds_regular_market_open_notification
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
 
 
+def test_generate_milestones_notifications_adds_regular_market_open_with_current_price_fallback():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("148.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_milestones_notifications()
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+
+
 def test_generate_milestones_notifications_does_not_add_regular_market_open_when_market_closed():
     stock = Stock(
         symbol="AAPL",
