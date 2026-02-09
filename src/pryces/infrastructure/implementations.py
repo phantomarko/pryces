@@ -8,7 +8,7 @@ import yfinance as yf
 
 from ..application.exceptions import StockInformationIncomplete
 from ..application.interfaces import StockProvider, MessageSender
-from ..domain.stocks import Stock
+from ..domain.stocks import MarketState, Stock
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,22 @@ class YahooFinanceProvider(StockProvider):
     def __init__(self) -> None:
         self._logger = logging.getLogger(__name__)
 
+    def _map_market_state(self, value: str | None) -> MarketState | None:
+        match value:
+            case "REGULAR":
+                return MarketState.OPEN
+            case "PRE" | "PREPRE":
+                return MarketState.PRE
+            case "POST" | "POSTPOST":
+                return MarketState.POST
+            case "CLOSED":
+                return MarketState.CLOSED
+            case None:
+                return None
+            case _:
+                self._logger.warning(f"Unknown market state: {value}")
+                return None
+
     def _build_response(self, symbol: str, info: dict, current_price: float) -> Stock:
         previous_close = info.get("previousClose")
         open_price = info.get("open")
@@ -32,6 +48,7 @@ class YahooFinanceProvider(StockProvider):
         fifty_two_week_low = info.get("fiftyTwoWeekLow")
         company_name = info.get("longName") or info.get("shortName")
         currency = info.get("currency")
+        market_state = self._map_market_state(info.get("marketState"))
 
         return Stock(
             symbol=symbol.upper(),
@@ -52,6 +69,7 @@ class YahooFinanceProvider(StockProvider):
             fiftyTwoWeekLow=(
                 Decimal(str(fifty_two_week_low)) if fifty_two_week_low is not None else None
             ),
+            marketState=market_state,
         )
 
     def get_stock(self, symbol: str) -> Stock | None:

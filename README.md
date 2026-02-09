@@ -162,6 +162,7 @@ Example output (success):
 ```
 AAPL - Apple Inc. (USD)
 
+  Market State:        OPEN
   Current Price:       269.48
   Previous Close:      269.955
   Open:                269.13
@@ -197,6 +198,7 @@ Example output (success with all symbols found):
 ```
 AAPL - Apple Inc. (USD)
 
+  Market State:        OPEN
   Current Price:       269.48
   Previous Close:      269.955
   Open:                269.13
@@ -211,6 +213,7 @@ AAPL - Apple Inc. (USD)
 
 GOOGL - Alphabet Inc. (USD)
 
+  Market State:        OPEN
   Current Price:       202.63
   Previous Close:      202.75
   Open:                202.13
@@ -225,6 +228,7 @@ GOOGL - Alphabet Inc. (USD)
 
 MSFT - Microsoft Corporation (USD)
 
+  Market State:        OPEN
   Current Price:       434.28
   Previous Close:      435.47
   Open:                432.40
@@ -243,6 +247,7 @@ Example output (partial success with some invalid symbols):
 ```
 AAPL - Apple Inc. (USD)
 
+  Market State:        OPEN
   Current Price:       269.48
   Previous Close:      269.955
   Open:                269.13

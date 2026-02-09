@@ -34,6 +34,7 @@ class StockDTO:
     twoHundredDayAverage: Decimal | None = None
     fiftyTwoWeekHigh: Decimal | None = None
     fiftyTwoWeekLow: Decimal | None = None
+    marketState: str | None = None
     notifications: list[NotificationDTO] = field(default_factory=list)
 
     @staticmethod
@@ -51,5 +52,6 @@ class StockDTO:
             twoHundredDayAverage=stock.twoHundredDayAverage,
             fiftyTwoWeekHigh=stock.fiftyTwoWeekHigh,
             fiftyTwoWeekLow=stock.fiftyTwoWeekLow,
+            marketState=stock.marketState.value if stock.marketState else None,
             notifications=[NotificationDTO.from_notification(n) for n in stock.notifications],
         )

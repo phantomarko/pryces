@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.application.dtos import StockDTO
-from pryces.domain.stocks import Stock
+from pryces.domain.stocks import MarketState, Stock
 
 
 def create_stock(
@@ -18,6 +18,7 @@ def create_stock(
         "twoHundredDayAverage": current_price * Decimal("0.93"),
         "fiftyTwoWeekHigh": current_price * Decimal("1.20"),
         "fiftyTwoWeekLow": current_price * Decimal("0.80"),
+        "marketState": MarketState.OPEN,
     }
 
     return Stock(symbol=symbol, currentPrice=current_price, **{**defaults, **overrides})

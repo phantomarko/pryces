@@ -1,6 +1,14 @@
 from decimal import Decimal
+from enum import Enum
 
 from pryces.domain.notifications import Notification, NotificationType
+
+
+class MarketState(str, Enum):
+    OPEN = "OPEN"
+    PRE = "PRE"
+    POST = "POST"
+    CLOSED = "CLOSED"
 
 
 class Stock:
@@ -19,6 +27,7 @@ class Stock:
         twoHundredDayAverage: Decimal | None = None,
         fiftyTwoWeekHigh: Decimal | None = None,
         fiftyTwoWeekLow: Decimal | None = None,
+        marketState: MarketState | None = None,
     ):
         self._symbol = symbol
         self._currentPrice = currentPrice
@@ -32,6 +41,7 @@ class Stock:
         self._twoHundredDayAverage = twoHundredDayAverage
         self._fiftyTwoWeekHigh = fiftyTwoWeekHigh
         self._fiftyTwoWeekLow = fiftyTwoWeekLow
+        self._marketState = marketState
         self._notifications: list[Notification] = []
 
     @property
@@ -81,6 +91,10 @@ class Stock:
     @property
     def fiftyTwoWeekLow(self) -> Decimal | None:
         return self._fiftyTwoWeekLow
+
+    @property
+    def marketState(self) -> MarketState | None:
+        return self._marketState
 
     @property
     def notifications(self) -> list[Notification]:

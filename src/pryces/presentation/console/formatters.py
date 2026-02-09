@@ -3,6 +3,7 @@ from __future__ import annotations
 from pryces.application.dtos import StockDTO
 
 FIELD_LABELS = [
+    ("marketState", "Market State"),
     ("currentPrice", "Current Price"),
     ("previousClosePrice", "Previous Close"),
     ("openPrice", "Open"),
