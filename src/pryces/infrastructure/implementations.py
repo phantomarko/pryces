@@ -56,7 +56,7 @@ class YahooFinanceProvider(StockProvider):
 
     def get_stock(self, symbol: str) -> Stock | None:
         try:
-            self._logger.debug(f"Fetching data for symbol: {symbol}")
+            self._logger.info(f"Fetching data for symbol: {symbol}")
 
             ticker_obj = yf.Ticker(symbol)
             info = ticker_obj.info
@@ -86,7 +86,7 @@ class YahooFinanceProvider(StockProvider):
             return []
 
         try:
-            self._logger.debug(f"Fetching batch data for symbols: {symbols}")
+            self._logger.info(f"Fetching batch data for symbols: {symbols}")
 
             # Use yfinance Tickers API for batch fetching
             tickers = yf.Tickers(" ".join(symbols))
@@ -137,7 +137,7 @@ class TelegramMessageSender(MessageSender):
         url = f"https://api.telegram.org/bot{self._settings.bot_token}/sendMessage"
         payload = json.dumps({"chat_id": self._settings.group_id, "text": message}).encode("utf-8")
 
-        self._logger.debug(f"Sending message to Telegram group {self._settings.group_id}")
+        self._logger.info(f"Sending message to Telegram group {self._settings.group_id}")
 
         request = urllib.request.Request(
             url, data=payload, headers={"Content-Type": "application/json"}
@@ -147,7 +147,7 @@ class TelegramMessageSender(MessageSender):
         response_data = json.loads(response.read().decode("utf-8"))
 
         if response_data.get("ok") is True:
-            self._logger.info("Message sent successfully via Telegram")
+            self._logger.info(f"Notification sent: {message}")
             return True
 
         self._logger.warning(f"Telegram API returned ok=false: {response_data}")
