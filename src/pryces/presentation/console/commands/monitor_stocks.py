@@ -1,4 +1,3 @@
-import logging
 import time
 
 from ....application.use_cases.trigger_stocks_notifications import (
@@ -32,7 +31,6 @@ def parse_symbols_input(value: str) -> list[str]:
 class MonitorStocksCommand(Command):
     def __init__(self, trigger_stocks_notifications_use_case: TriggerStocksNotifications) -> None:
         self._trigger_stocks_notifications = trigger_stocks_notifications_use_case
-        self._logger = logging.getLogger(__name__)
 
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(
@@ -63,8 +61,6 @@ class MonitorStocksCommand(Command):
     def execute(
         self, symbols: str = None, interval: str = None, repetitions: str = None, **kwargs
     ) -> str:
-        self._logger.info(f"Monitoring stocks for notifications: {symbols}")
-
         interval_seconds = int(interval)
         repetition_count = int(repetitions)
 
@@ -83,16 +79,10 @@ class MonitorStocksCommand(Command):
                 if i < repetition_count - 1:
                     time.sleep(interval_seconds)
 
-            self._logger.info(
-                f"Monitoring complete: {len(symbol_list)} stocks checked, "
-                f"{total_notifications} notifications sent over {repetition_count} repetitions"
-            )
-
             return (
                 f"Monitoring complete. {len(symbol_list)} stocks checked, "
                 f"{total_notifications} notifications sent over {repetition_count} repetitions."
             )
 
         except Exception as e:
-            self._logger.exception(f"Unexpected error while monitoring stocks for {symbols}")
             return f"Monitoring failed: {e}"
