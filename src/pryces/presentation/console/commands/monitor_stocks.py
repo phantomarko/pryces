@@ -48,12 +48,12 @@ class MonitorStocksCommand(Command):
             ),
             InputPrompt(
                 key="interval",
-                prompt="Enter interval between checks in seconds (e.g., 300): ",
+                prompt="Enter interval between checks in seconds (e.g., 90): ",
                 validator=validate_positive_integer,
             ),
             InputPrompt(
                 key="repetitions",
-                prompt="Enter number of repetitions (e.g., 6): ",
+                prompt="Enter number of repetitions (e.g., 525): ",
                 validator=validate_positive_integer,
             ),
         ]
