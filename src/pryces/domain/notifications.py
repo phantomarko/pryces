@@ -24,6 +24,9 @@ class Notification:
     def message(self) -> str:
         return self._message
 
+    def equals(self, other: "Notification") -> bool:
+        return self._type == other._type
+
     @staticmethod
     def create_fifty_day_average_crossed(
         symbol: str, current_price: Decimal, average_price: Decimal
