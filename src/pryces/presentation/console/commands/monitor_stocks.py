@@ -1,3 +1,4 @@
+import logging
 import time
 
 from ....application.use_cases.trigger_stocks_notifications import (
@@ -30,6 +31,7 @@ def _parse_symbols_input(value: str) -> list[str]:
 class MonitorStocksCommand(Command):
     def __init__(self, trigger_stocks_notifications_use_case: TriggerStocksNotifications) -> None:
         self._trigger_stocks_notifications = trigger_stocks_notifications_use_case
+        self._logger = logging.getLogger(__name__)
 
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(
@@ -63,23 +65,22 @@ class MonitorStocksCommand(Command):
         interval_seconds = int(interval)
         repetition_count = int(repetitions)
 
-        try:
-            symbol_list = _parse_symbols_input(symbols)
-            request = TriggerStocksNotificationsRequest(symbols=symbol_list)
+        symbol_list = _parse_symbols_input(symbols)
+        request = TriggerStocksNotificationsRequest(symbols=symbol_list)
 
-            total_notifications = 0
+        total_notifications = 0
 
-            for i in range(repetition_count):
+        for i in range(repetition_count):
+            try:
                 notifications = self._trigger_stocks_notifications.handle(request)
                 total_notifications += len(notifications)
+            except Exception as e:
+                self._logger.warning(f"Exception caught: {e}")
 
-                if i < repetition_count - 1:
-                    time.sleep(interval_seconds)
+            if i < repetition_count - 1:
+                time.sleep(interval_seconds)
 
-            return (
-                f"Monitoring complete. {len(symbol_list)} stocks checked, "
-                f"{total_notifications} notifications sent over {repetition_count} repetitions."
-            )
-
-        except Exception as e:
-            return f"Monitoring failed: {e}"
+        return (
+            f"Monitoring complete. {len(symbol_list)} stocks checked, "
+            f"{total_notifications} notifications sent over {repetition_count} repetitions."
+        )

@@ -101,14 +101,13 @@ class TestMonitorStocksCommand:
         assert "2 notifications sent" in result
         assert self.mock_sender.send_message.call_count == 2
 
-    def test_execute_returns_failure_message_on_exception(self):
-        error_message = "Network connection failed"
-        self.mock_provider.get_stocks.side_effect = Exception(error_message)
+    def test_execute_continues_on_exception(self):
+        self.mock_provider.get_stocks.side_effect = Exception("Network connection failed")
 
         result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
-        assert "Monitoring failed:" in result
-        assert error_message in result
+        assert "Monitoring complete" in result
+        assert "0 notifications sent" in result
 
     def test_execute_with_empty_results(self):
         self.mock_provider.get_stocks.return_value = []
