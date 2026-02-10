@@ -1,5 +1,6 @@
 import json
 import logging
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from decimal import Decimal
@@ -160,7 +161,13 @@ class TelegramMessageSender(MessageSender):
         request = urllib.request.Request(
             url, data=payload, headers={"Content-Type": "application/json"}
         )
-        response = urllib.request.urlopen(request)
+
+        try:
+            response = urllib.request.urlopen(request)
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8")
+            self._logger.error(f"Telegram API HTTP {e.code}: {error_body}")
+            raise
 
         response_data = json.loads(response.read().decode("utf-8"))
 
