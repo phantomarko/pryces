@@ -1,6 +1,6 @@
 # Pryces
 
-A Python CLI tool for retrieving stock price information, built with clean architecture principles.
+A Python CLI tool for monitoring stock prices and sending real-time Telegram notifications on market events.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ A Python CLI tool for retrieving stock price information, built with clean archi
 
 ## Overview
 
-Pryces is a stock price information system that provides real-time and historical data for stocks through an interactive command-line interface. The project demonstrates clean architecture principles with clear separation of concerns and minimal dependencies.
+Pryces is an interactive command-line tool that retrieves real-time stock prices, tracks moving average crossovers and significant price movements, and delivers Telegram notifications when relevant market events occur — all built with hexagonal architecture, minimal dependencies, and a clear separation between domain logic, application use cases, and infrastructure adapters.
 
 ## Getting Started
 
