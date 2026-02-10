@@ -73,29 +73,27 @@ class YahooFinanceProvider(StockProvider):
             marketState=market_state,
         )
 
+    def _build_stock_from_ticker(self, symbol: str, info: dict) -> Stock | None:
+        if not info or len(info) <= 3:
+            self._logger.error(f"No data available for symbol: {symbol}")
+            return None
+
+        current_price = None
+        for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
+            if price_key in info and info[price_key] is not None:
+                current_price = info[price_key]
+                break
+
+        if current_price is None:
+            raise StockInformationIncomplete(symbol)
+
+        return self._build_response(symbol, info, current_price)
+
     def get_stock(self, symbol: str) -> Stock | None:
         try:
             self._logger.info(f"Fetching data for symbol: {symbol}")
-
             ticker_obj = yf.Ticker(symbol)
-            info = ticker_obj.info
-
-            if not info or len(info) <= 3:  # Yahoo Finance returns ≤3 fields for invalid symbols
-                self._logger.warning(f"No data available for symbol: {symbol}")
-                return None
-
-            current_price = None
-            for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
-                if price_key in info and info[price_key] is not None:
-                    current_price = info[price_key]
-                    break
-
-            if current_price is None:
-                self._logger.error(f"No current price available for symbol: {symbol}")
-                raise StockInformationIncomplete(symbol)
-
-            return self._build_response(symbol, info, current_price)
-
+            return self._build_stock_from_ticker(symbol, ticker_obj.info)
         except Exception as e:
             self._logger.error(f"Error fetching data for {symbol}: {e}")
             raise
@@ -112,24 +110,11 @@ class YahooFinanceProvider(StockProvider):
         for symbol in symbols:
             try:
                 ticker_obj = tickers.tickers[symbol]
-                info = ticker_obj.info
-
-                if not info or len(info) <= 3:
-                    self._logger.warning(f"No data available for symbol: {symbol}")
-                    continue
-
-                current_price = None
-                for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
-                    if price_key in info and info[price_key] is not None:
-                        current_price = info[price_key]
-                        break
-
-                if current_price is None:
-                    self._logger.warning(f"No current price available for symbol: {symbol}")
-                    continue
-
-                responses.append(self._build_response(symbol, info, current_price))
-
+                stock = self._build_stock_from_ticker(symbol, ticker_obj.info)
+                if stock is not None:
+                    responses.append(stock)
+            except StockInformationIncomplete:
+                continue
             except Exception as e:
                 self._logger.warning(f"Error fetching data for {symbol}: {e}")
                 continue
