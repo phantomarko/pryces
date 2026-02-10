@@ -3,7 +3,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.exceptions import StockInformationIncomplete
 from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stock_price import GetStockPrice
 from pryces.presentation.console.commands.get_stock_price import (
@@ -73,15 +72,6 @@ class TestGetStockPriceCommand:
 
         assert result.startswith("Error:")
         assert symbol in result
-
-    def test_execute_returns_error_when_stock_information_incomplete(self):
-        symbol = "AAPL"
-        self.mock_provider.get_stock.side_effect = StockInformationIncomplete(symbol)
-
-        result = self.command.execute(symbol)
-
-        assert result.startswith("Error:")
-        assert "unexpected error occurred" in result.lower()
 
     def test_execute_returns_error_on_unexpected_exception(self):
         symbol = "AAPL"

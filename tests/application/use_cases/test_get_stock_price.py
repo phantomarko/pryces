@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.application.dtos import StockDTO
-from pryces.application.exceptions import StockNotFound, StockInformationIncomplete
+from pryces.application.exceptions import StockNotFound
 from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
@@ -59,20 +59,6 @@ class TestGetStockPrice:
 
         assert exc_info.value.symbol == symbol
         assert str(exc_info.value) == f"Stock not found: {symbol}"
-        self.mock_provider.get_stock.assert_called_once_with(symbol)
-
-    def test_handle_propagates_stock_information_incomplete(self):
-        symbol = "AAPL"
-        self.mock_provider.get_stock.side_effect = StockInformationIncomplete(symbol)
-
-        use_case = GetStockPrice(provider=self.mock_provider)
-        request = GetStockPriceRequest(symbol=symbol)
-
-        with pytest.raises(StockInformationIncomplete) as exc_info:
-            use_case.handle(request)
-
-        assert exc_info.value.symbol == symbol
-        assert "unable to retrieve current price" in str(exc_info.value)
         self.mock_provider.get_stock.assert_called_once_with(symbol)
 
     def test_handle_returns_dto_with_minimal_fields(self):

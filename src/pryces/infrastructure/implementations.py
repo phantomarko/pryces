@@ -7,7 +7,6 @@ from decimal import Decimal
 
 import yfinance as yf
 
-from ..application.exceptions import StockInformationIncomplete
 from ..application.interfaces import StockProvider, MessageSender
 from ..domain.stocks import MarketState, Stock
 
@@ -85,18 +84,15 @@ class YahooFinanceProvider(StockProvider):
                 break
 
         if current_price is None:
-            raise StockInformationIncomplete(symbol)
+            self._logger.error(f"Unable to retrieve current price for symbol: {symbol}")
+            return None
 
         return self._build_response(symbol, info, current_price)
 
     def get_stock(self, symbol: str) -> Stock | None:
-        try:
-            self._logger.info(f"Fetching data for symbol: {symbol}")
-            ticker_obj = yf.Ticker(symbol)
-            return self._build_stock_from_ticker(symbol, ticker_obj.info)
-        except Exception as e:
-            self._logger.error(f"Error fetching data for {symbol}: {e}")
-            raise
+        self._logger.info(f"Fetching data for symbol: {symbol}")
+        ticker_obj = yf.Ticker(symbol)
+        return self._build_stock_from_ticker(symbol, ticker_obj.info)
 
     def get_stocks(self, symbols: list[str]) -> list[Stock]:
         if not symbols:
@@ -113,8 +109,6 @@ class YahooFinanceProvider(StockProvider):
                 stock = self._build_stock_from_ticker(symbol, ticker_obj.info)
                 if stock is not None:
                     responses.append(stock)
-            except StockInformationIncomplete:
-                continue
             except Exception as e:
                 self._logger.error(f"Error fetching data for {symbol}: {e}")
                 continue
