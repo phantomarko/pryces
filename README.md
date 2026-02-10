@@ -5,7 +5,6 @@ A Python CLI tool for retrieving stock price information, built with clean archi
 ## Table of Contents
 
 - [Overview](#overview)
-- [Architecture](#architecture)
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
   - [Installation](#installation)
