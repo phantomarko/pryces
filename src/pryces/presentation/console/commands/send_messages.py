@@ -18,7 +18,7 @@ class SendMessagesCommand(Command):
 
     def execute(self, **kwargs) -> str:
         try:
-            request = SendMessagesRequest(messages=["This is a test message"])
+            request = SendMessagesRequest(messages=["Hello!\nThis is a test message."])
             response = self._send_messages.handle(request)
 
             if response.successful > 0 and response.failed == 0:

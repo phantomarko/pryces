@@ -42,7 +42,8 @@ class Notification:
         symbol: str, current_price: Decimal, average_price: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price crossed the 50-day moving average ({average_price}). "
+            f"{symbol} price crossed the 50-day moving average\n"
+            f"SMA50: {average_price}\n"
             f"Current price: {current_price}"
         )
         return Notification(Notification._CREATION_KEY, NotificationType.SMA50_CROSSED, message)
@@ -52,7 +53,8 @@ class Notification:
         symbol: str, current_price: Decimal, average_price: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price crossed the 200-day moving average ({average_price}). "
+            f"{symbol} price crossed the 200-day moving average\n"
+            f"SMA200: {average_price}\n"
             f"Current price: {current_price}"
         )
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
@@ -61,10 +63,10 @@ class Notification:
     def create_regular_market_open(
         symbol: str, open_price: Decimal, last_close_price: Decimal | None
     ) -> "Notification":
-        message = f"{symbol} regular market is now open. Opening price: {open_price}"
+        message = f"{symbol} regular market is now open\nOpening price: {open_price}"
         if last_close_price is not None:
             change_percentage = ((open_price - last_close_price) / last_close_price) * 100
-            message += f". Previous close: {last_close_price}" f" ({change_percentage:+.2f}%)"
+            message += f"\nPrevious close: {last_close_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_OPEN, message
         )
@@ -73,10 +75,10 @@ class Notification:
     def create_regular_market_closed(
         symbol: str, closing_price: Decimal, opening_price: Decimal | None
     ) -> "Notification":
-        message = f"{symbol} regular market is now closed. Closing price: {closing_price}"
+        message = f"{symbol} regular market is now closed\nClosing price: {closing_price}"
         if opening_price is not None:
             change_percentage = ((closing_price - opening_price) / opening_price) * 100
-            message += f". Opening price: {opening_price} ({change_percentage:+.2f}%)"
+            message += f"\nOpening price: {opening_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_CLOSED, message
         )
@@ -86,8 +88,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price increased more than 5% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price increased more than 5% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_INCREASE, message
@@ -98,8 +101,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price increased more than 10% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price increased more than 10% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.TEN_PERCENT_INCREASE, message
@@ -110,8 +114,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price increased more than 15% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price increased more than 15% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_INCREASE, message
@@ -122,8 +127,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price increased more than 20% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price increased more than 20% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_INCREASE, message
@@ -134,8 +140,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price decreased more than 5% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price decreased more than 5% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_DECREASE, message
@@ -146,8 +153,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price decreased more than 10% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price decreased more than 10% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.TEN_PERCENT_DECREASE, message
@@ -158,8 +166,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price decreased more than 15% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price decreased more than 15% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_DECREASE, message
@@ -170,8 +179,9 @@ class Notification:
         symbol: str, current_price: Decimal, last_close_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
         message = (
-            f"{symbol} price decreased more than 20% ({change_percentage:+.2f}%). "
-            f"Current price: {current_price}. Previous close: {last_close_price}"
+            f"{symbol} price decreased more than 20% ({change_percentage:+.2f}%)\n"
+            f"Current price: {current_price}\n"
+            f"Previous close: {last_close_price}"
         )
         return Notification(
             Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_DECREASE, message

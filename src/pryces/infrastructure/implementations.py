@@ -116,7 +116,7 @@ class YahooFinanceProvider(StockProvider):
             except StockInformationIncomplete:
                 continue
             except Exception as e:
-                self._logger.warning(f"Error fetching data for {symbol}: {e}")
+                self._logger.error(f"Error fetching data for {symbol}: {e}")
                 continue
 
         return responses
@@ -147,8 +147,8 @@ class TelegramMessageSender(MessageSender):
         response_data = json.loads(response.read().decode("utf-8"))
 
         if response_data.get("ok") is True:
-            self._logger.info(f"Notification sent: {message}")
+            self._logger.info(f"Notification sent:\n{message}")
             return True
 
-        self._logger.warning(f"Telegram API returned ok=false: {response_data}")
+        self._logger.error(f"Telegram API returned ok=false: {response_data}")
         return False
