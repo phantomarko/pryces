@@ -27,4 +27,4 @@ class SendMessagesCommand(Command):
                 return "Test notification failed."
 
         except Exception as e:
-            return "Test notification failed."
+            return f"Test notification failed: {e}"

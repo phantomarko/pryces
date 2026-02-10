@@ -45,4 +45,4 @@ class TestSendMessagesCommand:
 
         result = self.command.execute()
 
-        assert result == "Test notification failed."
+        assert result == "Test notification failed: Connection error"

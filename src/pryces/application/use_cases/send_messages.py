@@ -23,12 +23,9 @@ class SendMessages:
         failed = 0
 
         for message in request.messages:
-            try:
-                if self._sender.send_message(message):
-                    successful += 1
-                else:
-                    failed += 1
-            except Exception:
+            if self._sender.send_message(message):
+                successful += 1
+            else:
                 failed += 1
 
         return SendMessagesResponse(successful=successful, failed=failed)
