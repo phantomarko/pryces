@@ -105,6 +105,8 @@ Enter your selection:
 
 ### Monitor Stocks
 
+Periodically checks stock prices and sends Telegram notifications for relevant events like market open/close, moving average crossovers, and significant price changes.
+
 When you select option 1, you'll be prompted to enter comma-separated stock symbols, an interval between checks (in seconds), and the number of repetitions:
 
 ```
@@ -126,14 +128,19 @@ Example output (no notifications):
 Monitoring complete. 2 stocks checked, 0 notifications sent over 525 repetitions.
 ```
 
+**Tracked notifications:**
+- Market open / market closed
+- Price crossed the 50-day or 200-day moving average
+- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
+
 **Notes:**
-- This command monitors stocks and sends relevant notifications via Telegram
-- The command repeats the check at the specified interval, useful for covering market hours (e.g., every 90 seconds from 09:00 to 22:00 = interval 90, repetitions 525)
 - Duplicate notifications are automatically prevented
 - Use `--verbose` to see each notification as it is sent in real time
 - Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ### Get Stock Price
+
+Retrieves current price and market details for a single stock symbol.
 
 When you select option 2, you'll be prompted to enter a stock symbol:
 
@@ -170,6 +177,8 @@ Error: Stock not found: INVALID
 After each command execution, the menu returns to the main selection screen. Select `0` to exit the program.
 
 ### Get Multiple Stock Prices
+
+Retrieves current prices for multiple stock symbols at once, with a summary of successful and failed lookups.
 
 When you select option 3, you'll be prompted to enter comma-separated stock symbols:
 
@@ -253,6 +262,8 @@ Summary: 3 requested, 1 successful, 2 failed
 - Invalid symbols are silently skipped and do not cause errors. Check the summary line to see how many symbols succeeded vs. failed.
 
 ### Test Notifications
+
+Sends a test message via Telegram to verify your notification setup is working.
 
 When you select option 4, a test notification message is sent automatically (no input required):
 
