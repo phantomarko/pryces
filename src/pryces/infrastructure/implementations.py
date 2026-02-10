@@ -104,47 +104,37 @@ class YahooFinanceProvider(StockProvider):
         if not symbols:
             return []
 
-        try:
-            self._logger.info(f"Fetching batch data for symbols: {symbols}")
+        self._logger.info(f"Fetching batch data for symbols: {symbols}")
 
-            # Use yfinance Tickers API for batch fetching
-            tickers = yf.Tickers(" ".join(symbols))
-            responses = []
+        tickers = yf.Tickers(" ".join(symbols))
+        responses = []
 
-            for symbol in symbols:
-                try:
-                    # Access individual ticker info from batch
-                    ticker_obj = tickers.tickers[symbol]
-                    info = ticker_obj.info
+        for symbol in symbols:
+            try:
+                ticker_obj = tickers.tickers[symbol]
+                info = ticker_obj.info
 
-                    # Check if we got valid data
-                    if not info or len(info) <= 3:
-                        self._logger.warning(f"No data available for symbol: {symbol}")
-                        continue
-
-                    # Extract current price with fallback strategies
-                    current_price = None
-                    for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
-                        if price_key in info and info[price_key] is not None:
-                            current_price = info[price_key]
-                            break
-
-                    if current_price is None:
-                        self._logger.warning(f"No current price available for symbol: {symbol}")
-                        continue
-
-                    # Build and append response
-                    responses.append(self._build_response(symbol, info, current_price))
-
-                except Exception as e:
-                    self._logger.warning(f"Error fetching data for {symbol}: {e}")
+                if not info or len(info) <= 3:
+                    self._logger.warning(f"No data available for symbol: {symbol}")
                     continue
 
-            return responses
+                current_price = None
+                for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
+                    if price_key in info and info[price_key] is not None:
+                        current_price = info[price_key]
+                        break
 
-        except Exception as e:
-            self._logger.error(f"Error in batch fetch: {e}")
-            raise
+                if current_price is None:
+                    self._logger.warning(f"No current price available for symbol: {symbol}")
+                    continue
+
+                responses.append(self._build_response(symbol, info, current_price))
+
+            except Exception as e:
+                self._logger.warning(f"Error fetching data for {symbol}: {e}")
+                continue
+
+        return responses
 
 
 class TelegramMessageSender(MessageSender):
