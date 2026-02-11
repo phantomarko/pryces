@@ -6,26 +6,7 @@ from ....application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotificationsRequest,
 )
 from .base import Command, CommandMetadata, InputPrompt
-
-
-def _validate_symbols(value: str) -> bool:
-    if not value or not value.strip():
-        return False
-
-    symbols = [s.strip() for s in value.split(",")]
-    return all(symbol and len(symbol) <= 10 for symbol in symbols)
-
-
-def _validate_positive_integer(value: str) -> bool:
-    try:
-        return int(value) > 0
-    except (ValueError, TypeError):
-        return False
-
-
-def _parse_symbols_input(value: str) -> list[str]:
-    symbols = [s.strip().upper() for s in value.split(",")]
-    return [s for s in symbols if s]
+from ..input_utils import parse_symbols_input, validate_positive_integer, validate_symbols
 
 
 class MonitorStocksCommand(Command):
@@ -45,17 +26,17 @@ class MonitorStocksCommand(Command):
             InputPrompt(
                 key="symbols",
                 prompt="Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): ",
-                validator=_validate_symbols,
+                validator=validate_symbols,
             ),
             InputPrompt(
                 key="interval",
                 prompt="Enter interval between checks in seconds (e.g., 90): ",
-                validator=_validate_positive_integer,
+                validator=validate_positive_integer,
             ),
             InputPrompt(
                 key="repetitions",
                 prompt="Enter number of repetitions (e.g., 525): ",
-                validator=_validate_positive_integer,
+                validator=validate_positive_integer,
             ),
         ]
 
@@ -65,7 +46,7 @@ class MonitorStocksCommand(Command):
         interval_seconds = int(interval)
         repetition_count = int(repetitions)
 
-        symbol_list = _parse_symbols_input(symbols)
+        symbol_list = parse_symbols_input(symbols)
         request = TriggerStocksNotificationsRequest(symbols=symbol_list)
 
         total_notifications = 0

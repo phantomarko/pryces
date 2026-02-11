@@ -1,11 +1,8 @@
 from ....application.exceptions import StockNotFound
 from ....application.use_cases.get_stock_price import GetStockPrice, GetStockPriceRequest
-from ..formatters import format_stock
+from ..output_utils import format_stock
 from .base import Command, CommandMetadata, InputPrompt
-
-
-def _validate_symbol(value: str) -> bool:
-    return bool(value and value.strip() and len(value.strip()) <= 10)
+from ..input_utils import validate_symbol
 
 
 class GetStockPriceCommand(Command):
@@ -24,7 +21,7 @@ class GetStockPriceCommand(Command):
             InputPrompt(
                 key="symbol",
                 prompt="Enter stock symbol (e.g., AAPL, GOOGL): ",
-                validator=_validate_symbol,
+                validator=validate_symbol,
             )
         ]
 

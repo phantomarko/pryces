@@ -5,11 +5,10 @@ from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
-from pryces.presentation.console.commands.monitor_stocks import (
-    MonitorStocksCommand,
-    _validate_symbols,
-    _validate_positive_integer,
-    _parse_symbols_input,
+from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
+from pryces.presentation.console.input_utils import (
+    validate_positive_integer,
+    validate_symbols,
 )
 from tests.fixtures.factories import (
     create_stock_crossing_both_averages,
@@ -44,11 +43,11 @@ class TestMonitorStocksCommand:
         assert isinstance(prompts[0], InputPrompt)
         assert prompts[0].key == "symbols"
         assert "commas" in prompts[0].prompt.lower()
-        assert prompts[0].validator is _validate_symbols
+        assert prompts[0].validator is validate_symbols
         assert prompts[1].key == "interval"
-        assert prompts[1].validator is _validate_positive_integer
+        assert prompts[1].validator is validate_positive_integer
         assert prompts[2].key == "repetitions"
-        assert prompts[2].validator is _validate_positive_integer
+        assert prompts[2].validator is validate_positive_integer
 
     def test_execute_with_notifications_returns_correct_summary(self):
         stock = create_stock_crossing_fifty_day("AAPL")
@@ -155,79 +154,3 @@ class TestMonitorStocksCommand:
         assert "1 stocks checked" in result
         assert "3 notifications sent" in result
         assert "3 repetitions" in result
-
-
-class TestValidateSymbols:
-
-    def test_accepts_valid_single_symbol(self):
-        assert _validate_symbols("AAPL") is True
-
-    def test_accepts_valid_comma_separated_symbols(self):
-        assert _validate_symbols("AAPL,GOOGL,MSFT") is True
-
-    def test_accepts_symbols_with_spaces(self):
-        assert _validate_symbols("AAPL, GOOGL, MSFT") is True
-        assert _validate_symbols("AAPL , GOOGL , MSFT") is True
-
-    def test_rejects_empty_string(self):
-        assert _validate_symbols("") is False
-        assert _validate_symbols("   ") is False
-
-    def test_rejects_symbols_too_long(self):
-        assert _validate_symbols("TOOLONGSYMBOL") is False
-        assert _validate_symbols("AAPL,TOOLONGSYMBOL") is False
-
-    def test_rejects_empty_symbols_in_list(self):
-        assert _validate_symbols("AAPL,,GOOGL") is False
-        assert _validate_symbols(",AAPL,GOOGL") is False
-        assert _validate_symbols("AAPL,GOOGL,") is False
-
-
-class TestValidatePositiveInteger:
-
-    def test_accepts_positive_integers(self):
-        assert _validate_positive_integer("1") is True
-        assert _validate_positive_integer("10") is True
-        assert _validate_positive_integer("300") is True
-
-    def test_rejects_zero(self):
-        assert _validate_positive_integer("0") is False
-
-    def test_rejects_negative_numbers(self):
-        assert _validate_positive_integer("-1") is False
-        assert _validate_positive_integer("-100") is False
-
-    def test_rejects_non_numeric(self):
-        assert _validate_positive_integer("abc") is False
-        assert _validate_positive_integer("") is False
-        assert _validate_positive_integer("1.5") is False
-
-    def test_rejects_none(self):
-        assert _validate_positive_integer(None) is False
-
-
-class TestParseSymbolsInput:
-
-    def test_parses_single_symbol(self):
-        result = _parse_symbols_input("AAPL")
-        assert result == ["AAPL"]
-
-    def test_parses_comma_separated_symbols(self):
-        result = _parse_symbols_input("AAPL,GOOGL,MSFT")
-        assert result == ["AAPL", "GOOGL", "MSFT"]
-
-    def test_strips_whitespace(self):
-        result = _parse_symbols_input("AAPL, GOOGL, MSFT")
-        assert result == ["AAPL", "GOOGL", "MSFT"]
-
-    def test_converts_to_uppercase(self):
-        result = _parse_symbols_input("aapl,googl,msft")
-        assert result == ["AAPL", "GOOGL", "MSFT"]
-
-    def test_filters_empty_strings(self):
-        result = _parse_symbols_input("AAPL,,GOOGL")
-        assert result == ["AAPL", "GOOGL"]
-
-    def test_handles_mixed_case_with_spaces(self):
-        result = _parse_symbols_input("aapl, GooGl, MsFt")
-        assert result == ["AAPL", "GOOGL", "MSFT"]

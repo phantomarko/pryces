@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.presentation.console.formatters import format_stock, format_stock_list
+from pryces.presentation.console.output_utils import format_stock, format_stock_list
 from tests.fixtures.factories import create_stock_dto
 
 
