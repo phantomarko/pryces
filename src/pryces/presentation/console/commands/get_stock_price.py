@@ -1,8 +1,7 @@
 from ....application.exceptions import StockNotFound
 from ....application.use_cases.get_stock_price import GetStockPrice, GetStockPriceRequest
-from ..output_utils import format_stock
+from ..utils import format_stock, validate_symbol
 from .base import Command, CommandMetadata, InputPrompt
-from ..input_utils import validate_symbol
 
 
 class GetStockPriceCommand(Command):

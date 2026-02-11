@@ -6,7 +6,7 @@ from pryces.application.services import NotificationService
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
-from pryces.presentation.console.input_utils import (
+from pryces.presentation.console.utils import (
     validate_positive_integer,
     validate_symbols,
 )

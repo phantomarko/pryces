@@ -6,7 +6,7 @@ import pytest
 from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stocks_prices import GetStocksPrices
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
-from pryces.presentation.console.input_utils import validate_symbols
+from pryces.presentation.console.utils import validate_symbols
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from tests.fixtures.factories import create_stock
 

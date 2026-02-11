@@ -6,7 +6,7 @@ from ....application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotificationsRequest,
 )
 from .base import Command, CommandMetadata, InputPrompt
-from ..input_utils import parse_symbols_input, validate_positive_integer, validate_symbols
+from ..utils import parse_symbols_input, validate_positive_integer, validate_symbols
 
 
 class MonitorStocksCommand(Command):

@@ -1,7 +1,6 @@
 from ....application.use_cases.get_stocks_prices import GetStocksPrices, GetStocksPricesRequest
-from ..output_utils import format_stock_list
+from ..utils import format_stock_list, parse_symbols_input, validate_symbols
 from .base import Command, CommandMetadata, InputPrompt
-from ..input_utils import parse_symbols_input, validate_symbols
 
 
 class GetStocksPricesCommand(Command):
