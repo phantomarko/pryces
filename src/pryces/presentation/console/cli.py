@@ -6,17 +6,9 @@ from dotenv import load_dotenv
 
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
+from ...infrastructure.logging import setup as setup_logging
 from .factories import CommandFactory
 from .menu import InteractiveMenu
-
-
-def _configure_logging(verbose: bool = False) -> None:
-    log_level = logging.INFO if verbose else logging.WARNING
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        stream=sys.stderr,
-    )
 
 
 def _create_menu() -> InteractiveMenu:
@@ -41,14 +33,13 @@ def main() -> int:
         description="Stock price information system - Interactive Menu",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging to stderr"
     )
-
     args = parser.parse_args()
 
-    _configure_logging(args.verbose)
+    setup_logging(args.verbose)
+    logger = logging.getLogger(__name__)
 
     try:
         menu = _create_menu()
@@ -56,7 +47,7 @@ def main() -> int:
         return 0
 
     except Exception as e:
-        logging.error(f"CLI error: {e}")
+        logger.error(f"CLI error: {e}")
         return 1
 
 

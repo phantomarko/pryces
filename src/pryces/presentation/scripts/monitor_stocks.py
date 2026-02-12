@@ -15,7 +15,7 @@ from ...application.use_cases.trigger_stocks_notifications import (
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
-from .factories import LogFactory
+from pryces.infrastructure.logging import setup as setup_logging
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,8 @@ def main() -> int:
     args = parser.parse_args()
 
     load_dotenv()
-    logger = LogFactory.create(__name__)
+    setup_logging(verbose=True)
+    logger = logging.getLogger(__name__)
 
     try:
         config = _get_config(args.config)

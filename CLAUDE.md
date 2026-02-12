@@ -96,6 +96,7 @@ Presentation → Application → Domain
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
 - `implementations.py` — `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API
 - `factories.py` — `SettingsFactory` (reads Telegram env vars, creates `TelegramSettings`)
+- `logging.py` — `setup(verbose)` configures root logger: stderr handler if verbose, file handler if `LOGS_DIRECTORY` is set, `NullHandler` fallback if no handlers
 
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
 - `cli.py` — Entry point, composition root (wires dependencies)
