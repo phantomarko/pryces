@@ -1,6 +1,6 @@
 # Pryces
 
-A Python CLI tool for monitoring stock prices and sending real-time Telegram notifications on market events.
+A Python CLI tool for monitoring stock prices from Yahoo Finance and sending Telegram notifications on market events.
 
 ## Table of Contents
 
@@ -10,19 +10,19 @@ A Python CLI tool for monitoring stock prices and sending real-time Telegram not
   - [Installation](#installation)
   - [Environment Configuration](#environment-configuration)
 - [Usage](#usage)
+  - [Scripts](#scripts)
+    - [Monitor Stocks Script](#monitor-stocks-script)
   - [Interactive CLI](#interactive-cli)
     - [Monitor Stocks](#monitor-stocks)
     - [Get Stock Price](#get-stock-price)
     - [Get Multiple Stock Prices](#get-multiple-stock-prices)
     - [Test Notifications](#test-notifications)
-  - [Scripts](#scripts)
-    - [Monitor Stocks Script](#monitor-stocks-script)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
 
-Pryces is an interactive command-line tool that retrieves real-time stock prices, tracks moving average crossovers and significant price movements, and delivers Telegram notifications when relevant market events occur — all built with hexagonal architecture, minimal dependencies, and a clear separation between domain logic, application use cases, and infrastructure adapters.
+Pryces retrieves real-time stock data from Yahoo Finance, tracks moving average crossovers and significant price movements, and delivers Telegram notifications when relevant market events occur.
 
 ## Getting Started
 
@@ -61,12 +61,60 @@ Edit `.env` with your settings:
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Your Telegram Bot API token (from [@BotFather](https://t.me/BotFather)) |
 | `TELEGRAM_GROUP_ID` | The Telegram group/chat ID where notifications are sent |
+| `LOGS_DIRECTORY` | Directory path for log file output (optional — if not set, file logging is disabled) |
 
 The application loads these variables automatically from `.env` on startup via `python-dotenv`.
 
 ## Usage
 
-Pryces provides two ways to interact with stock data: an **interactive CLI** with a menu-driven interface, and **standalone scripts** for automated or scheduled tasks.
+Pryces provides two ways to interact with stock data: **standalone scripts** for automated or scheduled tasks, and an **interactive CLI** with a menu-driven interface.
+
+### Scripts
+
+Standalone scripts for automated or scheduled execution. Unlike the interactive CLI, scripts are configured via files and designed to run unattended (e.g., via cron).
+
+#### Monitor Stocks Script
+
+Monitors stocks and sends Telegram notifications, driven by a JSON configuration file.
+
+```bash
+python -m pryces.presentation.scripts.monitor_stocks monitor.json
+```
+
+Run in the background (detached from the terminal):
+```bash
+nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json &
+```
+
+Set `LOGS_DIRECTORY` in your `.env` file before launching it so you can follow the process after closing the terminal. Log files are created with a timestamp. To check the log:
+```bash
+tail -f /tmp/pryces_20260212_143025.log
+```
+
+**Configuration file format** (see `monitor.json.example`):
+
+```json
+{
+    "iterations": 2,
+    "interval": 5,
+    "symbols": ["AAPL", "GOOGL"]
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `iterations` | int | Number of monitoring cycles to run |
+| `interval` | int | Seconds to wait between cycles |
+| `symbols` | list[str] | Stock symbols to monitor |
+
+**Tracked notifications:**
+- Market open / market closed
+- Price crossed the 50-day or 200-day moving average
+- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
+
+**Notes:**
+- Duplicate notifications are automatically prevented within the same run
+- Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ### Interactive CLI
 
@@ -122,14 +170,9 @@ Enter number of repetitions (e.g., 525): 525
 Executing...
 ```
 
-Example output (with notifications):
+Example output:
 ```
 Monitoring complete. 2 stocks checked, 1 notifications sent over 525 repetitions.
-```
-
-Example output (no notifications):
-```
-Monitoring complete. 2 stocks checked, 0 notifications sent over 525 repetitions.
 ```
 
 **Tracked notifications:**
@@ -155,7 +198,7 @@ Enter stock symbol (e.g., AAPL, GOOGL): AAPL
 Executing...
 ```
 
-Example output (success):
+Example output:
 ```
 AAPL - Apple Inc. (USD)
 
@@ -169,13 +212,6 @@ AAPL - Apple Inc. (USD)
   200-Day Average:     236.9913
   52-Week High:        288.62
   52-Week Low:         169.21
-```
-
-**Note:** Only `symbol` and `currentPrice` are required fields. All other fields are optional and will be omitted if data is unavailable.
-
-Example output (error):
-```
-Error: Stock not found: INVALID
 ```
 
 After each command execution, the menu returns to the main selection screen. Select `0` to exit the program.
@@ -193,7 +229,7 @@ Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL,MSFT
 Executing...
 ```
 
-Example output (success with all symbols found):
+Example output:
 ```
 AAPL - Apple Inc. (USD)
 
@@ -242,29 +278,6 @@ MSFT - Microsoft Corporation (USD)
 Summary: 3 requested, 3 successful, 0 failed
 ```
 
-Example output (partial success with some invalid symbols):
-```
-AAPL - Apple Inc. (USD)
-
-  Market State:        OPEN
-  Current Price:       269.48
-  Previous Close:      269.955
-  Open:                269.13
-  Day High:            271.875
-  Day Low:             267.61
-  50-Day Average:      268.3466
-  200-Day Average:     236.9913
-  52-Week High:        288.62
-  52-Week Low:         169.21
-
-============================================================
-Summary: 3 requested, 1 successful, 2 failed
-```
-
-**Notes:**
-- Only `symbol` and `currentPrice` are required fields. All other fields are optional and will be omitted if data is unavailable.
-- Invalid symbols are silently skipped and do not cause errors. Check the summary line to see how many symbols succeeded vs. failed.
-
 ### Test Notifications
 
 Sends a test message via Telegram to verify your notification setup is working.
@@ -277,60 +290,10 @@ When you select option 4, a test notification message is sent automatically (no 
 Executing...
 ```
 
-Example output (success):
+Example output:
 ```
 Test notification sent successfully.
 ```
-
-Example output (failure):
-```
-Test notification failed.
-```
-
-**Note:** This command sends a test message via the Telegram Bot API. Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration)).
-
-### Scripts
-
-Standalone scripts for automated or scheduled execution. Unlike the interactive CLI, scripts are configured via files and designed to run unattended (e.g., via cron).
-
-#### Monitor Stocks Script
-
-Monitors stocks and sends Telegram notifications, driven by a JSON configuration file.
-
-```bash
-python -m pryces.presentation.scripts.monitor_stocks monitor.json
-```
-
-With verbose logging:
-```bash
-python -m pryces.presentation.scripts.monitor_stocks monitor.json --verbose
-```
-
-**Configuration file format** (see `monitor.json.example`):
-
-```json
-{
-    "iterations": 2,
-    "interval": 5,
-    "symbols": ["AAPL", "GOOGL"]
-}
-```
-
-| Field | Type | Description |
-|---|---|---|
-| `iterations` | int | Number of monitoring cycles to run |
-| `interval` | int | Seconds to wait between cycles |
-| `symbols` | list[str] | Stock symbols to monitor |
-
-**Tracked notifications:**
-- Market open / market closed
-- Price crossed the 50-day or 200-day moving average
-- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
-
-**Notes:**
-- Duplicate notifications are automatically prevented within the same run
-- Use `--verbose` to see each notification as it is sent in real time
-- Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ## Contributing
 
