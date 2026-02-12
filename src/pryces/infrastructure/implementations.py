@@ -2,6 +2,7 @@ import json
 import logging
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -94,26 +95,21 @@ class YahooFinanceProvider(StockProvider):
         ticker_obj = yf.Ticker(symbol)
         return self._build_stock_from_ticker(symbol, ticker_obj.info)
 
+    def _fetch_stock(self, symbol: str) -> Stock | None:
+        try:
+            return self.get_stock(symbol)
+        except Exception as e:
+            self._logger.error(f"Error fetching data for {symbol}: {e}")
+            return None
+
     def get_stocks(self, symbols: list[str]) -> list[Stock]:
         if not symbols:
             return []
 
-        self._logger.info(f"Fetching batch data for symbols: {symbols}")
+        with ThreadPoolExecutor(max_workers=len(symbols)) as executor:
+            results = list(executor.map(self._fetch_stock, symbols))
 
-        tickers = yf.Tickers(" ".join(symbols))
-        responses = []
-
-        for symbol in symbols:
-            try:
-                ticker_obj = tickers.tickers[symbol]
-                stock = self._build_stock_from_ticker(symbol, ticker_obj.info)
-                if stock is not None:
-                    responses.append(stock)
-            except Exception as e:
-                self._logger.error(f"Error fetching data for {symbol}: {e}")
-                continue
-
-        return responses
+        return [stock for stock in results if stock is not None]
 
 
 class TelegramMessageSender(MessageSender):
