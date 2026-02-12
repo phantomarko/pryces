@@ -1,12 +1,9 @@
-import os
-
 from ...application.interfaces import StockProvider, MessageSender
 from ...application.services import NotificationService
 from ...application.use_cases.get_stock_price import GetStockPrice
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
 from ...application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
-from ...infrastructure.implementations import TelegramSettings
 from .commands.get_stock_price import GetStockPriceCommand
 from .commands.get_stocks_prices import GetStocksPricesCommand
 from .commands.monitor_stocks import MonitorStocksCommand
@@ -45,12 +42,3 @@ class CommandFactory:
         registry.register(self._create_get_stocks_prices_command())
         registry.register(self._create_send_messages_command())
         return registry
-
-
-class SettingsFactory:
-    @staticmethod
-    def create_telegram_settings() -> TelegramSettings:
-        return TelegramSettings(
-            bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
-            group_id=os.environ["TELEGRAM_GROUP_ID"],
-        )

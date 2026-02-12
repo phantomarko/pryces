@@ -51,6 +51,3 @@ dmypy.json
 # Environment variables
 .env
 .env.local
-
-# CLI config
-monitor.json

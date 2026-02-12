@@ -10,11 +10,13 @@ A Python CLI tool for monitoring stock prices and sending real-time Telegram not
   - [Installation](#installation)
   - [Environment Configuration](#environment-configuration)
 - [Usage](#usage)
-  - [Interactive Menu](#interactive-menu)
-  - [Monitor Stocks](#monitor-stocks)
-  - [Get Stock Price](#get-stock-price)
-  - [Get Multiple Stock Prices](#get-multiple-stock-prices)
-  - [Test Notifications](#test-notifications)
+  - [Interactive CLI](#interactive-cli)
+    - [Monitor Stocks](#monitor-stocks)
+    - [Get Stock Price](#get-stock-price)
+    - [Get Multiple Stock Prices](#get-multiple-stock-prices)
+    - [Test Notifications](#test-notifications)
+  - [Scripts](#scripts)
+    - [Monitor Stocks Script](#monitor-stocks-script)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -64,9 +66,11 @@ The application loads these variables automatically from `.env` on startup via `
 
 ## Usage
 
-### Interactive Menu
+Pryces provides two ways to interact with stock data: an **interactive CLI** with a menu-driven interface, and **standalone scripts** for automated or scheduled tasks.
 
-Launch the interactive menu system:
+### Interactive CLI
+
+Launch the interactive menu:
 
 ```bash
 python -m pryces.presentation.console.cli
@@ -77,7 +81,7 @@ With verbose logging:
 python -m pryces.presentation.console.cli --verbose
 ```
 
-The interactive menu displays available commands and prompts for input:
+The menu displays available commands and prompts for input:
 
 ```
 ============================================================
@@ -284,6 +288,49 @@ Test notification failed.
 ```
 
 **Note:** This command sends a test message via the Telegram Bot API. Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration)).
+
+### Scripts
+
+Standalone scripts for automated or scheduled execution. Unlike the interactive CLI, scripts are configured via files and designed to run unattended (e.g., via cron).
+
+#### Monitor Stocks Script
+
+Monitors stocks and sends Telegram notifications, driven by a JSON configuration file.
+
+```bash
+python -m pryces.presentation.scripts.monitor_stocks monitor.json
+```
+
+With verbose logging:
+```bash
+python -m pryces.presentation.scripts.monitor_stocks monitor.json --verbose
+```
+
+**Configuration file format** (see `monitor.json.example`):
+
+```json
+{
+    "iterations": 2,
+    "interval": 5,
+    "symbols": ["AAPL", "GOOGL"]
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `iterations` | int | Number of monitoring cycles to run |
+| `interval` | int | Seconds to wait between cycles |
+| `symbols` | list[str] | Stock symbols to monitor |
+
+**Tracked notifications:**
+- Market open / market closed
+- Price crossed the 50-day or 200-day moving average
+- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
+
+**Notes:**
+- Duplicate notifications are automatically prevented within the same run
+- Use `--verbose` to see each notification as it is sent in real time
+- Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ## Contributing
 

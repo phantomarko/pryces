@@ -95,6 +95,7 @@ Presentation → Application → Domain
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
 - `implementations.py` — `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API
+- `factories.py` — `SettingsFactory` (reads Telegram env vars, creates `TelegramSettings`)
 
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
 - `cli.py` — Entry point, composition root (wires dependencies)
@@ -105,7 +106,11 @@ Presentation → Application → Domain
 - `commands/monitor_stocks.py` — `MonitorStocksCommand` (loops N repetitions with interval, triggers notifications per cycle)
 - `commands/send_messages.py` — `SendMessagesCommand` (sends test notification via Telegram)
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
-- `factories.py` — `CommandFactory` (DI + object creation), `SettingsFactory` (reads Telegram env vars)
+- `factories.py` — `CommandFactory` (DI + object creation)
+- `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`), parsers (`parse_symbols_input`), and formatters (`format_stock`, `format_stock_list`)
+
+**Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
+- `monitor_stocks.py` — Standalone monitor script driven by JSON config (`MonitorStocksConfig` dataclass, argparse CLI, logging). Entry point: `main()`
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them
@@ -113,9 +118,10 @@ Presentation → Application → Domain
 - **Factory + Registry**: `CommandFactory` builds commands, `CommandRegistry` stores them
 - **Dependency Injection**: Wired at composition root in `cli.py`
 
-### Entry Point
+### Entry Points
 ```bash
-python -m pryces.presentation.console.cli [--verbose]
+python -m pryces.presentation.console.cli [--verbose]           # Interactive CLI
+python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH [--verbose]  # Monitor script
 ```
 
 ## Patterns and Conventions

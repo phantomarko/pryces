@@ -4,8 +4,9 @@ import sys
 
 from dotenv import load_dotenv
 
+from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
-from .factories import CommandFactory, SettingsFactory
+from .factories import CommandFactory
 from .menu import InteractiveMenu
 
 
