@@ -1,10 +1,9 @@
 # Pryces
 
-A Python CLI tool for monitoring stock prices from Yahoo Finance and sending Telegram notifications on market events.
+Retrieves real-time stock data from Yahoo Finance, tracks moving average crossovers and significant price movements, and delivers Telegram notifications when relevant market events occur.
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
   - [Installation](#installation)
@@ -19,10 +18,6 @@ A Python CLI tool for monitoring stock prices from Yahoo Finance and sending Tel
     - [Test Notifications](#test-notifications)
 - [Contributing](#contributing)
 - [License](#license)
-
-## Overview
-
-Pryces retrieves real-time stock data from Yahoo Finance, tracks moving average crossovers and significant price movements, and delivers Telegram notifications when relevant market events occur.
 
 ## Getting Started
 
