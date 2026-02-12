@@ -117,19 +117,19 @@ class YahooFinanceProvider(StockProvider):
 
 
 class TelegramMessageSender(MessageSender):
+    _HEADERS = {"Content-Type": "application/json"}
+
     def __init__(self, settings: TelegramSettings) -> None:
         self._settings = settings
         self._logger = logging.getLogger(__name__)
+        self._url = f"https://api.telegram.org/bot{settings.bot_token}/sendMessage"
 
     def send_message(self, message: str) -> bool:
-        url = f"https://api.telegram.org/bot{self._settings.bot_token}/sendMessage"
         payload = json.dumps({"chat_id": self._settings.group_id, "text": message}).encode("utf-8")
 
         self._logger.info(f"Sending message to Telegram group {self._settings.group_id}")
 
-        request = urllib.request.Request(
-            url, data=payload, headers={"Content-Type": "application/json"}
-        )
+        request = urllib.request.Request(self._url, data=payload, headers=self._HEADERS)
 
         try:
             response = urllib.request.urlopen(request)
