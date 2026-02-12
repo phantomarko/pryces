@@ -15,6 +15,7 @@ from ...application.use_cases.trigger_stocks_notifications import (
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
+from .factories import LogFactory
 
 
 @dataclass(frozen=True)
@@ -35,15 +36,6 @@ class MonitorStocksConfig:
 def _get_config(path: Path) -> MonitorStocksConfig:
     data = json.loads(path.read_text())
     return MonitorStocksConfig(**data)
-
-
-def _configure_logging(verbose: bool = False) -> None:
-    log_level = logging.INFO if verbose else logging.WARNING
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        stream=sys.stderr,
-    )
 
 
 def _create_use_case() -> TriggerStocksNotifications:
@@ -83,15 +75,10 @@ def main() -> int:
         description="Monitor stocks for relevant price notifications",
     )
     parser.add_argument("config", type=Path, help="Path to the JSON configuration file")
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose logging to stderr"
-    )
     args = parser.parse_args()
 
-    _configure_logging(args.verbose)
-    logger = logging.getLogger(__name__)
-
     load_dotenv()
+    logger = LogFactory.create(__name__)
 
     try:
         config = _get_config(args.config)

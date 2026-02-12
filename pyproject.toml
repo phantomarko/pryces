@@ -40,7 +40,7 @@ omit = [
     "*/tests/*",
     "*/__init__.py",
     "*/presentation/console/cli.py",
-    "*/presentation/scripts/monitor_stocks.py",
+    "*/presentation/scripts/*",
 ]
 
 [tool.coverage.report]
