@@ -145,7 +145,7 @@ class Stock:
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
-        args = (self.symbol, self.currentPrice, self.previousClosePrice, change_percentage)
+        args = (self.symbol, self.currentPrice, change_percentage)
 
         if change_percentage > 0:
             thresholds = (
@@ -204,6 +204,6 @@ class Stock:
         elif self._is_market_state_post():
             self._notifications.append(
                 Notification.create_regular_market_closed(
-                    self.symbol, self.currentPrice, self.openPrice
+                    self.symbol, self.currentPrice, self.previousClosePrice
                 )
             )

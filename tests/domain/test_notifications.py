@@ -109,7 +109,7 @@ def test_create_regular_market_closed_sets_message():
     assert "150.00" in notification.message
 
 
-def test_create_regular_market_closed_with_opening_price_sets_type():
+def test_create_regular_market_closed_with_last_day_price_sets_type():
     notification = Notification.create_regular_market_closed(
         "AAPL", Decimal("150.00"), Decimal("148.00")
     )
@@ -117,7 +117,7 @@ def test_create_regular_market_closed_with_opening_price_sets_type():
     assert notification.type == NotificationType.REGULAR_MARKET_CLOSED
 
 
-def test_create_regular_market_closed_with_opening_price_sets_message():
+def test_create_regular_market_closed_with_last_day_price_sets_message():
     notification = Notification.create_regular_market_closed(
         "AAPL", Decimal("150.00"), Decimal("148.00")
     )
@@ -128,7 +128,7 @@ def test_create_regular_market_closed_with_opening_price_sets_message():
 
 def test_create_five_percent_increase_sets_type():
     notification = Notification.create_five_percent_increase(
-        "AAPL", Decimal("157.50"), Decimal("150.00"), Decimal("5.00")
+        "AAPL", Decimal("157.50"), Decimal("5.00")
     )
 
     assert notification.type == NotificationType.FIVE_PERCENT_INCREASE
@@ -136,7 +136,7 @@ def test_create_five_percent_increase_sets_type():
 
 def test_create_five_percent_increase_sets_message():
     notification = Notification.create_five_percent_increase(
-        "AAPL", Decimal("157.50"), Decimal("150.00"), Decimal("5.00")
+        "AAPL", Decimal("157.50"), Decimal("5.00")
     )
 
     assert isinstance(notification.message, str)
@@ -145,7 +145,7 @@ def test_create_five_percent_increase_sets_message():
 
 def test_create_ten_percent_increase_sets_type():
     notification = Notification.create_ten_percent_increase(
-        "AAPL", Decimal("165.00"), Decimal("150.00"), Decimal("10.00")
+        "AAPL", Decimal("165.00"), Decimal("10.00")
     )
 
     assert notification.type == NotificationType.TEN_PERCENT_INCREASE
@@ -153,7 +153,7 @@ def test_create_ten_percent_increase_sets_type():
 
 def test_create_ten_percent_increase_sets_message():
     notification = Notification.create_ten_percent_increase(
-        "AAPL", Decimal("165.00"), Decimal("150.00"), Decimal("10.00")
+        "AAPL", Decimal("165.00"), Decimal("10.00")
     )
 
     assert isinstance(notification.message, str)
@@ -162,7 +162,7 @@ def test_create_ten_percent_increase_sets_message():
 
 def test_create_fifteen_percent_increase_sets_type():
     notification = Notification.create_fifteen_percent_increase(
-        "AAPL", Decimal("172.50"), Decimal("150.00"), Decimal("15.00")
+        "AAPL", Decimal("172.50"), Decimal("15.00")
     )
 
     assert notification.type == NotificationType.FIFTEEN_PERCENT_INCREASE
@@ -170,7 +170,7 @@ def test_create_fifteen_percent_increase_sets_type():
 
 def test_create_fifteen_percent_increase_sets_message():
     notification = Notification.create_fifteen_percent_increase(
-        "AAPL", Decimal("172.50"), Decimal("150.00"), Decimal("15.00")
+        "AAPL", Decimal("172.50"), Decimal("15.00")
     )
 
     assert isinstance(notification.message, str)
@@ -179,7 +179,7 @@ def test_create_fifteen_percent_increase_sets_message():
 
 def test_create_twenty_percent_increase_sets_type():
     notification = Notification.create_twenty_percent_increase(
-        "AAPL", Decimal("180.00"), Decimal("150.00"), Decimal("20.00")
+        "AAPL", Decimal("180.00"), Decimal("20.00")
     )
 
     assert notification.type == NotificationType.TWENTY_PERCENT_INCREASE
@@ -187,7 +187,7 @@ def test_create_twenty_percent_increase_sets_type():
 
 def test_create_twenty_percent_increase_sets_message():
     notification = Notification.create_twenty_percent_increase(
-        "AAPL", Decimal("180.00"), Decimal("150.00"), Decimal("20.00")
+        "AAPL", Decimal("180.00"), Decimal("20.00")
     )
 
     assert isinstance(notification.message, str)
@@ -196,7 +196,7 @@ def test_create_twenty_percent_increase_sets_message():
 
 def test_create_five_percent_decrease_sets_type():
     notification = Notification.create_five_percent_decrease(
-        "AAPL", Decimal("142.50"), Decimal("150.00"), Decimal("-5.00")
+        "AAPL", Decimal("142.50"), Decimal("-5.00")
     )
 
     assert notification.type == NotificationType.FIVE_PERCENT_DECREASE
@@ -204,7 +204,7 @@ def test_create_five_percent_decrease_sets_type():
 
 def test_create_five_percent_decrease_sets_message():
     notification = Notification.create_five_percent_decrease(
-        "AAPL", Decimal("142.50"), Decimal("150.00"), Decimal("-5.00")
+        "AAPL", Decimal("142.50"), Decimal("-5.00")
     )
 
     assert isinstance(notification.message, str)
@@ -213,7 +213,7 @@ def test_create_five_percent_decrease_sets_message():
 
 def test_create_ten_percent_decrease_sets_type():
     notification = Notification.create_ten_percent_decrease(
-        "AAPL", Decimal("135.00"), Decimal("150.00"), Decimal("-10.00")
+        "AAPL", Decimal("135.00"), Decimal("-10.00")
     )
 
     assert notification.type == NotificationType.TEN_PERCENT_DECREASE
@@ -221,7 +221,7 @@ def test_create_ten_percent_decrease_sets_type():
 
 def test_create_ten_percent_decrease_sets_message():
     notification = Notification.create_ten_percent_decrease(
-        "AAPL", Decimal("135.00"), Decimal("150.00"), Decimal("-10.00")
+        "AAPL", Decimal("135.00"), Decimal("-10.00")
     )
 
     assert isinstance(notification.message, str)
@@ -230,7 +230,7 @@ def test_create_ten_percent_decrease_sets_message():
 
 def test_create_fifteen_percent_decrease_sets_type():
     notification = Notification.create_fifteen_percent_decrease(
-        "AAPL", Decimal("127.50"), Decimal("150.00"), Decimal("-15.00")
+        "AAPL", Decimal("127.50"), Decimal("-15.00")
     )
 
     assert notification.type == NotificationType.FIFTEEN_PERCENT_DECREASE
@@ -238,7 +238,7 @@ def test_create_fifteen_percent_decrease_sets_type():
 
 def test_create_fifteen_percent_decrease_sets_message():
     notification = Notification.create_fifteen_percent_decrease(
-        "AAPL", Decimal("127.50"), Decimal("150.00"), Decimal("-15.00")
+        "AAPL", Decimal("127.50"), Decimal("-15.00")
     )
 
     assert isinstance(notification.message, str)
@@ -247,7 +247,7 @@ def test_create_fifteen_percent_decrease_sets_message():
 
 def test_create_twenty_percent_decrease_sets_type():
     notification = Notification.create_twenty_percent_decrease(
-        "AAPL", Decimal("120.00"), Decimal("150.00"), Decimal("-20.00")
+        "AAPL", Decimal("120.00"), Decimal("-20.00")
     )
 
     assert notification.type == NotificationType.TWENTY_PERCENT_DECREASE
@@ -255,7 +255,7 @@ def test_create_twenty_percent_decrease_sets_type():
 
 def test_create_twenty_percent_decrease_sets_message():
     notification = Notification.create_twenty_percent_decrease(
-        "AAPL", Decimal("120.00"), Decimal("150.00"), Decimal("-20.00")
+        "AAPL", Decimal("120.00"), Decimal("-20.00")
     )
 
     assert isinstance(notification.message, str)
