@@ -1,6 +1,5 @@
 from unittest.mock import Mock
 
-from pryces.application.dtos import NotificationDTO
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
 from pryces.application.use_cases.trigger_stocks_notifications import (
@@ -30,11 +29,8 @@ class TestTriggerStocksNotifications:
         self.mock_provider.get_stocks.return_value = [stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert len(result) == 2
-        messages = [r.message for r in result]
-        assert any("50-day" in m for m in messages)
         assert self.mock_sender.send_message.call_count == 2
 
     def test_handle_sends_milestone_notification_for_two_hundred_day_crossing(self):
@@ -42,11 +38,8 @@ class TestTriggerStocksNotifications:
         self.mock_provider.get_stocks.return_value = [stock]
         request = TriggerStocksNotificationsRequest(symbols=["GOOGL"])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert len(result) == 2
-        messages = [r.message for r in result]
-        assert any("200-day" in m for m in messages)
         assert self.mock_sender.send_message.call_count == 2
 
     def test_handle_sends_both_notifications_when_both_averages_crossed(self):
@@ -54,21 +47,17 @@ class TestTriggerStocksNotifications:
         self.mock_provider.get_stocks.return_value = [stock]
         request = TriggerStocksNotificationsRequest(symbols=["MSFT"])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert len(result) == 3
-        messages = [r.message for r in result]
-        assert any("50-day" in m for m in messages)
-        assert any("200-day" in m for m in messages)
+        assert self.mock_sender.send_message.call_count == 3
 
     def test_handle_sends_market_open_even_when_no_crossings(self):
         stock = create_stock_no_crossing("AAPL")
         self.mock_provider.get_stocks.return_value = [stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert len(result) == 1
         self.mock_sender.send_message.assert_called_once()
 
     def test_handle_sends_notifications_for_all_stocks_with_market_open(self):
@@ -77,9 +66,8 @@ class TestTriggerStocksNotifications:
         self.mock_provider.get_stocks.return_value = [crossing_stock, non_crossing_stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL"])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert len(result) == 3
         assert self.mock_sender.send_message.call_count == 3
 
     def test_handle_sends_notifications_for_multiple_stocks_with_crossings(self):
@@ -88,31 +76,16 @@ class TestTriggerStocksNotifications:
         self.mock_provider.get_stocks.return_value = [stock1, stock2]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL"])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert len(result) == 4
-        messages = [r.message for r in result]
-        assert any("AAPL" in m for m in messages)
-        assert any("GOOGL" in m for m in messages)
         assert self.mock_sender.send_message.call_count == 4
 
-    def test_handle_returns_notification_dtos(self):
-        stock = create_stock_crossing_fifty_day("AAPL")
-        self.mock_provider.get_stocks.return_value = [stock]
-        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
-
-        result = self.use_case.handle(request)
-
-        assert len(result) == 2
-        assert all(isinstance(r, NotificationDTO) for r in result)
-
-    def test_handle_returns_empty_list_for_empty_symbols(self):
+    def test_handle_does_nothing_for_empty_symbols(self):
         self.mock_provider.get_stocks.return_value = []
         request = TriggerStocksNotificationsRequest(symbols=[])
 
-        result = self.use_case.handle(request)
+        self.use_case.handle(request)
 
-        assert result == []
         self.mock_sender.send_message.assert_not_called()
         self.mock_provider.get_stocks.assert_called_once_with([])
 

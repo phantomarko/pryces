@@ -85,7 +85,7 @@ Presentation → Application → Domain
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
 - `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port)
-- `dtos.py` — `NotificationDTO` (type + message, from_notification factory), `StockDTO` (maps domain Stock to DTO, includes marketState + notifications list)
+- `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes marketState)
 - `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
 - `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender, tracks already-sent per symbol to avoid duplicates)
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)

@@ -167,7 +167,7 @@ Executing...
 
 Example output:
 ```
-Monitoring complete. 2 stocks checked, 1 notifications sent over 525 repetitions.
+Monitoring complete. 2 stocks checked over 525 repetitions.
 ```
 
 **Tracked notifications:**

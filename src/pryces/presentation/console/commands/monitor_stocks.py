@@ -49,12 +49,9 @@ class MonitorStocksCommand(Command):
         symbol_list = parse_symbols_input(symbols)
         request = TriggerStocksNotificationsRequest(symbols=symbol_list)
 
-        total_notifications = 0
-
         for i in range(repetition_count):
             try:
-                notifications = self._trigger_stocks_notifications.handle(request)
-                total_notifications += len(notifications)
+                self._trigger_stocks_notifications.handle(request)
             except Exception as e:
                 self._logger.warning(f"Exception caught: {e}")
 
@@ -62,6 +59,6 @@ class MonitorStocksCommand(Command):
                 time.sleep(interval_seconds)
 
         return (
-            f"Monitoring complete. {len(symbol_list)} stocks checked, "
-            f"{total_notifications} notifications sent over {repetition_count} repetitions."
+            f"Monitoring complete. {len(symbol_list)} stocks checked "
+            f"over {repetition_count} repetitions."
         )

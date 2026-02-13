@@ -52,12 +52,10 @@ def _monitor(
     logger: logging.Logger,
 ) -> None:
     request = TriggerStocksNotificationsRequest(symbols=config.symbols)
-    total_notifications = 0
 
     for i in range(config.iterations):
         try:
-            notifications = use_case.handle(request)
-            total_notifications += len(notifications)
+            use_case.handle(request)
         except Exception as e:
             logger.warning(f"Exception caught: {e}")
 
@@ -65,8 +63,8 @@ def _monitor(
             time.sleep(config.interval)
 
     logger.info(
-        f"Monitoring complete. {len(config.symbols)} stocks checked, "
-        f"{total_notifications} notifications sent over {config.iterations} repetitions."
+        f"Monitoring complete. {len(config.symbols)} stocks checked "
+        f"over {config.iterations} repetitions."
     )
 
 

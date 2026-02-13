@@ -1,6 +1,5 @@
 from unittest.mock import Mock, patch
 
-from pryces.application.dtos import NotificationDTO
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
@@ -56,7 +55,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "2 notifications sent" in result
         assert self.mock_sender.send_message.call_count == 2
 
     def test_execute_without_crossings_returns_market_open_notification(self):
@@ -66,7 +64,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "1 notifications sent" in result
         self.mock_sender.send_message.assert_called_once()
 
     def test_execute_with_mixed_stocks(self):
@@ -77,7 +74,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL,GOOGL", interval="1", repetitions="1")
 
         assert "2 stocks checked" in result
-        assert "3 notifications sent" in result
         assert self.mock_sender.send_message.call_count == 3
 
     def test_execute_with_both_crossings(self):
@@ -87,7 +83,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="MSFT", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "3 notifications sent" in result
         assert self.mock_sender.send_message.call_count == 3
 
     def test_execute_with_two_hundred_day_crossing(self):
@@ -97,7 +92,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="GOOGL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "2 notifications sent" in result
         assert self.mock_sender.send_message.call_count == 2
 
     def test_execute_continues_on_exception(self):
@@ -106,7 +100,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL", interval="1", repetitions="1")
 
         assert "Monitoring complete" in result
-        assert "0 notifications sent" in result
 
     def test_execute_with_empty_results(self):
         self.mock_provider.get_stocks.return_value = []
@@ -114,7 +107,6 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="INVALID", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert "0 notifications sent" in result
 
     def test_execute_accepts_kwargs_for_compatibility(self):
         stock = create_stock_no_crossing("AAPL")
@@ -152,5 +144,4 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="AAPL", interval="10", repetitions="3")
 
         assert "1 stocks checked" in result
-        assert "3 notifications sent" in result
         assert "3 repetitions" in result
