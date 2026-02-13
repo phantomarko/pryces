@@ -7,7 +7,7 @@ from pryces.domain.notifications import Notification
 from pryces.domain.stocks import Stock
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class NotificationDTO:
     type: str
     message: str
@@ -20,7 +20,7 @@ class NotificationDTO:
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class StockDTO:
     symbol: str
     currentPrice: Decimal

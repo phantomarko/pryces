@@ -18,7 +18,7 @@ from ...infrastructure.implementations import TelegramMessageSender, YahooFinanc
 from pryces.infrastructure.logging import setup as setup_logging
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class MonitorStocksConfig:
     iterations: int
     interval: int

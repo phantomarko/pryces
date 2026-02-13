@@ -18,6 +18,7 @@ class NotificationType(Enum):
 
 
 class Notification:
+    __slots__ = ("_type", "_message")
     _CREATION_KEY = object()
 
     def __init__(self, key: object, type: NotificationType, message: str):

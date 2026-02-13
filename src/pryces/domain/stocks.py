@@ -12,6 +12,23 @@ class MarketState(str, Enum):
 
 
 class Stock:
+    __slots__ = (
+        "_symbol",
+        "_currentPrice",
+        "_name",
+        "_currency",
+        "_previousClosePrice",
+        "_openPrice",
+        "_dayHigh",
+        "_dayLow",
+        "_fiftyDayAverage",
+        "_twoHundredDayAverage",
+        "_fiftyTwoWeekHigh",
+        "_fiftyTwoWeekLow",
+        "_marketState",
+        "_notifications",
+    )
+
     def __init__(
         self,
         *,
@@ -142,29 +159,30 @@ class Stock:
     def _is_market_state_post(self) -> bool:
         return self._marketState == MarketState.POST
 
+    _INCREASE_THRESHOLDS = (
+        (Decimal("20"), Notification.create_twenty_percent_increase),
+        (Decimal("15"), Notification.create_fifteen_percent_increase),
+        (Decimal("10"), Notification.create_ten_percent_increase),
+        (Decimal("5"), Notification.create_five_percent_increase),
+    )
+    _DECREASE_THRESHOLDS = (
+        (Decimal("-20"), Notification.create_twenty_percent_decrease),
+        (Decimal("-15"), Notification.create_fifteen_percent_decrease),
+        (Decimal("-10"), Notification.create_ten_percent_decrease),
+        (Decimal("-5"), Notification.create_five_percent_decrease),
+    )
+
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
         args = (self.symbol, self.currentPrice, change_percentage)
 
         if change_percentage > 0:
-            thresholds = (
-                (Decimal("20"), Notification.create_twenty_percent_increase),
-                (Decimal("15"), Notification.create_fifteen_percent_increase),
-                (Decimal("10"), Notification.create_ten_percent_increase),
-                (Decimal("5"), Notification.create_five_percent_increase),
-            )
-            for threshold, factory in thresholds:
+            for threshold, factory in self._INCREASE_THRESHOLDS:
                 if change_percentage >= threshold:
                     return factory(*args)
         elif change_percentage < 0:
-            thresholds = (
-                (Decimal("-20"), Notification.create_twenty_percent_decrease),
-                (Decimal("-15"), Notification.create_fifteen_percent_decrease),
-                (Decimal("-10"), Notification.create_ten_percent_decrease),
-                (Decimal("-5"), Notification.create_five_percent_decrease),
-            )
-            for threshold, factory in thresholds:
+            for threshold, factory in self._DECREASE_THRESHOLDS:
                 if change_percentage <= threshold:
                     return factory(*args)
 

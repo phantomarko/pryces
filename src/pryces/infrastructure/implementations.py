@@ -12,7 +12,7 @@ from ..application.interfaces import StockProvider, MessageSender
 from ..domain.stocks import MarketState, Stock
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class TelegramSettings:
     bot_token: str
     group_id: str
