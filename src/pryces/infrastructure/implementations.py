@@ -91,7 +91,7 @@ class YahooFinanceProvider(StockProvider):
         return self._build_response(symbol, info, current_price)
 
     def get_stock(self, symbol: str) -> Stock | None:
-        self._logger.info(f"Fetching data for symbol: {symbol}")
+        self._logger.debug(f"Fetching data for symbol: {symbol}")
         ticker_obj = yf.Ticker(symbol)
         info = ticker_obj.info
         stock = self._build_stock_from_ticker(symbol, info)

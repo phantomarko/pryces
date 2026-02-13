@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
@@ -20,7 +21,11 @@ def setup(verbose: bool = False) -> None:
     logs_directory = os.environ.get("LOGS_DIRECTORY")
     if logs_directory and Path(logs_directory).is_dir():
         filename = datetime.now().strftime("pryces_%Y%m%d_%H%M%S.log")
-        file_handler = logging.FileHandler(Path(logs_directory) / filename)
+        file_handler = RotatingFileHandler(
+            Path(logs_directory) / filename,
+            maxBytes=5 * 1024 * 1024,
+            backupCount=3,
+        )
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
