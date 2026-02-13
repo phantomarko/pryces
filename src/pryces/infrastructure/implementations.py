@@ -93,7 +93,10 @@ class YahooFinanceProvider(StockProvider):
     def get_stock(self, symbol: str) -> Stock | None:
         self._logger.info(f"Fetching data for symbol: {symbol}")
         ticker_obj = yf.Ticker(symbol)
-        return self._build_stock_from_ticker(symbol, ticker_obj.info)
+        info = ticker_obj.info
+        stock = self._build_stock_from_ticker(symbol, info)
+        del info, ticker_obj
+        return stock
 
     def _fetch_stock(self, symbol: str) -> Stock | None:
         try:
@@ -106,7 +109,7 @@ class YahooFinanceProvider(StockProvider):
         if not symbols:
             return []
 
-        with ThreadPoolExecutor(max_workers=len(symbols)) as executor:
+        with ThreadPoolExecutor(max_workers=min(len(symbols), 5)) as executor:
             results = list(executor.map(self._fetch_stock, symbols))
 
         return [stock for stock in results if stock is not None]
