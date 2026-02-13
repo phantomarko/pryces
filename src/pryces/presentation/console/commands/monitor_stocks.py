@@ -43,6 +43,7 @@ class MonitorStocksCommand(Command):
     def execute(
         self, symbols: str = None, interval: str = None, repetitions: str = None, **kwargs
     ) -> str:
+        self._logger.info("Monitor Stocks command started")
         interval_seconds = int(interval)
         repetition_count = int(repetitions)
 
@@ -58,6 +59,7 @@ class MonitorStocksCommand(Command):
             if i < repetition_count - 1:
                 time.sleep(interval_seconds)
 
+        self._logger.info("Monitor Stocks command finished")
         return (
             f"Monitoring complete. {len(symbol_list)} stocks checked "
             f"over {repetition_count} repetitions."

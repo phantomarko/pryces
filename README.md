@@ -119,11 +119,6 @@ Launch the interactive menu:
 python -m pryces.presentation.console.cli
 ```
 
-With verbose logging:
-```bash
-python -m pryces.presentation.console.cli --verbose
-```
-
 The menu displays available commands and prompts for input:
 
 ```
@@ -177,7 +172,6 @@ Monitoring complete. 2 stocks checked over 525 repetitions.
 
 **Notes:**
 - Duplicate notifications are automatically prevented
-- Use `--verbose` to see each notification as it is sent in real time
 - Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ### Get Stock Price

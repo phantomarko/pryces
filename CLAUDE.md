@@ -121,7 +121,7 @@ Presentation → Application → Domain
 
 ### Entry Points
 ```bash
-python -m pryces.presentation.console.cli [--verbose]           # Interactive CLI
+python -m pryces.presentation.console.cli                       # Interactive CLI
 python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH [--verbose]  # Monitor script
 ```
 

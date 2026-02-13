@@ -1,4 +1,3 @@
-import argparse
 import logging
 import sys
 
@@ -29,16 +28,7 @@ def _create_menu() -> InteractiveMenu:
 def main() -> int:
     load_dotenv()
 
-    parser = argparse.ArgumentParser(
-        description="Stock price information system - Interactive Menu",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose logging to stderr"
-    )
-    args = parser.parse_args()
-
-    setup_logging(args.verbose)
+    setup_logging()
     logger = logging.getLogger(__name__)
 
     try:
