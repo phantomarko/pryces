@@ -76,7 +76,7 @@ def main() -> int:
     args = parser.parse_args()
 
     load_dotenv()
-    setup_logging(verbose=True)
+    setup_logging()
     logger = logging.getLogger(__name__)
 
     try:
