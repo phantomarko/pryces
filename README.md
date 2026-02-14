@@ -73,7 +73,9 @@ Standalone scripts for automated or scheduled execution. Unlike the interactive 
 Monitors stocks and sends Telegram notifications, driven by a JSON configuration file.
 
 ```bash
-python -m pryces.presentation.scripts.monitor_stocks monitor.json
+python -m pryces.presentation.scripts.monitor_stocks monitor.json.example
+make monitor  # alternative using Makefile (defaults to monitor.json.example)
+make monitor CONFIG=monitor_alternative.json  # alternative with custom config
 ```
 
 Run in the background (detached from the terminal):
@@ -117,6 +119,7 @@ Launch the interactive menu:
 
 ```bash
 python -m pryces.presentation.console.cli
+make cli  # alternative using Makefile
 ```
 
 The menu displays available commands and prompts for input:

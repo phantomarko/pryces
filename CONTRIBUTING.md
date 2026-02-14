@@ -49,6 +49,7 @@ deactivate
 ```bash
 # Run all tests
 pytest
+make test  # alternative using Makefile
 
 # Verbose output
 pytest -v
@@ -76,6 +77,7 @@ chmod +x .git/hooks/pre-commit
 ```bash
 # Format all files
 black src/ tests/
+make format  # alternative using Makefile
 
 # Check without changes
 black --check src/ tests/
