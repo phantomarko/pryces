@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pryces is a Python project built with clean architecture principles, emphasizing SOLID design, minimal dependencies, and clear separation of concerns.
 
+## Design Principles
+
+All code must follow **SOLID principles**, **hexagonal architecture**, and **clean code** practices:
+- **Single Responsibility**: Each class/module has one reason to change
+- **Open/Closed**: Extend behavior through new implementations, not modifying existing code
+- **Liskov Substitution**: Implementations must be interchangeable through their port interfaces
+- **Interface Segregation**: Keep port interfaces focused and minimal
+- **Dependency Inversion**: Depend on abstractions (ports), not concretions (adapters)
+- **Hexagonal Architecture**: Domain and application layers never depend on infrastructure or presentation; dependencies always point inward
+- **Clean Code**: Meaningful names, small focused functions, no duplication, self-documenting structure
+
 ## Critical Directives
 
 ### Update README.md After Changes
@@ -121,8 +132,8 @@ Presentation → Application → Domain
 
 ### Entry Points
 ```bash
-python -m pryces.presentation.console.cli                       # Interactive CLI
-python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH [--verbose]  # Monitor script
+python -m pryces.presentation.console.cli                         # Interactive CLI
+python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH  # Monitor script
 ```
 
 ## Patterns and Conventions
