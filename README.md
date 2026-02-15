@@ -12,10 +12,6 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
   - [Scripts](#scripts)
     - [Monitor Stocks Script](#monitor-stocks-script)
   - [Interactive CLI](#interactive-cli)
-    - [Monitor Stocks](#monitor-stocks)
-    - [Get Stock Price](#get-stock-price)
-    - [Get Multiple Stock Prices](#get-multiple-stock-prices)
-    - [Check Readiness](#check-readiness)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -123,63 +119,36 @@ python -m pryces.presentation.console.cli
 make cli  # alternative using Makefile
 ```
 
-The menu displays available commands and prompts for input:
+Available commands:
+
+| # | Command | Description |
+|---|---------|-------------|
+| 1 | Monitor Stocks | Launch stock monitor as background process |
+| 2 | Get Stock Price | Current price and details for one symbol |
+| 3 | Get Multiple Stock Prices | Current prices for multiple symbols |
+| 4 | Check Readiness | Verify env vars and Telegram connectivity |
+| 0 | Exit | Exit the program |
+
+#### Monitor Stocks
+
+Launches the [Monitor Stocks Script](#monitor-stocks-script) as a detached background process. See that section for config format and notification details.
 
 ```
-============================================================
-PRYCES - Stock Price Information System
-============================================================
-
-Available Commands:
-
-  1. Monitor Stocks
-     Monitor stocks for relevant price notifications
-
-  2. Get Stock Price
-     Retrieve current price and details for a single stock symbol
-
-  3. Get Multiple Stock Prices
-     Retrieve current prices for multiple stock symbols
-
-  4. Check Readiness
-     Check if all components and configs are ready for monitoring
-
-  0. Exit
-
-Enter your selection:
-```
-
-### Monitor Stocks
-
-Launches the [Monitor Stocks Script](#monitor-stocks-script) as a detached background process. The CLI remains responsive after launching.
-
-When you select option 1, you'll be prompted to enter the path to a JSON config file (see [Monitor Stocks Script](#monitor-stocks-script) for the config format):
-
-```
---- Monitor Stocks ---
-
 Enter the path to the JSON config file (e.g., monitor.json): monitor.json.example
-Executing...
 ```
 
-Example output:
 ```
 Monitor started in background (PID: 12345)
 ```
 
 The returned PID can be used to check or stop the process (e.g., `kill 12345`).
 
-### Get Stock Price
+#### Get Stock Price
 
 Retrieves current price and market details for a single stock symbol.
 
-When you select option 2, you'll be prompted to enter a stock symbol:
-
 ```
---- Get Stock Price ---
-
 Enter stock symbol (e.g., AAPL, GOOGL): AAPL
-Executing...
 ```
 
 Example output:
@@ -198,87 +167,21 @@ AAPL - Apple Inc. (USD)
   52-Week Low:         169.21
 ```
 
-After each command execution, the menu returns to the main selection screen. Select `0` to exit the program.
+#### Get Multiple Stock Prices
 
-### Get Multiple Stock Prices
-
-Retrieves current prices for multiple stock symbols at once, with a summary of successful and failed lookups.
-
-When you select option 3, you'll be prompted to enter comma-separated stock symbols:
+Retrieves current prices for multiple stock symbols at once. Outputs each stock in the same format as [Get Stock Price](#get-stock-price), separated by a divider line, followed by a summary:
 
 ```
---- Get Multiple Stock Prices ---
-
 Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL,MSFT
-Executing...
 ```
 
-Example output:
 ```
-AAPL - Apple Inc. (USD)
-
-  Market State:        OPEN
-  Current Price:       269.48
-  Previous Close:      269.955
-  Open:                269.13
-  Day High:            271.875
-  Day Low:             267.61
-  50-Day Average:      268.3466
-  200-Day Average:     236.9913
-  52-Week High:        288.62
-  52-Week Low:         169.21
-
-------------------------------------------------------------
-
-GOOGL - Alphabet Inc. (USD)
-
-  Market State:        OPEN
-  Current Price:       202.63
-  Previous Close:      202.75
-  Open:                202.13
-  Day High:            204.06
-  Day Low:             201.32
-  50-Day Average:      194.5574
-  200-Day Average:     178.4237
-  52-Week High:        207.18
-  52-Week Low:         137.82
-
-------------------------------------------------------------
-
-MSFT - Microsoft Corporation (USD)
-
-  Market State:        OPEN
-  Current Price:       434.28
-  Previous Close:      435.47
-  Open:                432.40
-  Day High:            435.95
-  Day Low:             429.90
-  50-Day Average:      436.8654
-  200-Day Average:     433.2095
-  52-Week High:        468.35
-  52-Week Low:         385.58
-
-============================================================
 Summary: 3 requested, 3 successful, 0 failed
 ```
 
-### Check Readiness
+#### Check Readiness
 
-Verifies that all components and configurations are ready for a successful monitoring session. Checks environment variables and Telegram connectivity.
-
-When you select option 4, all checks run automatically (no input required):
-
-```
---- Check Readiness ---
-
-Executing...
-```
-
-Example output when everything is configured correctly:
-```
-[READY] Environment variables
-[READY] Telegram notifications
-```
+Verifies that all components and configurations are ready for monitoring. Runs automatically with no input required.
 
 Example output when issues are detected:
 ```
