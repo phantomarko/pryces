@@ -1,5 +1,5 @@
 {
-    "iterations": 2,
+    "duration": 2,
     "interval": 5,
     "symbols": ["ASPI", "HUMA"]
 }

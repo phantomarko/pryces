@@ -92,7 +92,7 @@ tail -f /tmp/pryces_20260212_143025.log
 
 ```json
 {
-    "iterations": 2,
+    "duration": 2,
     "interval": 5,
     "symbols": ["AAPL", "GOOGL"]
 }
@@ -100,7 +100,7 @@ tail -f /tmp/pryces_20260212_143025.log
 
 | Field | Type | Description |
 |---|---|---|
-| `iterations` | int | Number of monitoring cycles to run |
+| `duration` | int | Monitoring duration in minutes |
 | `interval` | int | Seconds to wait between cycles |
 | `symbols` | list[str] | Stock symbols to monitor |
 
@@ -153,20 +153,20 @@ Enter your selection:
 
 Periodically checks stock prices and sends Telegram notifications for relevant events like market open/close, moving average crossovers, and significant price changes.
 
-When you select option 1, you'll be prompted to enter comma-separated stock symbols, an interval between checks (in seconds), and the number of repetitions:
+When you select option 1, you'll be prompted to enter comma-separated stock symbols, an interval between checks (in seconds), and the monitoring duration (in minutes):
 
 ```
 --- Monitor Stocks ---
 
 Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL
 Enter interval between checks in seconds (e.g., 90): 90
-Enter number of repetitions (e.g., 525): 525
+Enter monitoring duration in minutes (e.g., 120): 120
 Executing...
 ```
 
 Example output:
 ```
-Monitoring complete. 2 stocks checked over 525 repetitions.
+Monitoring complete. 2 stocks checked over 120 minutes.
 ```
 
 **Tracked notifications:**

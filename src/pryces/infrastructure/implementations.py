@@ -92,6 +92,7 @@ class YahooFinanceProvider(StockProvider):
         return self._build_response(symbol, info, current_price)
 
     def get_stock(self, symbol: str) -> Stock | None:
+        self._logger.debug(f"Fetching stock data for {symbol}")
         ticker_obj = yf.Ticker(symbol)
         info = ticker_obj.info
         stock = self._build_stock_from_ticker(symbol, info)
@@ -126,7 +127,7 @@ class TelegramMessageSender(MessageSender):
     def send_message(self, message: str) -> bool:
         payload = json.dumps({"chat_id": self._settings.group_id, "text": message}).encode("utf-8")
 
-        self._logger.info(f"Sending message to Telegram group {self._settings.group_id}")
+        self._logger.debug(f"Sending message to Telegram group {self._settings.group_id}")
 
         request = urllib.request.Request(self._url, data=payload, headers=self._HEADERS)
 

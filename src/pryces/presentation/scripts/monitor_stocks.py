@@ -21,13 +21,13 @@ from pryces.infrastructure.logging import setup as setup_logging
 
 @dataclass(frozen=True, slots=True)
 class MonitorStocksConfig:
-    iterations: int
+    duration: int
     interval: int
     symbols: list[str]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.iterations, int) or self.iterations <= 0:
-            raise ValueError("iterations must be a positive integer")
+        if not isinstance(self.duration, int) or self.duration <= 0:
+            raise ValueError("duration must be a positive integer")
         if not isinstance(self.interval, int) or self.interval <= 0:
             raise ValueError("interval must be a positive integer")
         if not isinstance(self.symbols, list) or not self.symbols:
@@ -54,19 +54,23 @@ def _monitor(
     logger: logging.Logger,
 ) -> None:
     request = TriggerStocksNotificationsRequest(symbols=config.symbols)
+    duration_seconds = config.duration * 60
+    start = time.monotonic()
 
-    for i in range(config.iterations):
+    while True:
         try:
             use_case.handle(request)
         except Exception as e:
             logger.warning(f"Exception caught: {e}")
 
-        if i < config.iterations - 1:
-            time.sleep(config.interval)
+        if time.monotonic() - start >= duration_seconds:
+            break
+
+        time.sleep(config.interval)
 
     logger.info(
         f"Monitoring complete. {len(config.symbols)} stocks checked "
-        f"over {config.iterations} repetitions."
+        f"over {config.duration} minutes."
     )
 
 
@@ -92,7 +96,7 @@ def main() -> int:
 
     logger.info(f"Config: {args.config}")
     logger.info(
-        f"Iterations: {config.iterations}, Interval: {config.interval}s, Stocks: {config.symbols}"
+        f"Duration: {config.duration}m, Interval: {config.interval}s, Stocks: {config.symbols}"
     )
 
     use_case = _create_use_case()

@@ -34,33 +34,36 @@ class MonitorStocksCommand(Command):
                 validator=validate_positive_integer,
             ),
             InputPrompt(
-                key="repetitions",
-                prompt="Enter number of repetitions (e.g., 525): ",
+                key="duration",
+                prompt="Enter monitoring duration in minutes (e.g., 120): ",
                 validator=validate_positive_integer,
             ),
         ]
 
     def execute(
-        self, symbols: str = None, interval: str = None, repetitions: str = None, **kwargs
+        self, symbols: str = None, interval: str = None, duration: str = None, **kwargs
     ) -> str:
         self._logger.info("Monitor Stocks command started")
         interval_seconds = int(interval)
-        repetition_count = int(repetitions)
+        duration_seconds = int(duration) * 60
 
         symbol_list = parse_symbols_input(symbols)
         request = TriggerStocksNotificationsRequest(symbols=symbol_list)
 
-        for i in range(repetition_count):
+        start = time.monotonic()
+
+        while True:
             try:
                 self._trigger_stocks_notifications.handle(request)
             except Exception as e:
                 self._logger.warning(f"Exception caught: {e}")
 
-            if i < repetition_count - 1:
-                time.sleep(interval_seconds)
+            if time.monotonic() - start >= duration_seconds:
+                break
+
+            time.sleep(interval_seconds)
 
         self._logger.info("Monitor Stocks command finished")
         return (
-            f"Monitoring complete. {len(symbol_list)} stocks checked "
-            f"over {repetition_count} repetitions."
+            f"Monitoring complete. {len(symbol_list)} stocks checked " f"over {duration} minutes."
         )
