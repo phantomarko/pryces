@@ -79,10 +79,11 @@ def main() -> int:
         description="Monitor stocks for relevant price notifications",
     )
     parser.add_argument("config", type=Path, help="Path to the JSON configuration file")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
 
     load_dotenv()
-    setup_logging()
+    setup_logging(debug=args.debug)
     logger = logging.getLogger(__name__)
 
     try:

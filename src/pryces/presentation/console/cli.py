@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import sys
@@ -28,9 +29,13 @@ def _create_menu() -> InteractiveMenu:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Pryces - Stock Price Information System")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    args = parser.parse_args()
+
     load_dotenv()
 
-    setup_logging()
+    setup_logging(debug=args.debug)
     logger = logging.getLogger(__name__)
 
     try:

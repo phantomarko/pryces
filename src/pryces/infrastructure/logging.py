@@ -6,15 +6,19 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
-def setup(verbose: bool = False) -> None:
+def setup(verbose: bool = False, debug: bool = False) -> None:
+    level = logging.DEBUG if debug else logging.INFO
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
+
+    if debug:
+        logging.getLogger("pryces").setLevel(logging.DEBUG)
 
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     if verbose:
         stream_handler = logging.StreamHandler(sys.stderr)
-        stream_handler.setLevel(logging.INFO)
+        stream_handler.setLevel(level)
         stream_handler.setFormatter(formatter)
         root_logger.addHandler(stream_handler)
 
@@ -26,7 +30,7 @@ def setup(verbose: bool = False) -> None:
             maxBytes=5 * 1024 * 1024,
             backupCount=3,
         )
-        file_handler.setLevel(logging.INFO)
+        file_handler.setLevel(level)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
 
