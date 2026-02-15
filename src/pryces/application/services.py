@@ -7,10 +7,10 @@ from .interfaces import MessageSender
 class NotificationService:
     def __init__(self, message_sender: MessageSender) -> None:
         self._message_sender = message_sender
-        self._notifications_sent: dict[str, list[Notification]] = {}
+        self._notifications_sent: dict[str, dict[str, bool]] = {}
 
     @property
-    def notifications_sent(self) -> dict[str, list[Notification]]:
+    def notifications_sent(self) -> dict[str, dict[str, bool]]:
         return self._notifications_sent
 
     def send_stock_notifications(self, stock: Stock) -> list[Notification]:
@@ -24,8 +24,8 @@ class NotificationService:
             self._message_sender.send_message(notification.message)
 
             if stock.symbol not in self._notifications_sent:
-                self._notifications_sent[stock.symbol] = []
-            self._notifications_sent[stock.symbol].append(notification)
+                self._notifications_sent[stock.symbol] = {}
+            self._notifications_sent[stock.symbol][notification.type.value] = True
             sent.append(notification)
 
         return sent
@@ -33,4 +33,4 @@ class NotificationService:
     def _already_sent(self, symbol: str, notification: Notification) -> bool:
         if symbol not in self._notifications_sent:
             return False
-        return any(notification.equals(sent) for sent in self._notifications_sent[symbol])
+        return notification.type.value in self._notifications_sent[symbol]

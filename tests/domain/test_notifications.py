@@ -44,28 +44,6 @@ def test_create_two_hundred_day_average_crossed_sets_message():
     assert len(notification.message) > 0
 
 
-def test_equals_returns_true_for_same_type():
-    notification1 = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("145.00")
-    )
-    notification2 = Notification.create_fifty_day_average_crossed(
-        "GOOGL", Decimal("200.00"), Decimal("190.00")
-    )
-
-    assert notification1.equals(notification2) is True
-
-
-def test_equals_returns_false_for_different_type():
-    notification1 = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("145.00")
-    )
-    notification2 = Notification.create_two_hundred_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("140.00")
-    )
-
-    assert notification1.equals(notification2) is False
-
-
 def test_create_close_to_fifty_day_average_sets_type():
     notification = Notification.create_close_to_fifty_day_average(
         "AAPL", Decimal("100.00"), Decimal("110.00"), Decimal("10.00")
