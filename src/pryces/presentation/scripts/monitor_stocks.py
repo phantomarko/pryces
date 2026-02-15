@@ -33,6 +33,43 @@ class MonitorStocksConfig:
             raise ValueError("symbols must be a non-empty list")
 
 
+class MonitorStocksScript:
+    def __init__(
+        self,
+        use_case: TriggerStocksNotifications,
+        config: MonitorStocksConfig,
+    ) -> None:
+        self._use_case = use_case
+        self._config = config
+        self._logger = logging.getLogger(__name__)
+
+    def run(self) -> None:
+        self._logger.info(f"Config: {self._config}")
+        self._logger.info(
+            f"Duration: {self._config.duration}m, Interval: {self._config.interval}s, "
+            f"Stocks: {self._config.symbols}"
+        )
+        request = TriggerStocksNotificationsRequest(symbols=self._config.symbols)
+        duration_seconds = self._config.duration * 60
+        start = time.monotonic()
+
+        while True:
+            try:
+                self._use_case.handle(request)
+            except Exception as e:
+                self._logger.warning(f"Exception caught: {e}")
+
+            if time.monotonic() - start >= duration_seconds:
+                break
+
+            time.sleep(self._config.interval)
+
+        self._logger.info(
+            f"Monitoring complete. {len(self._config.symbols)} stocks checked "
+            f"over {self._config.duration} minutes."
+        )
+
+
 def _get_config(path: Path) -> MonitorStocksConfig:
     data = json.loads(path.read_text())
     return MonitorStocksConfig(**data)
@@ -47,32 +84,6 @@ def _create_use_case() -> TriggerStocksNotifications:
     return TriggerStocksNotifications(provider=provider, notification_service=notification_service)
 
 
-def _monitor(
-    use_case: TriggerStocksNotifications,
-    config: MonitorStocksConfig,
-    logger: logging.Logger,
-) -> None:
-    request = TriggerStocksNotificationsRequest(symbols=config.symbols)
-    duration_seconds = config.duration * 60
-    start = time.monotonic()
-
-    while True:
-        try:
-            use_case.handle(request)
-        except Exception as e:
-            logger.warning(f"Exception caught: {e}")
-
-        if time.monotonic() - start >= duration_seconds:
-            break
-
-        time.sleep(config.interval)
-
-    logger.info(
-        f"Monitoring complete. {len(config.symbols)} stocks checked "
-        f"over {config.duration} minutes."
-    )
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Monitor stocks for relevant price notifications",
@@ -83,7 +94,6 @@ def main() -> int:
 
     load_dotenv()
     setup_logging(debug=args.debug)
-    logger = logging.getLogger(__name__)
 
     try:
         config = _get_config(args.config)
@@ -94,13 +104,8 @@ def main() -> int:
         print(f"Error: invalid config file: {e}")
         return 1
 
-    logger.info(f"Config: {args.config}")
-    logger.info(
-        f"Duration: {config.duration}m, Interval: {config.interval}s, Stocks: {config.symbols}"
-    )
-
     use_case = _create_use_case()
-    _monitor(use_case, config, logger)
+    MonitorStocksScript(use_case, config).run()
 
     return 0
 
