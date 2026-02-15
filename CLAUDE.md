@@ -80,7 +80,7 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
 
 ## Architecture Overview
 
-Pryces is a stock price CLI tool using **Ports & Adapters** (hexagonal) architecture. Only external dependency: `yfinance`.
+Pryces is a stock price CLI tool using **Ports & Adapters** (hexagonal) architecture. External dependencies: `yfinance`, `python-dotenv`.
 
 ### Layers
 
@@ -91,13 +91,13 @@ Presentation → Application → Domain
 ```
 
 **Domain** (`src/pryces/domain/`) — Core domain model:
-- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice, marketState + 10 optional Decimal price fields; generates milestone notifications via `generate_notifications()`)
+- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice + optional: name, currency, marketState, and 10 Decimal price fields; generates milestone notifications via `generate_notifications()`)
 - `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
 - `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port)
 - `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes marketState)
-- `exceptions.py` — `StockNotFound`, `StockInformationIncomplete`
+- `exceptions.py` — `StockNotFound`
 - `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender, tracks already-sent per symbol to avoid duplicates)
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
@@ -105,9 +105,9 @@ Presentation → Application → Domain
 - `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers notifications via NotificationService)
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
-- `implementations.py` — `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API
-- `factories.py` — `SettingsFactory` (reads Telegram env vars, creates `TelegramSettings`)
-- `logging.py` — `setup(verbose)` configures root logger: stderr handler if verbose, file handler if `LOGS_DIRECTORY` is set, `NullHandler` fallback if no handlers
+- `implementations.py` — `YahooFinanceSettings` frozen dataclass (max_workers), `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API
+- `factories.py` — `SettingsFactory` (creates `YahooFinanceSettings` from `MAX_FETCH_WORKERS` env var, creates `TelegramSettings` from Telegram env vars)
+- `logging.py` — `setup(verbose, debug)` configures root logger: stderr handler if verbose, file handler if `LOGS_DIRECTORY` is set, `NullHandler` fallback if no handlers; `debug` scopes DEBUG level to `pryces` logger only
 
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
 - `cli.py` — Entry point, composition root (wires dependencies)
@@ -115,14 +115,14 @@ Presentation → Application → Domain
 - `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`
 - `commands/get_stock_price.py` — `GetStockPriceCommand`
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
-- `commands/monitor_stocks.py` — `MonitorStocksCommand` (loops N repetitions with interval, triggers notifications per cycle)
+- `commands/monitor_stocks.py` — `MonitorStocksCommand` (runs for a time-based duration in minutes with configurable interval, triggers notifications per cycle)
 - `commands/send_messages.py` — `SendMessagesCommand` (sends test notification via Telegram)
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
 - `factories.py` — `CommandFactory` (DI + object creation)
 - `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`), parsers (`parse_symbols_input`), and formatters (`format_stock`, `format_stock_list`)
 
 **Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
-- `monitor_stocks.py` — Standalone monitor script driven by JSON config (`MonitorStocksConfig` dataclass, argparse CLI, logging). Entry point: `main()`
+- `monitor_stocks.py` — Standalone monitor script driven by JSON config (`MonitorStocksConfig` dataclass, `MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them
