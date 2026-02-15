@@ -7,6 +7,7 @@ from .commands.get_stocks_prices import GetStocksPricesCommand
 from .commands.monitor_stocks import MonitorStocksCommand
 from .commands.registry import CommandRegistry
 from .commands.check_readiness import CheckReadinessCommand
+from .commands.list_monitors import ListMonitorsCommand
 
 
 class CommandFactory:
@@ -29,9 +30,13 @@ class CommandFactory:
         use_case = SendMessages(sender=self._message_sender)
         return CheckReadinessCommand(send_messages_use_case=use_case)
 
+    def _create_list_monitors_command(self) -> ListMonitorsCommand:
+        return ListMonitorsCommand()
+
     def create_command_registry(self) -> CommandRegistry:
         registry = CommandRegistry()
         registry.register(self._create_monitor_stocks_command())
+        registry.register(self._create_list_monitors_command())
         registry.register(self._create_get_stock_price_command())
         registry.register(self._create_get_stocks_prices_command())
         registry.register(self._create_check_readiness_command())

@@ -10,7 +10,7 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
   - [Environment Configuration](#environment-configuration)
 - [Usage](#usage)
   - [Scripts](#scripts)
-    - [Monitor Stocks Script](#monitor-stocks-script)
+    - [Monitor Stocks](#monitor-stocks)
   - [Interactive CLI](#interactive-cli)
 - [Contributing](#contributing)
 - [License](#license)
@@ -64,7 +64,7 @@ Pryces provides two ways to interact with stock data: **standalone scripts** for
 
 Standalone scripts for automated or scheduled execution. Unlike the interactive CLI, scripts are configured via files and designed to run unattended (e.g., via cron).
 
-#### Monitor Stocks Script
+#### Monitor Stocks
 
 Monitors stocks and sends Telegram notifications, driven by a JSON configuration file.
 
@@ -124,14 +124,15 @@ Available commands:
 | # | Command | Description |
 |---|---------|-------------|
 | 1 | Monitor Stocks | Launch stock monitor as background process |
-| 2 | Get Stock Price | Current price and details for one symbol |
-| 3 | Get Multiple Stock Prices | Current prices for multiple symbols |
-| 4 | Check Readiness | Verify env vars and Telegram connectivity |
+| 2 | List Monitor Processes | List running monitor processes |
+| 3 | Get Stock Price | Current price and details for one symbol |
+| 4 | Get Multiple Stock Prices | Current prices for multiple symbols |
+| 5 | Check Readiness | Verify env vars and Telegram connectivity |
 | 0 | Exit | Exit the program |
 
 #### Monitor Stocks
 
-Launches the [Monitor Stocks Script](#monitor-stocks-script) as a detached background process. See that section for config format and notification details.
+Launches the [Monitor Stocks](#monitor-stocks) as a detached background process. See that section for config format and notification details.
 
 ```
 Enter the path to the JSON config file (e.g., monitor.json): monitor.json.example
@@ -142,6 +143,22 @@ Monitor started in background (PID: 12345)
 ```
 
 The returned PID can be used to check or stop the process (e.g., `kill 12345`).
+
+#### List Monitor Processes
+
+Lists all running monitor processes on the machine. No input required.
+
+Example output:
+```
+Found 2 monitor process(es):
+  PID 12345 — config: /path/to/config.json
+  PID 67890 — config: /path/to/other.json
+```
+
+If no monitors are running:
+```
+No monitor processes found.
+```
 
 #### Get Stock Price
 
