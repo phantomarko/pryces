@@ -1,9 +1,15 @@
 import os
 
-from .implementations import TelegramSettings
+from .implementations import TelegramSettings, YahooFinanceSettings
 
 
 class SettingsFactory:
+    @staticmethod
+    def create_yahoo_finance_settings() -> YahooFinanceSettings:
+        return YahooFinanceSettings(
+            max_workers=int(os.environ["MAX_FETCH_WORKERS"]),
+        )
+
     @staticmethod
     def create_telegram_settings() -> TelegramSettings:
         return TelegramSettings(

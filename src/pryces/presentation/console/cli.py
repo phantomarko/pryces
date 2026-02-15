@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import sys
 
 from dotenv import load_dotenv
@@ -13,8 +12,8 @@ from .menu import InteractiveMenu
 
 
 def _create_menu() -> InteractiveMenu:
-    max_workers = int(os.environ["MAX_FETCH_WORKERS"])
-    provider = YahooFinanceProvider(max_workers=max_workers)
+    yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings()
+    provider = YahooFinanceProvider(settings=yahoo_finance_settings)
 
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(settings=telegram_settings)

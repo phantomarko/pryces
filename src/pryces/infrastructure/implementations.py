@@ -13,14 +13,19 @@ from ..domain.stocks import MarketState, Stock
 
 
 @dataclass(frozen=True, slots=True)
+class YahooFinanceSettings:
+    max_workers: int
+
+
+@dataclass(frozen=True, slots=True)
 class TelegramSettings:
     bot_token: str
     group_id: str
 
 
 class YahooFinanceProvider(StockProvider):
-    def __init__(self, max_workers: int) -> None:
-        self._max_workers = max_workers
+    def __init__(self, settings: YahooFinanceSettings) -> None:
+        self._max_workers = settings.max_workers
         self._logger = logging.getLogger(__name__)
 
     def _map_market_state(self, value: str | None) -> MarketState | None:
