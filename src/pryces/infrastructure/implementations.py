@@ -19,7 +19,8 @@ class TelegramSettings:
 
 
 class YahooFinanceProvider(StockProvider):
-    def __init__(self) -> None:
+    def __init__(self, max_workers: int) -> None:
+        self._max_workers = max_workers
         self._logger = logging.getLogger(__name__)
 
     def _map_market_state(self, value: str | None) -> MarketState | None:
@@ -108,7 +109,7 @@ class YahooFinanceProvider(StockProvider):
         if not symbols:
             return []
 
-        with ThreadPoolExecutor(max_workers=min(len(symbols), 5)) as executor:
+        with ThreadPoolExecutor(max_workers=min(len(symbols), self._max_workers)) as executor:
             results = list(executor.map(self._fetch_stock, symbols))
 
         return [stock for stock in results if stock is not None]

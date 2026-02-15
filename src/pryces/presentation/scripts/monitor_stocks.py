@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from dataclasses import dataclass
@@ -39,7 +40,8 @@ def _get_config(path: Path) -> MonitorStocksConfig:
 
 
 def _create_use_case() -> TriggerStocksNotifications:
-    provider = YahooFinanceProvider()
+    max_workers = int(os.environ["MAX_FETCH_WORKERS"])
+    provider = YahooFinanceProvider(max_workers=max_workers)
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(settings=telegram_settings)
     notification_service = NotificationService(message_sender)
