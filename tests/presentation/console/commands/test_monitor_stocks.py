@@ -92,7 +92,7 @@ class TestMonitorStocksCommand:
         result = self.command.execute(symbols="GOOGL", interval="1", repetitions="1")
 
         assert "1 stocks checked" in result
-        assert self.mock_sender.send_message.call_count == 2
+        assert self.mock_sender.send_message.call_count == 3
 
     def test_execute_continues_on_exception(self):
         self.mock_provider.get_stocks.side_effect = Exception("Network connection failed")

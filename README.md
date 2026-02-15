@@ -106,6 +106,7 @@ tail -f /tmp/pryces_20260212_143025.log
 
 **Tracked notifications:**
 - Market open / market closed
+- Price is close to crossing the 50-day or 200-day moving average (within 5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
 
@@ -170,6 +171,7 @@ Monitoring complete. 2 stocks checked over 525 repetitions.
 
 **Tracked notifications:**
 - Market open / market closed
+- Price is close to crossing the 50-day or 200-day moving average (within 5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
 

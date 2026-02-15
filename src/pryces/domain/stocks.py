@@ -117,6 +117,22 @@ class Stock:
     def notifications(self) -> list[Notification]:
         return self._notifications
 
+    def _is_close_to_fifty_day_average(self) -> bool:
+        if self.fiftyDayAverage is None or self.previousClosePrice is None:
+            return False
+
+        change_percentage = (self.fiftyDayAverage - self.currentPrice) / self.currentPrice * 100
+
+        return (
+            self.previousClosePrice < self.fiftyDayAverage
+            and self.currentPrice < self.fiftyDayAverage
+            and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
+        ) or (
+            self.previousClosePrice > self.fiftyDayAverage
+            and self.currentPrice > self.fiftyDayAverage
+            and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
+        )
+
     def _has_crossed_fifty_day_average(self) -> bool:
         if self.previousClosePrice is None or self.fiftyDayAverage is None:
             return False
@@ -131,6 +147,24 @@ class Stock:
         )
 
         return crossed_above or crossed_below
+
+    def _is_close_to_two_hundred_day_average(self) -> bool:
+        if self.twoHundredDayAverage is None or self.previousClosePrice is None:
+            return False
+
+        change_percentage = (
+            (self.twoHundredDayAverage - self.currentPrice) / self.currentPrice * 100
+        )
+
+        return (
+            self.previousClosePrice < self.twoHundredDayAverage
+            and self.currentPrice < self.twoHundredDayAverage
+            and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
+        ) or (
+            self.previousClosePrice > self.twoHundredDayAverage
+            and self.currentPrice > self.twoHundredDayAverage
+            and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
+        )
 
     def _has_crossed_two_hundred_day_average(self) -> bool:
         if self.previousClosePrice is None or self.twoHundredDayAverage is None:
@@ -158,6 +192,9 @@ class Stock:
 
     def _is_market_state_post(self) -> bool:
         return self._marketState == MarketState.POST
+
+    _CLOSE_TO_SMA_UPPER_THRESHOLD = Decimal("5")
+    _CLOSE_TO_SMA_LOWER_THRESHOLD = Decimal("-5")
 
     _INCREASE_THRESHOLDS = (
         (Decimal("20"), Notification.create_twenty_percent_increase),
@@ -196,10 +233,24 @@ class Stock:
                 self.previousClosePrice,
             )
         )
+        if self._is_close_to_fifty_day_average():
+            change_pct = (self.fiftyDayAverage - self.currentPrice) / self.currentPrice * 100
+            self._notifications.append(
+                Notification.create_close_to_fifty_day_average(
+                    self.symbol, self.currentPrice, self.fiftyDayAverage, change_pct
+                )
+            )
         if self._has_crossed_fifty_day_average():
             self._notifications.append(
                 Notification.create_fifty_day_average_crossed(
                     self.symbol, self.currentPrice, self.fiftyDayAverage
+                )
+            )
+        if self._is_close_to_two_hundred_day_average():
+            change_pct = (self.twoHundredDayAverage - self.currentPrice) / self.currentPrice * 100
+            self._notifications.append(
+                Notification.create_close_to_two_hundred_day_average(
+                    self.symbol, self.currentPrice, self.twoHundredDayAverage, change_pct
                 )
             )
         if self._has_crossed_two_hundred_day_average():

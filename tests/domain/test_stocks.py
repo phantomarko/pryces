@@ -146,6 +146,356 @@ def test_has_crossed_fifty_day_average_returns_false_when_previous_equals_averag
     assert stock_current_below._has_crossed_fifty_day_average() is False
 
 
+def test_is_close_to_fifty_day_average_returns_false_when_fields_are_missing():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+    assert stock._is_close_to_fifty_day_average() is False
+
+    stock_with_previous = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("140.00"),
+    )
+    assert stock_with_previous._is_close_to_fifty_day_average() is False
+
+    stock_with_average = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        fiftyDayAverage=Decimal("145.00"),
+    )
+    assert stock_with_average._is_close_to_fifty_day_average() is False
+
+
+def test_is_close_to_fifty_day_average_returns_true_when_approaching_from_below_within_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        fiftyDayAverage=Decimal("105.00"),
+    )
+    assert stock._is_close_to_fifty_day_average() is True
+
+
+def test_is_close_to_fifty_day_average_returns_true_when_approaching_from_above_within_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        fiftyDayAverage=Decimal("95.00"),
+    )
+    assert stock._is_close_to_fifty_day_average() is True
+
+
+def test_is_close_to_fifty_day_average_returns_false_when_approaching_from_below_beyond_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        fiftyDayAverage=Decimal("106.00"),
+    )
+    assert stock._is_close_to_fifty_day_average() is False
+
+
+def test_is_close_to_fifty_day_average_returns_false_when_approaching_from_above_beyond_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        fiftyDayAverage=Decimal("94.00"),
+    )
+    assert stock._is_close_to_fifty_day_average() is False
+
+
+def test_is_close_to_fifty_day_average_returns_true_at_exact_threshold_from_below():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        fiftyDayAverage=Decimal("105.00"),
+    )
+    assert stock._is_close_to_fifty_day_average() is True
+
+
+def test_is_close_to_fifty_day_average_returns_true_at_exact_threshold_from_above():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        fiftyDayAverage=Decimal("95.00"),
+    )
+    assert stock._is_close_to_fifty_day_average() is True
+
+
+def test_is_close_to_fifty_day_average_returns_false_when_previous_close_on_same_side_as_price():
+    stock_both_above = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("110.00"),
+        previousClosePrice=Decimal("108.00"),
+        fiftyDayAverage=Decimal("100.00"),
+    )
+    assert stock_both_above._is_close_to_fifty_day_average() is False
+
+    stock_both_below = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("90.00"),
+        previousClosePrice=Decimal("92.00"),
+        fiftyDayAverage=Decimal("100.00"),
+    )
+    assert stock_both_below._is_close_to_fifty_day_average() is False
+
+
+def test_is_close_to_fifty_day_average_returns_false_when_previous_equals_average():
+    stock_current_above = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("103.00"),
+        previousClosePrice=Decimal("100.00"),
+        fiftyDayAverage=Decimal("100.00"),
+    )
+    assert stock_current_above._is_close_to_fifty_day_average() is False
+
+    stock_current_below = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("97.00"),
+        previousClosePrice=Decimal("100.00"),
+        fiftyDayAverage=Decimal("100.00"),
+    )
+    assert stock_current_below._is_close_to_fifty_day_average() is False
+
+
+def test_generate_notifications_adds_close_to_sma50_when_approaching_from_below():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        fiftyDayAverage=Decimal("103.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA50 in types
+
+
+def test_generate_notifications_adds_close_to_sma50_when_approaching_from_above():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        fiftyDayAverage=Decimal("97.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA50 in types
+
+
+def test_generate_notifications_does_not_add_close_to_sma50_when_beyond_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        fiftyDayAverage=Decimal("110.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA50 not in types
+
+
+def test_generate_notifications_does_not_add_close_to_sma50_when_previous_close_on_same_side():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("110.00"),
+        previousClosePrice=Decimal("108.00"),
+        fiftyDayAverage=Decimal("100.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA50 not in types
+
+
+def test_is_close_to_two_hundred_day_average_returns_false_when_fields_are_missing():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+    assert stock._is_close_to_two_hundred_day_average() is False
+
+    stock_with_previous = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        previousClosePrice=Decimal("140.00"),
+    )
+    assert stock_with_previous._is_close_to_two_hundred_day_average() is False
+
+    stock_with_average = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("150.00"),
+        twoHundredDayAverage=Decimal("145.00"),
+    )
+    assert stock_with_average._is_close_to_two_hundred_day_average() is False
+
+
+def test_is_close_to_two_hundred_day_average_returns_true_when_approaching_from_below_within_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        twoHundredDayAverage=Decimal("105.00"),
+    )
+    assert stock._is_close_to_two_hundred_day_average() is True
+
+
+def test_is_close_to_two_hundred_day_average_returns_true_when_approaching_from_above_within_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        twoHundredDayAverage=Decimal("95.00"),
+    )
+    assert stock._is_close_to_two_hundred_day_average() is True
+
+
+def test_is_close_to_two_hundred_day_average_returns_false_when_approaching_from_below_beyond_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        twoHundredDayAverage=Decimal("106.00"),
+    )
+    assert stock._is_close_to_two_hundred_day_average() is False
+
+
+def test_is_close_to_two_hundred_day_average_returns_false_when_approaching_from_above_beyond_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        twoHundredDayAverage=Decimal("94.00"),
+    )
+    assert stock._is_close_to_two_hundred_day_average() is False
+
+
+def test_is_close_to_two_hundred_day_average_returns_true_at_exact_threshold_from_below():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        twoHundredDayAverage=Decimal("105.00"),
+    )
+    assert stock._is_close_to_two_hundred_day_average() is True
+
+
+def test_is_close_to_two_hundred_day_average_returns_true_at_exact_threshold_from_above():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        twoHundredDayAverage=Decimal("95.00"),
+    )
+    assert stock._is_close_to_two_hundred_day_average() is True
+
+
+def test_is_close_to_two_hundred_day_average_returns_false_when_previous_close_on_same_side_as_price():
+    stock_both_above = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("110.00"),
+        previousClosePrice=Decimal("108.00"),
+        twoHundredDayAverage=Decimal("100.00"),
+    )
+    assert stock_both_above._is_close_to_two_hundred_day_average() is False
+
+    stock_both_below = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("90.00"),
+        previousClosePrice=Decimal("92.00"),
+        twoHundredDayAverage=Decimal("100.00"),
+    )
+    assert stock_both_below._is_close_to_two_hundred_day_average() is False
+
+
+def test_is_close_to_two_hundred_day_average_returns_false_when_previous_equals_average():
+    stock_current_above = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("103.00"),
+        previousClosePrice=Decimal("100.00"),
+        twoHundredDayAverage=Decimal("100.00"),
+    )
+    assert stock_current_above._is_close_to_two_hundred_day_average() is False
+
+    stock_current_below = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("97.00"),
+        previousClosePrice=Decimal("100.00"),
+        twoHundredDayAverage=Decimal("100.00"),
+    )
+    assert stock_current_below._is_close_to_two_hundred_day_average() is False
+
+
+def test_generate_notifications_adds_close_to_sma200_when_approaching_from_below():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        twoHundredDayAverage=Decimal("103.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA200 in types
+
+
+def test_generate_notifications_adds_close_to_sma200_when_approaching_from_above():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("105.00"),
+        twoHundredDayAverage=Decimal("97.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA200 in types
+
+
+def test_generate_notifications_does_not_add_close_to_sma200_when_beyond_threshold():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("100.00"),
+        previousClosePrice=Decimal("95.00"),
+        twoHundredDayAverage=Decimal("110.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA200 not in types
+
+
+def test_generate_notifications_does_not_add_close_to_sma200_when_previous_close_on_same_side():
+    stock = Stock(
+        symbol="AAPL",
+        currentPrice=Decimal("110.00"),
+        previousClosePrice=Decimal("108.00"),
+        twoHundredDayAverage=Decimal("100.00"),
+        marketState=MarketState.OPEN,
+    )
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.CLOSE_TO_SMA200 not in types
+
+
 def test_has_crossed_two_hundred_day_average_returns_false_when_fields_are_missing():
     stock = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
     assert stock._has_crossed_two_hundred_day_average() is False
@@ -365,8 +715,8 @@ def test_generate_notifications_adds_no_notifications_when_no_crossing():
         symbol="AAPL",
         currentPrice=Decimal("150.00"),
         previousClosePrice=Decimal("148.00"),
-        fiftyDayAverage=Decimal("145.00"),
-        twoHundredDayAverage=Decimal("140.00"),
+        fiftyDayAverage=Decimal("120.00"),
+        twoHundredDayAverage=Decimal("110.00"),
         marketState=MarketState.OPEN,
     )
 

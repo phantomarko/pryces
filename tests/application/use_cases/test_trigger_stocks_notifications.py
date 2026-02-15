@@ -40,7 +40,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 2
+        assert self.mock_sender.send_message.call_count == 3
 
     def test_handle_sends_both_notifications_when_both_averages_crossed(self):
         stock = create_stock_crossing_both_averages("MSFT")
@@ -78,7 +78,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 4
+        assert self.mock_sender.send_message.call_count == 5
 
     def test_handle_does_nothing_for_empty_symbols(self):
         self.mock_provider.get_stocks.return_value = []

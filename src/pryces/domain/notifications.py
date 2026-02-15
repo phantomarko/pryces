@@ -5,6 +5,8 @@ from enum import Enum
 class NotificationType(Enum):
     SMA50_CROSSED = "SMA50_CROSSED"
     SMA200_CROSSED = "SMA200_CROSSED"
+    CLOSE_TO_SMA50 = "CLOSE_TO_SMA50"
+    CLOSE_TO_SMA200 = "CLOSE_TO_SMA200"
     REGULAR_MARKET_OPEN = "REGULAR_MARKET_OPEN"
     REGULAR_MARKET_CLOSED = "REGULAR_MARKET_CLOSED"
     FIVE_PERCENT_INCREASE = "FIVE_PERCENT_INCREASE"
@@ -59,6 +61,34 @@ class Notification:
             f"Price: {current_price}"
         )
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
+
+    @staticmethod
+    def create_close_to_fifty_day_average(
+        symbol: str,
+        current_price: Decimal,
+        average_price: Decimal,
+        change_percentage: Decimal,
+    ) -> "Notification":
+        message = (
+            f"{symbol} price is close to the 50-day moving average\n"
+            f"SMA50: {average_price}\n"
+            f"Price: {current_price} ({change_percentage:+.2f}% to cross)"
+        )
+        return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
+
+    @staticmethod
+    def create_close_to_two_hundred_day_average(
+        symbol: str,
+        current_price: Decimal,
+        average_price: Decimal,
+        change_percentage: Decimal,
+    ) -> "Notification":
+        message = (
+            f"{symbol} price is close to the 200-day moving average\n"
+            f"SMA200: {average_price}\n"
+            f"Price: {current_price} ({change_percentage:+.2f}% to cross)"
+        )
+        return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
 
     @staticmethod
     def create_regular_market_open(
