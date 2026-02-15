@@ -115,11 +115,11 @@ Presentation → Application → Domain
 - `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`
 - `commands/get_stock_price.py` — `GetStockPriceCommand`
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
-- `commands/monitor_stocks.py` — `MonitorStocksCommand` (runs for a time-based duration in minutes with configurable interval, triggers notifications per cycle)
+- `commands/monitor_stocks.py` — `MonitorStocksCommand` (launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
 - `commands/check_readiness.py` — `CheckReadinessCommand` (verifies env vars and Telegram connectivity; tracks `_all_ready` state and appends warning on failures)
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
 - `factories.py` — `CommandFactory` (DI + object creation)
-- `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`), parsers (`parse_symbols_input`), and formatters (`format_stock`, `format_stock_list`)
+- `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`, `validate_file_path`), parsers (`parse_symbols_input`), and formatters (`format_stock`, `format_stock_list`)
 
 **Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
 - `monitor_stocks.py` — Standalone monitor script driven by JSON config (`MonitorStocksConfig` dataclass, `MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`

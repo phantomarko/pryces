@@ -1,19 +1,11 @@
-import logging
-import time
+import subprocess
+import sys
 
-from ....application.use_cases.trigger_stocks_notifications import (
-    TriggerStocksNotifications,
-    TriggerStocksNotificationsRequest,
-)
 from .base import Command, CommandMetadata, InputPrompt
-from ..utils import parse_symbols_input, validate_positive_integer, validate_symbols
+from ..utils import validate_file_path
 
 
 class MonitorStocksCommand(Command):
-    def __init__(self, trigger_stocks_notifications_use_case: TriggerStocksNotifications) -> None:
-        self._trigger_stocks_notifications = trigger_stocks_notifications_use_case
-        self._logger = logging.getLogger(__name__)
-
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(
             id="monitor_stocks",
@@ -24,46 +16,23 @@ class MonitorStocksCommand(Command):
     def get_input_prompts(self) -> list[InputPrompt]:
         return [
             InputPrompt(
-                key="symbols",
-                prompt="Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): ",
-                validator=validate_symbols,
-            ),
-            InputPrompt(
-                key="interval",
-                prompt="Enter interval between checks in seconds (e.g., 90): ",
-                validator=validate_positive_integer,
-            ),
-            InputPrompt(
-                key="duration",
-                prompt="Enter monitoring duration in minutes (e.g., 120): ",
-                validator=validate_positive_integer,
+                key="config_path",
+                prompt="Enter the path to the JSON config file (e.g., monitor.json): ",
+                validator=validate_file_path,
             ),
         ]
 
-    def execute(
-        self, symbols: str = None, interval: str = None, duration: str = None, **kwargs
-    ) -> str:
-        self._logger.info("Monitor Stocks command started")
-        interval_seconds = int(interval)
-        duration_seconds = int(duration) * 60
-
-        symbol_list = parse_symbols_input(symbols)
-        request = TriggerStocksNotificationsRequest(symbols=symbol_list)
-
-        start = time.monotonic()
-
-        while True:
-            try:
-                self._trigger_stocks_notifications.handle(request)
-            except Exception as e:
-                self._logger.warning(f"Exception caught: {e}")
-
-            if time.monotonic() - start >= duration_seconds:
-                break
-
-            time.sleep(interval_seconds)
-
-        self._logger.info("Monitor Stocks command finished")
-        return (
-            f"Monitoring complete. {len(symbol_list)} stocks checked " f"over {duration} minutes."
+    def execute(self, config_path: str = None, **kwargs) -> str:
+        cmd = [
+            sys.executable,
+            "-m",
+            "pryces.presentation.scripts.monitor_stocks",
+            config_path.strip(),
+        ]
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
+        return f"Monitor started in background (PID: {process.pid})"

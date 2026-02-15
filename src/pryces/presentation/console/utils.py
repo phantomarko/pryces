@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from pryces.application.dtos import StockDTO
 
 
@@ -20,6 +22,10 @@ def validate_positive_integer(value: str) -> bool:
         return int(value) > 0
     except (ValueError, TypeError):
         return False
+
+
+def validate_file_path(value: str) -> bool:
+    return bool(value and value.strip() and Path(value.strip()).is_file())
 
 
 def parse_symbols_input(value: str) -> list[str]:

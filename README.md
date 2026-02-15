@@ -151,33 +151,23 @@ Enter your selection:
 
 ### Monitor Stocks
 
-Periodically checks stock prices and sends Telegram notifications for relevant events like market open/close, moving average crossovers, and significant price changes.
+Launches the [Monitor Stocks Script](#monitor-stocks-script) as a detached background process. The CLI remains responsive after launching.
 
-When you select option 1, you'll be prompted to enter comma-separated stock symbols, an interval between checks (in seconds), and the monitoring duration (in minutes):
+When you select option 1, you'll be prompted to enter the path to a JSON config file (see [Monitor Stocks Script](#monitor-stocks-script) for the config format):
 
 ```
 --- Monitor Stocks ---
 
-Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL
-Enter interval between checks in seconds (e.g., 90): 90
-Enter monitoring duration in minutes (e.g., 120): 120
+Enter the path to the JSON config file (e.g., monitor.json): monitor.json.example
 Executing...
 ```
 
 Example output:
 ```
-Monitoring complete. 2 stocks checked over 120 minutes.
+Monitor started in background (PID: 12345)
 ```
 
-**Tracked notifications:**
-- Market open / market closed
-- Price is close to crossing the 50-day or 200-day moving average (within 5%)
-- Price crossed the 50-day or 200-day moving average
-- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
-
-**Notes:**
-- Duplicate notifications are automatically prevented
-- Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
+The returned PID can be used to check or stop the process (e.g., `kill 12345`).
 
 ### Get Stock Price
 

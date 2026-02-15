@@ -4,6 +4,7 @@ from pryces.presentation.console.utils import (
     format_stock,
     format_stock_list,
     parse_symbols_input,
+    validate_file_path,
     validate_positive_integer,
     validate_symbol,
     validate_symbols,
@@ -73,6 +74,33 @@ class TestValidatePositiveInteger:
 
     def test_rejects_none(self):
         assert validate_positive_integer(None) is False
+
+
+class TestValidateFilePath:
+
+    def test_accepts_existing_file(self, tmp_path):
+        file = tmp_path / "config.json"
+        file.write_text("{}")
+
+        assert validate_file_path(str(file)) is True
+
+    def test_accepts_existing_file_with_whitespace(self, tmp_path):
+        file = tmp_path / "config.json"
+        file.write_text("{}")
+
+        assert validate_file_path(f"  {file}  ") is True
+
+    def test_rejects_nonexistent_path(self):
+        assert validate_file_path("/nonexistent/path/to/file.json") is False
+
+    def test_rejects_directory(self, tmp_path):
+        assert validate_file_path(str(tmp_path)) is False
+
+    def test_rejects_empty_string(self):
+        assert validate_file_path("") is False
+
+    def test_rejects_whitespace_only(self):
+        assert validate_file_path("   ") is False
 
 
 class TestParseSymbolsInput:
