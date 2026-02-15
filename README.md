@@ -15,7 +15,7 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
     - [Monitor Stocks](#monitor-stocks)
     - [Get Stock Price](#get-stock-price)
     - [Get Multiple Stock Prices](#get-multiple-stock-prices)
-    - [Test Notifications](#test-notifications)
+    - [Check Readiness](#check-readiness)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -141,8 +141,8 @@ Available Commands:
   3. Get Multiple Stock Prices
      Retrieve current prices for multiple stock symbols
 
-  4. Test Notifications
-     Send a test notification message
+  4. Check Readiness
+     Check if all components and configs are ready for monitoring
 
   0. Exit
 
@@ -272,21 +272,32 @@ MSFT - Microsoft Corporation (USD)
 Summary: 3 requested, 3 successful, 0 failed
 ```
 
-### Test Notifications
+### Check Readiness
 
-Sends a test message via Telegram to verify your notification setup is working.
+Verifies that all components and configurations are ready for a successful monitoring session. Checks environment variables and Telegram connectivity.
 
-When you select option 4, a test notification message is sent automatically (no input required):
+When you select option 4, all checks run automatically (no input required):
 
 ```
---- Test Notifications ---
+--- Check Readiness ---
 
 Executing...
 ```
 
-Example output:
+Example output when everything is configured correctly:
 ```
-Test notification sent successfully.
+[READY] Environment variables
+[READY] Telegram notifications
+```
+
+Example output when issues are detected:
+```
+[NOT READY] Environment variables
+  - TELEGRAM_BOT_TOKEN is missing or empty
+  - MAX_FETCH_WORKERS is missing or not a valid integer
+[NOT READY] Telegram notifications
+
+Fix the errors above and restart the app for changes to take effect.
 ```
 
 ## Contributing

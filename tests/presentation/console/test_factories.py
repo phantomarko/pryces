@@ -6,7 +6,7 @@ from pryces.presentation.console.commands.get_stock_price import GetStockPriceCo
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
 from pryces.presentation.console.commands.registry import CommandRegistry
-from pryces.presentation.console.commands.send_messages import SendMessagesCommand
+from pryces.presentation.console.commands.check_readiness import CheckReadinessCommand
 
 
 class TestCommandFactory:
@@ -74,16 +74,16 @@ class TestCommandFactory:
 
         assert isinstance(command, GetStocksPricesCommand)
 
-    def test_registry_contains_send_messages_command(self):
+    def test_registry_contains_check_readiness_command(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
             stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
         )
 
         registry = factory.create_command_registry()
-        command = registry.get_command("send_messages")
+        command = registry.get_command("check_readiness")
 
-        assert isinstance(command, SendMessagesCommand)
+        assert isinstance(command, CheckReadinessCommand)
 
     def test_registry_contains_monitor_stocks_command(self):
         mock_provider = Mock(spec=StockProvider)
