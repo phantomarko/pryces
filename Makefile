@@ -1,19 +1,17 @@
 CONFIG ?= monitor.json.example
 DEBUG_FLAG := $(if $(DEBUG),--debug,)
+VENV := venv/bin
 
-.PHONY: venv cli monitor test format
-
-venv:
-	@echo "Run: source venv/bin/activate"
+.PHONY: cli monitor test format
 
 cli:
-	python -m pryces.presentation.console.cli $(DEBUG_FLAG)
+	$(VENV)/python -m pryces.presentation.console.cli $(DEBUG_FLAG)
 
 monitor:
-	python -m pryces.presentation.scripts.monitor_stocks $(CONFIG) $(DEBUG_FLAG)
+	$(VENV)/python -m pryces.presentation.scripts.monitor_stocks $(CONFIG) $(DEBUG_FLAG)
 
 test:
-	pytest
+	$(VENV)/pytest
 
 format:
-	black src/ tests/ --line-length 100
+	$(VENV)/black src/ tests/ --line-length 100
