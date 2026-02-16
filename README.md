@@ -12,6 +12,11 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
   - [Scripts](#scripts)
     - [Monitor Stocks](#monitor-stocks)
   - [Interactive CLI](#interactive-cli)
+    - [Monitor Stocks (CLI)](#monitor-stocks-cli)
+    - [List Monitor Processes](#list-monitor-processes)
+    - [Get Stock Price](#get-stock-price)
+    - [Get Multiple Stock Prices](#get-multiple-stock-prices)
+    - [Check Readiness](#check-readiness)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -70,14 +75,23 @@ Standalone scripts for automated or scheduled execution. Unlike the interactive 
 Monitors stocks and sends Telegram notifications, driven by a JSON configuration file.
 
 ```bash
-python -m pryces.presentation.scripts.monitor_stocks monitor.json.example
-make monitor  # alternative using Makefile (defaults to monitor.json.example)
+# using Makefile
+make monitor  # defaults to monitor.json.example
 make monitor CONFIG=monitor_alternative.json  # alternative with custom config
+
+# or using Python
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m pryces.presentation.scripts.monitor_stocks monitor.json.example
 ```
 
 Run in the background (detached from the terminal):
 ```bash
-nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json &
+# using Makefile
+nohup make monitor CONFIG=monitor_alternative.json &
+
+# or using Python
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example &
 ```
 
 Log files are created with a timestamp. To check the log:
@@ -116,8 +130,12 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 Launch the interactive menu:
 
 ```bash
+# using Makefile
+make cli
+
+# or using Python
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 python -m pryces.presentation.console.cli
-make cli  # alternative using Makefile
 ```
 
 Available commands:
@@ -131,7 +149,7 @@ Available commands:
 | 5 | Check Readiness | Verify env vars and Telegram connectivity |
 | 0 | Exit | Exit the program |
 
-#### Monitor Stocks
+#### Monitor Stocks (CLI)
 
 Launches the [Monitor Stocks](#monitor-stocks) as a detached background process. See that section for config format and notification details.
 
