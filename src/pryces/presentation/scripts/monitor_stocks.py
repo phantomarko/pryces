@@ -15,7 +15,7 @@ from ...application.use_cases.trigger_stocks_notifications import (
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
-from pryces.infrastructure.logging import setup as setup_logging
+from pryces.infrastructure.logging import setup_monitor_logging
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +96,7 @@ def main() -> int:
     args = parser.parse_args()
 
     load_dotenv()
-    setup_logging(debug=args.debug)
+    setup_monitor_logging(debug=args.debug)
 
     try:
         config = _get_config(args.config)

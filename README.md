@@ -82,7 +82,7 @@ nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json &
 
 Log files are created with a timestamp. To check the log:
 ```bash
-tail -f /tmp/pryces_20260212_143025.log
+tail -f /tmp/pryces_monitor_20260212_143025.log
 ```
 
 **Configuration file format** (see `monitor.json.example`):

@@ -5,8 +5,11 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+CLI_ENTRY_POINT = "cli"
+MONITOR_ENTRY_POINT = "monitor"
 
-def setup(verbose: bool = False, debug: bool = False) -> None:
+
+def _setup_logger(entry_point: str, verbose: bool = False, debug: bool = False) -> None:
     level = logging.DEBUG if debug else logging.INFO
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
@@ -24,7 +27,7 @@ def setup(verbose: bool = False, debug: bool = False) -> None:
 
     logs_directory = os.environ.get("LOGS_DIRECTORY")
     if logs_directory and Path(logs_directory).is_dir():
-        filename = datetime.now().strftime("pryces_%Y%m%d_%H%M%S.log")
+        filename = datetime.now().strftime(f"pryces_{entry_point}_%Y%m%d_%H%M%S.log")
         file_handler = RotatingFileHandler(
             Path(logs_directory) / filename,
             maxBytes=5 * 1024 * 1024,
@@ -36,3 +39,11 @@ def setup(verbose: bool = False, debug: bool = False) -> None:
 
     if not root_logger.handlers:
         root_logger.addHandler(logging.NullHandler())
+
+
+def setup_cli_logging(verbose: bool = False, debug: bool = False) -> None:
+    _setup_logger(CLI_ENTRY_POINT, verbose=verbose, debug=debug)
+
+
+def setup_monitor_logging(verbose: bool = False, debug: bool = False) -> None:
+    _setup_logger(MONITOR_ENTRY_POINT, verbose=verbose, debug=debug)

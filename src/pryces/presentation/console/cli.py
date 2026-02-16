@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
-from ...infrastructure.logging import setup as setup_logging
+from ...infrastructure.logging import setup_cli_logging
 from .factories import CommandFactory
 from .menu import InteractiveMenu
 
@@ -34,7 +34,7 @@ def main() -> int:
 
     load_dotenv()
 
-    setup_logging(debug=args.debug)
+    setup_cli_logging(debug=args.debug)
     logger = logging.getLogger(__name__)
 
     try:
