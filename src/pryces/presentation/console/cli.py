@@ -43,7 +43,9 @@ def main() -> int:
         return 0
 
     except Exception as e:
-        logger.error(f"CLI error: {e}")
+        message = f"CLI error: {e}"
+        print(message)
+        logger.error(message)
         return 1
 
 

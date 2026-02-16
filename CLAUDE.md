@@ -106,7 +106,7 @@ Presentation → Application → Domain
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
 - `implementations.py` — `YahooFinanceSettings` frozen dataclass (max_workers), `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API
-- `factories.py` — `SettingsFactory` (creates `YahooFinanceSettings` from `MAX_FETCH_WORKERS` env var, creates `TelegramSettings` from Telegram env vars)
+- `factories.py` — `SettingsFactory` (creates `YahooFinanceSettings` from `MAX_FETCH_WORKERS` env var, creates `TelegramSettings` from Telegram env vars; raises `EnvironmentError` with clear message on missing vars)
 - `logging.py` — `setup(verbose, debug)` configures root logger: stderr handler if verbose, file handler if `LOGS_DIRECTORY` is set, `NullHandler` fallback if no handlers; `debug` scopes DEBUG level to `pryces` logger only
 
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:

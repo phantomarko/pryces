@@ -75,13 +75,16 @@ def _get_config(path: Path) -> MonitorStocksConfig:
     return MonitorStocksConfig(**data)
 
 
-def _create_use_case() -> TriggerStocksNotifications:
+def _create_script(config: MonitorStocksConfig) -> MonitorStocksScript:
     yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings()
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(settings=telegram_settings)
     notification_service = NotificationService(message_sender)
-    return TriggerStocksNotifications(provider=provider, notification_service=notification_service)
+    use_case = TriggerStocksNotifications(
+        provider=provider, notification_service=notification_service
+    )
+    return MonitorStocksScript(use_case, config)
 
 
 def main() -> int:
@@ -104,8 +107,14 @@ def main() -> int:
         print(f"Error: invalid config file: {e}")
         return 1
 
-    use_case = _create_use_case()
-    MonitorStocksScript(use_case, config).run()
+    try:
+        script = _create_script(config)
+        script.run()
+    except Exception as e:
+        message = f"Monitor error: {e}"
+        print(message)
+        logging.getLogger(__name__).error(message)
+        return 1
 
     return 0
 

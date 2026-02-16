@@ -6,13 +6,19 @@ from .implementations import TelegramSettings, YahooFinanceSettings
 class SettingsFactory:
     @staticmethod
     def create_yahoo_finance_settings() -> YahooFinanceSettings:
-        return YahooFinanceSettings(
-            max_workers=int(os.environ["MAX_FETCH_WORKERS"]),
-        )
+        try:
+            return YahooFinanceSettings(
+                max_workers=int(os.environ["MAX_FETCH_WORKERS"]),
+            )
+        except KeyError as e:
+            raise EnvironmentError(f"Missing required environment variable: {e}") from e
 
     @staticmethod
     def create_telegram_settings() -> TelegramSettings:
-        return TelegramSettings(
-            bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
-            group_id=os.environ["TELEGRAM_GROUP_ID"],
-        )
+        try:
+            return TelegramSettings(
+                bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
+                group_id=os.environ["TELEGRAM_GROUP_ID"],
+            )
+        except KeyError as e:
+            raise EnvironmentError(f"Missing required environment variable: {e}") from e
