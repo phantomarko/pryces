@@ -52,7 +52,8 @@ Edit `.env` with your settings:
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Your Telegram Bot API token (from [@BotFather](https://t.me/BotFather)) |
 | `TELEGRAM_GROUP_ID` | The Telegram group/chat ID where notifications are sent |
-| `LOGS_DIRECTORY` | Directory path for log file output (optional — if not set, file logging is disabled) |
+| `MAX_FETCH_WORKERS` | Maximum number of concurrent workers for fetching stock data (values above 6 are not recommended on low-resource systems) |
+| `LOGS_DIRECTORY` | Directory path for log file output (use `/tmp` if you don't need persistent logs) |
 
 The application loads these variables automatically from `.env` on startup via `python-dotenv`.
 
@@ -79,7 +80,7 @@ Run in the background (detached from the terminal):
 nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json &
 ```
 
-Set `LOGS_DIRECTORY` in your `.env` file before launching it so you can follow the process after closing the terminal. Log files are created with a timestamp. To check the log:
+Log files are created with a timestamp. To check the log:
 ```bash
 tail -f /tmp/pryces_20260212_143025.log
 ```
