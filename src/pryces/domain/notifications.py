@@ -41,22 +41,14 @@ class Notification:
     def create_fifty_day_average_crossed(
         symbol: str, current_price: Decimal, average_price: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price crossed the 50-day moving average\n"
-            f"SMA50: {average_price}\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} crossed SMA50 at {current_price} (SMA: {average_price})"
         return Notification(Notification._CREATION_KEY, NotificationType.SMA50_CROSSED, message)
 
     @staticmethod
     def create_two_hundred_day_average_crossed(
         symbol: str, current_price: Decimal, average_price: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price crossed the 200-day moving average\n"
-            f"SMA200: {average_price}\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} crossed SMA200 at {current_price} (SMA: {average_price})"
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
 
     @staticmethod
@@ -66,11 +58,7 @@ class Notification:
         average_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = (
-            f"{symbol} price is close to the 50-day moving average\n"
-            f"SMA50: {average_price}\n"
-            f"Price: {current_price} ({change_percentage:+.2f}% to cross)"
-        )
+        message = f"{symbol} nearing SMA50 by {change_percentage:+.2f}% ({current_price} \u2192 SMA: {average_price})"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
 
     @staticmethod
@@ -80,18 +68,14 @@ class Notification:
         average_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = (
-            f"{symbol} price is close to the 200-day moving average\n"
-            f"SMA200: {average_price}\n"
-            f"Price: {current_price} ({change_percentage:+.2f}% to cross)"
-        )
+        message = f"{symbol} nearing SMA200 by {change_percentage:+.2f}% ({current_price} \u2192 SMA: {average_price})"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
 
     @staticmethod
     def create_regular_market_open(
         symbol: str, open_price: Decimal, last_close_price: Decimal | None
     ) -> "Notification":
-        message = f"{symbol} regular market is now open\nPrice: {open_price}"
+        message = f"{symbol} opened at {open_price}"
         if last_close_price is not None:
             change_percentage = ((open_price - last_close_price) / last_close_price) * 100
             message += f" ({change_percentage:+.2f}%)"
@@ -103,7 +87,7 @@ class Notification:
     def create_regular_market_closed(
         symbol: str, current_price: Decimal, last_close_price: Decimal | None
     ) -> "Notification":
-        message = f"{symbol} regular market is now closed\nPrice: {current_price}"
+        message = f"{symbol} closed at {current_price}"
         if last_close_price is not None:
             change_percentage = ((current_price - last_close_price) / last_close_price) * 100
             message += f" ({change_percentage:+.2f}%)"
@@ -115,10 +99,7 @@ class Notification:
     def create_five_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price increased more than 5% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_INCREASE, message
         )
@@ -127,10 +108,7 @@ class Notification:
     def create_ten_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price increased more than 10% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TEN_PERCENT_INCREASE, message
         )
@@ -139,10 +117,7 @@ class Notification:
     def create_fifteen_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price increased more than 15% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_INCREASE, message
         )
@@ -151,10 +126,7 @@ class Notification:
     def create_twenty_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price increased more than 20% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_INCREASE, message
         )
@@ -163,10 +135,7 @@ class Notification:
     def create_five_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price decreased more than 5% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_DECREASE, message
         )
@@ -175,10 +144,7 @@ class Notification:
     def create_ten_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price decreased more than 10% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TEN_PERCENT_DECREASE, message
         )
@@ -187,10 +153,7 @@ class Notification:
     def create_fifteen_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price decreased more than 15% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_DECREASE, message
         )
@@ -199,10 +162,7 @@ class Notification:
     def create_twenty_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = (
-            f"{symbol} price decreased more than 20% ({change_percentage:+.2f}%)\n"
-            f"Price: {current_price}"
-        )
+        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_DECREASE, message
         )
