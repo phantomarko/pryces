@@ -1012,6 +1012,108 @@ def test_generate_notifications_percentage_at_exact_threshold():
     }
 
 
+def test_generate_new_52_week_high_notification_does_not_add_when_past_stock_is_none():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("200.00"))
+
+    stock._generate_new_52_week_high_notification(None)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_high_notification_does_not_add_when_past_stock_has_no_52_week_high():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("200.00"))
+    past_stock = Stock(symbol="AAPL", currentPrice=Decimal("180.00"))
+
+    stock._generate_new_52_week_high_notification(past_stock)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_high_notification_does_not_add_when_current_price_equals_past_stock_52_week_high():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("180.00"))
+    past_stock = Stock(
+        symbol="AAPL", currentPrice=Decimal("170.00"), fiftyTwoWeekHigh=Decimal("180.00")
+    )
+
+    stock._generate_new_52_week_high_notification(past_stock)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_high_notification_does_not_add_when_current_price_below_past_stock_52_week_high():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("170.00"))
+    past_stock = Stock(
+        symbol="AAPL", currentPrice=Decimal("160.00"), fiftyTwoWeekHigh=Decimal("180.00")
+    )
+
+    stock._generate_new_52_week_high_notification(past_stock)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_high_notification_adds_notification_when_current_price_exceeds_past_stock_52_week_high():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("200.00"))
+    past_stock = Stock(
+        symbol="AAPL", currentPrice=Decimal("170.00"), fiftyTwoWeekHigh=Decimal("180.00")
+    )
+
+    stock._generate_new_52_week_high_notification(past_stock)
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.NEW_52_WEEK_HIGH
+
+
+def test_generate_new_52_week_low_notification_does_not_add_when_past_stock_is_none():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("100.00"))
+
+    stock._generate_new_52_week_low_notification(None)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_low_notification_does_not_add_when_past_stock_has_no_52_week_low():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("100.00"))
+    past_stock = Stock(symbol="AAPL", currentPrice=Decimal("120.00"))
+
+    stock._generate_new_52_week_low_notification(past_stock)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_low_notification_does_not_add_when_current_price_equals_past_stock_52_week_low():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("120.00"))
+    past_stock = Stock(
+        symbol="AAPL", currentPrice=Decimal("130.00"), fiftyTwoWeekLow=Decimal("120.00")
+    )
+
+    stock._generate_new_52_week_low_notification(past_stock)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_low_notification_does_not_add_when_current_price_above_past_stock_52_week_low():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("130.00"))
+    past_stock = Stock(
+        symbol="AAPL", currentPrice=Decimal("140.00"), fiftyTwoWeekLow=Decimal("120.00")
+    )
+
+    stock._generate_new_52_week_low_notification(past_stock)
+
+    assert stock.notifications == []
+
+
+def test_generate_new_52_week_low_notification_adds_notification_when_current_price_falls_below_past_stock_52_week_low():
+    stock = Stock(symbol="AAPL", currentPrice=Decimal("100.00"))
+    past_stock = Stock(
+        symbol="AAPL", currentPrice=Decimal("130.00"), fiftyTwoWeekLow=Decimal("120.00")
+    )
+
+    stock._generate_new_52_week_low_notification(past_stock)
+
+    assert len(stock.notifications) == 1
+    assert stock.notifications[0].type == NotificationType.NEW_52_WEEK_LOW
+
+
 def test_generate_notifications_no_percentage_when_previous_close_none():
     stock = Stock(
         symbol="AAPL",

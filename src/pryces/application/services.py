@@ -9,8 +9,10 @@ class NotificationService:
         self._message_sender = message_sender
         self._repository = repository
 
-    def send_stock_notifications(self, stock: Stock) -> list[Notification]:
-        stock.generate_notifications()
+    def send_stock_notifications(
+        self, stock: Stock, past_stock: Stock | None
+    ) -> list[Notification]:
+        stock.generate_notifications(past_stock)
         sent: list[Notification] = []
 
         for notification in stock.notifications:

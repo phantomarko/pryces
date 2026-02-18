@@ -17,6 +17,8 @@ class NotificationType(Enum):
     TEN_PERCENT_DECREASE = "TEN_PERCENT_DECREASE"
     FIFTEEN_PERCENT_DECREASE = "FIFTEEN_PERCENT_DECREASE"
     TWENTY_PERCENT_DECREASE = "TWENTY_PERCENT_DECREASE"
+    NEW_52_WEEK_HIGH = "NEW_52_WEEK_HIGH"
+    NEW_52_WEEK_LOW = "NEW_52_WEEK_LOW"
 
 
 class Notification:
@@ -166,3 +168,13 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_DECREASE, message
         )
+
+    @staticmethod
+    def create_new_52_week_high(symbol: str, current_price: Decimal) -> "Notification":
+        message = f"{symbol} hit a new 52-week high at {current_price}"
+        return Notification(Notification._CREATION_KEY, NotificationType.NEW_52_WEEK_HIGH, message)
+
+    @staticmethod
+    def create_new_52_week_low(symbol: str, current_price: Decimal) -> "Notification":
+        message = f"{symbol} hit a new 52-week low at {current_price}"
+        return Notification(Notification._CREATION_KEY, NotificationType.NEW_52_WEEK_LOW, message)

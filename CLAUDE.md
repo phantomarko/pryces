@@ -91,14 +91,14 @@ Presentation → Application → Domain
 ```
 
 **Domain** (`src/pryces/domain/`) — Core domain model:
-- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice + optional: name, currency, marketState, and 10 Decimal price fields; generates milestone notifications via `generate_notifications()`)
-- `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
+- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice + optional: name, currency, marketState, and 10 Decimal price fields; generates milestone notifications via `generate_notifications(past_stock=None)` — accepts optional previous snapshot to detect new 52-week highs/lows)
+- `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, NEW_52_WEEK_HIGH, NEW_52_WEEK_LOW, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
 - `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port), `NotificationRepository` ABC (port: `save`, `exists_by_type`)
 - `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes marketState)
 - `exceptions.py` — `StockNotFound`
-- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`)
+- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection)
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)

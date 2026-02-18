@@ -120,6 +120,7 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 - Price is close to crossing the 50-day or 200-day moving average (within 5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
+- Price set a new 52-week high or low (compared to the previous monitoring run)
 
 **Notes:**
 - Duplicate notifications are automatically prevented within the same run

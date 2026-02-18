@@ -274,6 +274,32 @@ def test_create_twenty_percent_decrease_sets_message():
     assert len(notification.message) > 0
 
 
+def test_create_new_52_week_high_sets_type():
+    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"))
+
+    assert notification.type == NotificationType.NEW_52_WEEK_HIGH
+
+
+def test_create_new_52_week_high_sets_message():
+    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"))
+
+    assert isinstance(notification.message, str)
+    assert len(notification.message) > 0
+
+
+def test_create_new_52_week_low_sets_type():
+    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"))
+
+    assert notification.type == NotificationType.NEW_52_WEEK_LOW
+
+
+def test_create_new_52_week_low_sets_message():
+    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"))
+
+    assert isinstance(notification.message, str)
+    assert len(notification.message) > 0
+
+
 def test_notification_type_enum_has_expected_values():
     assert NotificationType.SMA50_CROSSED.value == "SMA50_CROSSED"
     assert NotificationType.SMA200_CROSSED.value == "SMA200_CROSSED"
@@ -289,3 +315,5 @@ def test_notification_type_enum_has_expected_values():
     assert NotificationType.TEN_PERCENT_DECREASE.value == "TEN_PERCENT_DECREASE"
     assert NotificationType.FIFTEEN_PERCENT_DECREASE.value == "FIFTEEN_PERCENT_DECREASE"
     assert NotificationType.TWENTY_PERCENT_DECREASE.value == "TWENTY_PERCENT_DECREASE"
+    assert NotificationType.NEW_52_WEEK_HIGH.value == "NEW_52_WEEK_HIGH"
+    assert NotificationType.NEW_52_WEEK_LOW.value == "NEW_52_WEEK_LOW"

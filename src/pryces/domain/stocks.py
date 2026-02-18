@@ -225,7 +225,27 @@ class Stock:
 
         return None
 
-    def _generate_market_open_notifications(self) -> None:
+    def _generate_new_52_week_high_notification(self, past_stock: "Stock | None") -> None:
+        if (
+            past_stock is not None
+            and past_stock.fiftyTwoWeekHigh is not None
+            and self.currentPrice > past_stock.fiftyTwoWeekHigh
+        ):
+            self._notifications.append(
+                Notification.create_new_52_week_high(self.symbol, self.currentPrice)
+            )
+
+    def _generate_new_52_week_low_notification(self, past_stock: "Stock | None") -> None:
+        if (
+            past_stock is not None
+            and past_stock.fiftyTwoWeekLow is not None
+            and self.currentPrice < past_stock.fiftyTwoWeekLow
+        ):
+            self._notifications.append(
+                Notification.create_new_52_week_low(self.symbol, self.currentPrice)
+            )
+
+    def _generate_market_open_notifications(self, past_stock: "Stock | None") -> None:
         self._notifications.append(
             Notification.create_regular_market_open(
                 self.symbol,
@@ -266,10 +286,12 @@ class Stock:
             )
             if percentage_notification is not None:
                 self._notifications.append(percentage_notification)
+        self._generate_new_52_week_high_notification(past_stock)
+        self._generate_new_52_week_low_notification(past_stock)
 
-    def generate_notifications(self) -> None:
+    def generate_notifications(self, past_stock: "Stock | None" = None) -> None:
         if self._is_market_state_open():
-            self._generate_market_open_notifications()
+            self._generate_market_open_notifications(past_stock)
         elif self._is_market_state_post():
             self._notifications.append(
                 Notification.create_regular_market_closed(

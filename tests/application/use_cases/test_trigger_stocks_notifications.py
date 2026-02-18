@@ -1,7 +1,10 @@
+from decimal import Decimal
 from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
+from pryces.domain.notifications import NotificationType
+from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.implementations import (
     InMemoryNotificationRepository,
     InMemoryStockRepository,
@@ -104,3 +107,55 @@ class TestTriggerStocksNotifications:
         self.use_case.handle(request)
 
         self.mock_provider.get_stocks.assert_called_once_with(["AAPL", "GOOGL", "MSFT"])
+
+    def test_handle_sends_new_52_week_high_notification_when_past_stock_exists(self):
+        past_stock = Stock(
+            symbol="AAPL", currentPrice=Decimal("180.00"), fiftyTwoWeekHigh=Decimal("190.00")
+        )
+        stock_repo = InMemoryStockRepository()
+        stock_repo.save_batch([past_stock])
+        self.use_case = TriggerStocksNotifications(
+            provider=self.mock_provider,
+            notification_service=self.notification_service,
+            stock_repository=stock_repo,
+        )
+        current_stock = Stock(
+            symbol="AAPL",
+            currentPrice=Decimal("200.00"),
+            openPrice=Decimal("195.00"),
+            previousClosePrice=Decimal("190.00"),
+            marketState=MarketState.OPEN,
+        )
+        self.mock_provider.get_stocks.return_value = [current_stock]
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
+
+        self.use_case.handle(request)
+
+        sent_types = {n.type for n in current_stock.notifications}
+        assert NotificationType.NEW_52_WEEK_HIGH in sent_types
+
+    def test_handle_sends_new_52_week_low_notification_when_past_stock_exists(self):
+        past_stock = Stock(
+            symbol="AAPL", currentPrice=Decimal("120.00"), fiftyTwoWeekLow=Decimal("110.00")
+        )
+        stock_repo = InMemoryStockRepository()
+        stock_repo.save_batch([past_stock])
+        self.use_case = TriggerStocksNotifications(
+            provider=self.mock_provider,
+            notification_service=self.notification_service,
+            stock_repository=stock_repo,
+        )
+        current_stock = Stock(
+            symbol="AAPL",
+            currentPrice=Decimal("100.00"),
+            openPrice=Decimal("105.00"),
+            previousClosePrice=Decimal("110.00"),
+            marketState=MarketState.OPEN,
+        )
+        self.mock_provider.get_stocks.return_value = [current_stock]
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
+
+        self.use_case.handle(request)
+
+        sent_types = {n.type for n in current_stock.notifications}
+        assert NotificationType.NEW_52_WEEK_LOW in sent_types

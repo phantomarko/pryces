@@ -24,6 +24,7 @@ class TriggerStocksNotifications:
         stocks = self._provider.get_stocks(request.symbols)
 
         for stock in stocks:
-            self._notification_service.send_stock_notifications(stock)
+            past_stock = self._stock_repository.get(stock.symbol)
+            self._notification_service.send_stock_notifications(stock, past_stock)
 
         self._stock_repository.save_batch(stocks)
