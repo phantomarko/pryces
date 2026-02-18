@@ -20,6 +20,16 @@ class MessageSender(ABC):
         pass
 
 
+class StockRepository(ABC):
+    @abstractmethod
+    def save_batch(self, stocks: list[Stock]) -> None:
+        pass
+
+    @abstractmethod
+    def get(self, symbol: str) -> Stock | None:
+        pass
+
+
 class NotificationRepository(ABC):
     @abstractmethod
     def save(self, symbol: str, notification: Notification) -> None:

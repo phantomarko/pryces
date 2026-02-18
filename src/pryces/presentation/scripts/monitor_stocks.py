@@ -16,6 +16,7 @@ from ...application.use_cases.trigger_stocks_notifications import (
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import (
     InMemoryNotificationRepository,
+    InMemoryStockRepository,
     TelegramMessageSender,
     YahooFinanceProvider,
 )
@@ -86,8 +87,11 @@ def _create_script(config: MonitorStocksConfig) -> MonitorStocksScript:
     message_sender = TelegramMessageSender(settings=telegram_settings)
     notification_repository = InMemoryNotificationRepository()
     notification_service = NotificationService(message_sender, notification_repository)
+    stock_repository = InMemoryStockRepository()
     use_case = TriggerStocksNotifications(
-        provider=provider, notification_service=notification_service
+        provider=provider,
+        notification_service=notification_service,
+        stock_repository=stock_repository,
     )
     return MonitorStocksScript(use_case, config)
 

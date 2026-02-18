@@ -2,7 +2,10 @@ from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
-from pryces.infrastructure.implementations import InMemoryNotificationRepository
+from pryces.infrastructure.implementations import (
+    InMemoryNotificationRepository,
+    InMemoryStockRepository,
+)
 from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
@@ -24,7 +27,9 @@ class TestTriggerStocksNotifications:
             self.mock_sender, InMemoryNotificationRepository()
         )
         self.use_case = TriggerStocksNotifications(
-            provider=self.mock_provider, notification_service=self.notification_service
+            provider=self.mock_provider,
+            notification_service=self.notification_service,
+            stock_repository=InMemoryStockRepository(),
         )
 
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):

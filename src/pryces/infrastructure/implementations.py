@@ -8,7 +8,12 @@ from decimal import Decimal
 
 import yfinance as yf
 
-from ..application.interfaces import StockProvider, MessageSender, NotificationRepository
+from ..application.interfaces import (
+    StockProvider,
+    MessageSender,
+    NotificationRepository,
+    StockRepository,
+)
 from ..domain.notifications import Notification, NotificationType
 from ..domain.stocks import MarketState, Stock
 
@@ -167,3 +172,15 @@ class InMemoryNotificationRepository(NotificationRepository):
         if symbol not in self._store:
             return False
         return notification_type.value in self._store[symbol]
+
+
+class InMemoryStockRepository(StockRepository):
+    def __init__(self) -> None:
+        self._store: dict[str, Stock] = {}
+
+    def save_batch(self, stocks: list[Stock]) -> None:
+        for stock in stocks:
+            self._store[stock.symbol] = stock
+
+    def get(self, symbol: str) -> Stock | None:
+        return self._store.get(symbol)
