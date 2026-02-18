@@ -8,7 +8,8 @@ from decimal import Decimal
 
 import yfinance as yf
 
-from ..application.interfaces import StockProvider, MessageSender
+from ..application.interfaces import StockProvider, MessageSender, NotificationRepository
+from ..domain.notifications import Notification, NotificationType
 from ..domain.stocks import MarketState, Stock
 
 
@@ -151,3 +152,18 @@ class TelegramMessageSender(MessageSender):
 
         self._logger.error(f"Telegram API returned ok=false: {response_data}")
         return False
+
+
+class InMemoryNotificationRepository(NotificationRepository):
+    def __init__(self) -> None:
+        self._store: dict[str, dict[str, bool]] = {}
+
+    def save(self, symbol: str, notification: Notification) -> None:
+        if symbol not in self._store:
+            self._store[symbol] = {}
+        self._store[symbol][notification.type.value] = True
+
+    def exists_by_type(self, symbol: str, notification_type: NotificationType) -> bool:
+        if symbol not in self._store:
+            return False
+        return notification_type.value in self._store[symbol]

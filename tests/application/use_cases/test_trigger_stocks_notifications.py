@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
+from pryces.infrastructure.implementations import InMemoryNotificationRepository
 from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
@@ -19,7 +20,9 @@ class TestTriggerStocksNotifications:
     def setup_method(self):
         self.mock_provider = Mock(spec=StockProvider)
         self.mock_sender = Mock(spec=MessageSender)
-        self.notification_service = NotificationService(self.mock_sender)
+        self.notification_service = NotificationService(
+            self.mock_sender, InMemoryNotificationRepository()
+        )
         self.use_case = TriggerStocksNotifications(
             provider=self.mock_provider, notification_service=self.notification_service
         )

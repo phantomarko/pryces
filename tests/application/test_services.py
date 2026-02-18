@@ -2,6 +2,8 @@ from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender
 from pryces.application.services import NotificationService
+from pryces.domain.notifications import NotificationType
+from pryces.infrastructure.implementations import InMemoryNotificationRepository
 from tests.fixtures.factories import (
     create_stock_crossing_both_averages,
     create_stock_crossing_fifty_day,
@@ -14,7 +16,8 @@ class TestNotificationService:
 
     def setup_method(self):
         self.mock_sender = Mock(spec=MessageSender)
-        self.service = NotificationService(self.mock_sender)
+        self.repo = InMemoryNotificationRepository()
+        self.service = NotificationService(self.mock_sender, self.repo)
 
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
@@ -34,13 +37,13 @@ class TestNotificationService:
         assert result[0] is stock.notifications[0]
         assert result[1] is stock.notifications[1]
 
-    def test_adds_sent_notifications_to_dictionary(self):
+    def test_saves_sent_notifications_to_repository(self):
         stock = create_stock_crossing_fifty_day("AAPL")
 
         self.service.send_stock_notifications(stock)
 
-        assert "AAPL" in self.service.notifications_sent
-        assert len(self.service.notifications_sent["AAPL"]) == 2
+        for notification in stock.notifications:
+            assert self.repo.exists_by_type("AAPL", notification.type)
 
     def test_skips_duplicate_notifications_for_same_symbol(self):
         stock1 = create_stock_crossing_fifty_day("AAPL")
@@ -50,7 +53,6 @@ class TestNotificationService:
         result = self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 2
-        assert len(self.service.notifications_sent["AAPL"]) == 2
         assert result == []
 
     def test_handles_multiple_stocks_independently(self):
@@ -61,8 +63,10 @@ class TestNotificationService:
         result2 = self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 4
-        assert "AAPL" in self.service.notifications_sent
-        assert "GOOGL" in self.service.notifications_sent
+        for notification in stock1.notifications:
+            assert self.repo.exists_by_type("AAPL", notification.type)
+        for notification in stock2.notifications:
+            assert self.repo.exists_by_type("GOOGL", notification.type)
         assert len(result1) == 2
         assert len(result2) == 2
 
@@ -72,7 +76,7 @@ class TestNotificationService:
         result = self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called_once()
-        assert "AAPL" in self.service.notifications_sent
+        assert self.repo.exists_by_type("AAPL", NotificationType.REGULAR_MARKET_OPEN)
         assert len(result) == 1
 
     def test_sends_unsent_notification_type_even_if_other_type_already_sent(self):
@@ -83,6 +87,8 @@ class TestNotificationService:
         result2 = self.service.send_stock_notifications(stock_both)
 
         assert self.mock_sender.send_message.call_count == 3
-        assert len(self.service.notifications_sent["AAPL"]) == 3
+        assert self.repo.exists_by_type("AAPL", NotificationType.REGULAR_MARKET_OPEN)
+        assert self.repo.exists_by_type("AAPL", NotificationType.SMA50_CROSSED)
+        assert self.repo.exists_by_type("AAPL", NotificationType.SMA200_CROSSED)
         assert len(result1) == 2
         assert len(result2) == 1

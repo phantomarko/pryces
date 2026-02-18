@@ -14,7 +14,11 @@ from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotificationsRequest,
 )
 from ...infrastructure.factories import SettingsFactory
-from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
+from ...infrastructure.implementations import (
+    InMemoryNotificationRepository,
+    TelegramMessageSender,
+    YahooFinanceProvider,
+)
 from pryces.infrastructure.logging import setup_monitor_logging
 
 
@@ -80,7 +84,8 @@ def _create_script(config: MonitorStocksConfig) -> MonitorStocksScript:
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(settings=telegram_settings)
-    notification_service = NotificationService(message_sender)
+    notification_repository = InMemoryNotificationRepository()
+    notification_service = NotificationService(message_sender, notification_repository)
     use_case = TriggerStocksNotifications(
         provider=provider, notification_service=notification_service
     )
