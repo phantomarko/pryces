@@ -19,6 +19,7 @@ def create_stock(
         "fiftyTwoWeekHigh": current_price * Decimal("1.20"),
         "fiftyTwoWeekLow": current_price * Decimal("0.80"),
         "marketState": MarketState.OPEN,
+        "priceDelayInMinutes": 0,
     }
 
     return Stock(symbol=symbol, currentPrice=current_price, **{**defaults, **overrides})

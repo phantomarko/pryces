@@ -44,6 +44,7 @@ FIELD_LABELS = [
     ("twoHundredDayAverage", "200-Day Average"),
     ("fiftyTwoWeekHigh", "52-Week High"),
     ("fiftyTwoWeekLow", "52-Week Low"),
+    ("priceDelayInMinutes", "Price delay (min)"),
 ]
 
 LABEL_WIDTH = max(len(label) for _, label in FIELD_LABELS)

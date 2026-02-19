@@ -1125,3 +1125,14 @@ def test_generate_notifications_no_percentage_when_previous_close_none():
 
     assert len(stock.notifications) == 1
     assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+
+
+def test_stock_price_delay_in_minutes_accepts_int_and_none():
+    stock_real_time = Stock(symbol="AAPL", currentPrice=Decimal("150.00"), priceDelayInMinutes=0)
+    assert stock_real_time.priceDelayInMinutes == 0
+
+    stock_delayed = Stock(symbol="AAPL", currentPrice=Decimal("150.00"), priceDelayInMinutes=15)
+    assert stock_delayed.priceDelayInMinutes == 15
+
+    stock_none = Stock(symbol="AAPL", currentPrice=Decimal("150.00"))
+    assert stock_none.priceDelayInMinutes is None

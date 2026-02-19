@@ -62,6 +62,7 @@ class YahooFinanceProvider(StockProvider):
         company_name = info.get("longName") or info.get("shortName")
         currency = info.get("currency")
         market_state = self._map_market_state(info.get("marketState"))
+        price_delay_in_minutes = info.get("exchangeDataDelayedBy")
 
         return Stock(
             symbol=symbol.upper(),
@@ -83,6 +84,7 @@ class YahooFinanceProvider(StockProvider):
                 Decimal(str(fifty_two_week_low)) if fifty_two_week_low is not None else None
             ),
             marketState=market_state,
+            priceDelayInMinutes=price_delay_in_minutes,
         )
 
     def _build_stock_from_ticker(self, symbol: str, info: dict) -> Stock | None:

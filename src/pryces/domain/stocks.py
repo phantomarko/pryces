@@ -26,6 +26,7 @@ class Stock:
         "_fiftyTwoWeekHigh",
         "_fiftyTwoWeekLow",
         "_marketState",
+        "_priceDelayInMinutes",
         "_notifications",
     )
 
@@ -45,6 +46,7 @@ class Stock:
         fiftyTwoWeekHigh: Decimal | None = None,
         fiftyTwoWeekLow: Decimal | None = None,
         marketState: MarketState | None = None,
+        priceDelayInMinutes: int | None = None,
     ):
         self._symbol = symbol
         self._currentPrice = currentPrice
@@ -59,6 +61,7 @@ class Stock:
         self._fiftyTwoWeekHigh = fiftyTwoWeekHigh
         self._fiftyTwoWeekLow = fiftyTwoWeekLow
         self._marketState = marketState
+        self._priceDelayInMinutes = priceDelayInMinutes
         self._notifications: list[Notification] = []
 
     @property
@@ -112,6 +115,10 @@ class Stock:
     @property
     def marketState(self) -> MarketState | None:
         return self._marketState
+
+    @property
+    def priceDelayInMinutes(self) -> int | None:
+        return self._priceDelayInMinutes
 
     @property
     def notifications(self) -> list[Notification]:

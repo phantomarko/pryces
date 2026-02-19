@@ -25,6 +25,7 @@ class TestStockDTO:
         assert result.twoHundredDayAverage == stock.twoHundredDayAverage
         assert result.fiftyTwoWeekHigh == stock.fiftyTwoWeekHigh
         assert result.fiftyTwoWeekLow == stock.fiftyTwoWeekLow
+        assert result.priceDelayInMinutes == stock.priceDelayInMinutes
 
     def test_from_stock_with_minimal_fields(self):
         stock = Stock(symbol="AAPL", currentPrice=Decimal("150.25"))
@@ -36,3 +37,11 @@ class TestStockDTO:
         assert result.currentPrice == Decimal("150.25")
         assert result.name is None
         assert result.currency is None
+        assert result.priceDelayInMinutes is None
+
+    def test_from_stock_maps_price_delay_in_minutes(self):
+        stock = Stock(symbol="AAPL", currentPrice=Decimal("150.25"), priceDelayInMinutes=15)
+
+        result = StockDTO.from_stock(stock)
+
+        assert result.priceDelayInMinutes == 15
