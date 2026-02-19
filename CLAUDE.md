@@ -71,6 +71,16 @@ Do NOT use plan mode for:
 
 Plan mode ensures alignment on approach before implementation, preventing wasted effort.
 
+### Always Run and Update Tests After Code Changes
+**IMPORTANT**: After making any code changes, you MUST:
+
+1. **Run the full test suite** to verify nothing is broken: `source venv/bin/activate && pytest`
+2. **Fix any failing tests** caused by your changes before considering the task done
+3. **Add new tests** to cover new behavior — new commands, use cases, services, or non-trivial logic must have corresponding tests
+4. **Delete obsolete tests** when removing the code they cover
+
+Never consider an implementation task complete without a passing test suite.
+
 ### Always Use Virtual Environment for Testing
 **IMPORTANT**: This project uses a Python virtual environment. You MUST activate it before running any tests or testing code manually.
 
@@ -121,8 +131,7 @@ Presentation → Application → Domain
 - `cli.py` — Entry point, composition root (wires dependencies)
 - `menu.py` — `InteractiveMenu` (main loop, I/O via injectable streams)
 - `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`
-- `commands/get_stock_price.py` — `GetStockPriceCommand`
-- `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
+- `commands/get_stocks_prices.py` — `GetStocksPricesCommand` (one or multiple symbols → formatted output)
 - `commands/monitor_stocks.py` — `MonitorStocksCommand` (launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
 - `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path; displays numbered entries); exports `_get_monitor_processes() -> list[tuple[str, str]]` shared helper
 - `commands/stop_monitor.py` — `StopMonitorCommand` (lists monitor processes with numbers, prompts user to pick one, kills selected process; handles own I/O via injectable `input_stream`/`output_stream` defaulting to `sys.stdin`/`sys.stdout`)

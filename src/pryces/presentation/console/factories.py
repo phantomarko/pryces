@@ -1,8 +1,6 @@
 from ...application.interfaces import StockProvider, MessageSender
-from ...application.use_cases.get_stock_price import GetStockPrice
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
-from .commands.get_stock_price import GetStockPriceCommand
 from .commands.get_stocks_prices import GetStocksPricesCommand
 from .commands.monitor_stocks import MonitorStocksCommand
 from .commands.registry import CommandRegistry
@@ -18,10 +16,6 @@ class CommandFactory:
 
     def _create_monitor_stocks_command(self) -> MonitorStocksCommand:
         return MonitorStocksCommand()
-
-    def _create_get_stock_price_command(self) -> GetStockPriceCommand:
-        use_case = GetStockPrice(provider=self._stock_provider)
-        return GetStockPriceCommand(get_stock_price_use_case=use_case)
 
     def _create_get_stocks_prices_command(self) -> GetStocksPricesCommand:
         use_case = GetStocksPrices(provider=self._stock_provider)
@@ -42,7 +36,6 @@ class CommandFactory:
         registry.register(self._create_monitor_stocks_command())
         registry.register(self._create_list_monitors_command())
         registry.register(self._create_stop_monitor_command())
-        registry.register(self._create_get_stock_price_command())
         registry.register(self._create_get_stocks_prices_command())
         registry.register(self._create_check_readiness_command())
         return registry

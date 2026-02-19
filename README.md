@@ -14,8 +14,7 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
   - [Interactive CLI](#interactive-cli)
     - [Monitor Stocks (CLI)](#monitor-stocks-cli)
     - [List Monitor Processes](#list-monitor-processes)
-    - [Get Stock Price](#get-stock-price)
-    - [Get Multiple Stock Prices](#get-multiple-stock-prices)
+    - [Get Stock Prices](#get-stock-prices)
     - [Check Readiness](#check-readiness)
 - [Contributing](#contributing)
 - [License](#license)
@@ -147,9 +146,8 @@ Available commands:
 | 1 | Monitor Stocks | Launch stock monitor as background process |
 | 2 | List Monitor Processes | List running monitor processes |
 | 3 | Stop Monitor Process | Stop a running monitor process |
-| 4 | Get Stock Price | Current price and details for one symbol |
-| 5 | Get Multiple Stock Prices | Current prices for multiple symbols |
-| 6 | Check Readiness | Verify env vars and Telegram connectivity |
+| 4 | Get Stock Prices | Current price and details for one or multiple symbols |
+| 5 | Check Readiness | Verify env vars and Telegram connectivity |
 | 0 | Exit | Exit the program |
 
 #### Monitor Stocks (CLI)
@@ -202,15 +200,15 @@ Stopped monitor process PID 12345 (config: /path/to/config.json).
 
 Enter `0` to cancel without stopping anything.
 
-#### Get Stock Price
+#### Get Stock Prices
 
-Retrieves current price and market details for a single stock symbol.
+Retrieves current price and market details for one or multiple stock symbols. Enter a single symbol or a comma-separated list.
 
 ```
-Enter stock symbol (e.g., AAPL, GOOGL): AAPL
+Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL
 ```
 
-Example output:
+Example output for a single symbol:
 ```
 AAPL - Apple Inc. (USD)
 
@@ -227,9 +225,7 @@ AAPL - Apple Inc. (USD)
   Price delay (min):  0
 ```
 
-#### Get Multiple Stock Prices
-
-Retrieves current prices for multiple stock symbols at once. Outputs each stock in the same format as [Get Stock Price](#get-stock-price), separated by a divider line, followed by a summary:
+When fetching multiple symbols, each result is separated by a divider line, followed by a summary:
 
 ```
 Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL,MSFT

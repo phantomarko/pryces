@@ -157,7 +157,7 @@ class TestGetStocksPricesCommand:
 
         assert isinstance(metadata, CommandMetadata)
         assert metadata.id == "get_stocks_prices"
-        assert metadata.name == "Get Multiple Stock Prices"
+        assert metadata.name == "Get Stock Prices"
         assert "multiple stock symbols" in metadata.description
 
     def test_get_input_prompts_returns_symbols_prompt(self):

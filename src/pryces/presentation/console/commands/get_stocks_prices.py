@@ -13,8 +13,8 @@ class GetStocksPricesCommand(Command):
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(
             id="get_stocks_prices",
-            name="Get Multiple Stock Prices",
-            description="Retrieve current prices for multiple stock symbols",
+            name="Get Stock Prices",
+            description="Retrieve current price and details for one or multiple stock symbols",
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
