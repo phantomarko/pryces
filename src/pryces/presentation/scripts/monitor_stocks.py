@@ -15,6 +15,7 @@ from ...application.use_cases.trigger_stocks_notifications import (
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import (
+    InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
     InMemoryStockRepository,
     TelegramMessageSender,
@@ -86,7 +87,10 @@ def _create_script(config: MonitorStocksConfig) -> MonitorStocksScript:
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(settings=telegram_settings)
     notification_repository = InMemoryNotificationRepository()
-    notification_service = NotificationService(message_sender, notification_repository)
+    transition_repository = InMemoryMarketTransitionRepository()
+    notification_service = NotificationService(
+        message_sender, notification_repository, transition_repository
+    )
     stock_repository = InMemoryStockRepository()
     use_case = TriggerStocksNotifications(
         provider=provider,

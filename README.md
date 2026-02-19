@@ -124,6 +124,7 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 
 **Notes:**
 - Duplicate notifications are automatically prevented within the same run
+- When a stock reports a non-zero `priceDelayInMinutes` (e.g. 15 for delayed exchanges), notifications are suppressed for that many minutes after a market state transition to OPEN or POST. This prevents sending stale prices at the exact moment the market opens or closes — once the delay has elapsed, notifications fire normally with fresh data.
 - Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
 
 ### Interactive CLI

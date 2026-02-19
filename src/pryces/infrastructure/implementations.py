@@ -4,14 +4,16 @@ import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 import yfinance as yf
 
 from ..application.interfaces import (
-    StockProvider,
+    MarketTransitionRepository,
     MessageSender,
     NotificationRepository,
+    StockProvider,
     StockRepository,
 )
 from ..domain.notifications import Notification, NotificationType
@@ -186,3 +188,17 @@ class InMemoryStockRepository(StockRepository):
 
     def get(self, symbol: str) -> Stock | None:
         return self._store.get(symbol)
+
+
+class InMemoryMarketTransitionRepository(MarketTransitionRepository):
+    def __init__(self) -> None:
+        self._store: dict[str, datetime] = {}
+
+    def save(self, symbol: str, transition_time: datetime) -> None:
+        self._store[symbol] = transition_time
+
+    def get(self, symbol: str) -> datetime | None:
+        return self._store.get(symbol)
+
+    def delete(self, symbol: str) -> None:
+        self._store.pop(symbol, None)

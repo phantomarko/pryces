@@ -95,17 +95,17 @@ Presentation → Application → Domain
 - `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, NEW_52_WEEK_HIGH, NEW_52_WEEK_LOW, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
-- `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port), `NotificationRepository` ABC (port: `save`, `exists_by_type`)
+- `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port), `NotificationRepository` ABC (port: `save`, `exists_by_type`), `MarketTransitionRepository` ABC (port: `save`, `get`, `delete` — tracks first-detected market state transition timestamp per symbol)
 - `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes marketState)
 - `exceptions.py` — `StockNotFound`
-- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection)
+- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection; suppresses notifications when `stock.priceDelayInMinutes > 0` and a market state transition to OPEN/POST was just detected — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing)
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)
 - `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers notifications via NotificationService)
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
-- `implementations.py` — `YahooFinanceSettings` frozen dataclass (max_workers), `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API, `InMemoryNotificationRepository` implements `NotificationRepository` (in-memory dict store)
+- `implementations.py` — `YahooFinanceSettings` frozen dataclass (max_workers), `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API, `InMemoryNotificationRepository` implements `NotificationRepository` (in-memory dict store), `InMemoryMarketTransitionRepository` implements `MarketTransitionRepository` (in-memory dict store), `InMemoryStockRepository` implements `StockRepository` (in-memory dict store)
 - `factories.py` — `SettingsFactory` (creates `YahooFinanceSettings` from `MAX_FETCH_WORKERS` env var, creates `TelegramSettings` from Telegram env vars; raises `EnvironmentError` with clear message on missing vars)
 - `logging.py` — `setup_cli_logging(verbose, debug)` and `setup_monitor_logging(verbose, debug)` configure root logger per entry point: stderr handler if verbose, file handler (named `pryces_{entry_point}_timestamp.log`) if `LOGS_DIRECTORY` is set, `NullHandler` fallback if no handlers; `debug` scopes DEBUG level to `pryces` logger only
 

@@ -6,6 +6,7 @@ from pryces.application.services import NotificationService
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.implementations import (
+    InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
     InMemoryStockRepository,
 )
@@ -27,7 +28,9 @@ class TestTriggerStocksNotifications:
         self.mock_provider = Mock(spec=StockProvider)
         self.mock_sender = Mock(spec=MessageSender)
         self.notification_service = NotificationService(
-            self.mock_sender, InMemoryNotificationRepository()
+            self.mock_sender,
+            InMemoryNotificationRepository(),
+            InMemoryMarketTransitionRepository(),
         )
         self.use_case = TriggerStocksNotifications(
             provider=self.mock_provider,
