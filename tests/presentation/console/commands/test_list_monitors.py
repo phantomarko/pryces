@@ -43,7 +43,7 @@ class TestListMonitorsCommand:
         result = self.command.execute()
 
         assert "Found 1 monitor process(es):" in result
-        assert "PID 12345" in result
+        assert "1. PID 12345" in result
         assert "/path/to/config.json" in result
 
     @patch("pryces.presentation.console.commands.list_monitors.subprocess.run")
@@ -59,9 +59,9 @@ class TestListMonitorsCommand:
         result = self.command.execute()
 
         assert "Found 2 monitor process(es):" in result
-        assert "PID 11111" in result
+        assert "1. PID 11111" in result
         assert "/config/a.json" in result
-        assert "PID 22222" in result
+        assert "2. PID 22222" in result
         assert "/config/b.json" in result
 
     @patch("pryces.presentation.console.commands.list_monitors.subprocess.run")

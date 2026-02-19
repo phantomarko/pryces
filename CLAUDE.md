@@ -19,14 +19,22 @@ All code must follow **SOLID principles**, **hexagonal architecture**, and **cle
 
 ## Critical Directives
 
-### Update README.md After Changes
-**IMPORTANT**: Whenever you make significant changes to the codebase (new features, API changes, new fields, renamed parameters, etc.), you MUST update the README.md to reflect these changes:
+### Update Documentation After Changes
+**IMPORTANT**: Whenever you make significant changes to the codebase (new features, API changes, new fields, renamed parameters, etc.), you MUST update both of the following:
+
+**README.md** (user-facing documentation):
 - Update example outputs to match current output format
 - Update command examples if CLI arguments change
 - Add documentation for new features
 - Ensure all examples are accurate and tested
 
-The README is user-facing documentation and must stay synchronized with the actual code behavior.
+**CLAUDE.md — Architecture Overview** (developer-facing reference):
+- Update file/class descriptions when responsibilities change
+- Add entries for new files, classes, or exported helpers
+- Remove or rename entries when things are deleted or renamed
+- Keep the layer descriptions (Domain, Application, Infrastructure, Presentation) accurate
+
+Both must stay synchronized with the actual code behavior.
 
 ### Prefer Using Subagents for Context Optimization
 **IMPORTANT**: Always use specialized subagents (via the Task tool) whenever possible to optimize context usage, unless explicitly instructed not to use subagents.
@@ -116,7 +124,8 @@ Presentation → Application → Domain
 - `commands/get_stock_price.py` — `GetStockPriceCommand`
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand`
 - `commands/monitor_stocks.py` — `MonitorStocksCommand` (launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
-- `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path)
+- `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path; displays numbered entries); exports `_get_monitor_processes() -> list[tuple[str, str]]` shared helper
+- `commands/stop_monitor.py` — `StopMonitorCommand` (lists monitor processes with numbers, prompts user to pick one, kills selected process; handles own I/O via injectable `input_stream`/`output_stream` defaulting to `sys.stdin`/`sys.stdout`)
 - `commands/check_readiness.py` — `CheckReadinessCommand` (verifies env vars and Telegram connectivity; tracks `_all_ready` state and appends warning on failures)
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
 - `factories.py` — `CommandFactory` (DI + object creation)

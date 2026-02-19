@@ -8,6 +8,7 @@ from .commands.monitor_stocks import MonitorStocksCommand
 from .commands.registry import CommandRegistry
 from .commands.check_readiness import CheckReadinessCommand
 from .commands.list_monitors import ListMonitorsCommand
+from .commands.stop_monitor import StopMonitorCommand
 
 
 class CommandFactory:
@@ -33,10 +34,14 @@ class CommandFactory:
     def _create_list_monitors_command(self) -> ListMonitorsCommand:
         return ListMonitorsCommand()
 
+    def _create_stop_monitor_command(self) -> StopMonitorCommand:
+        return StopMonitorCommand()
+
     def create_command_registry(self) -> CommandRegistry:
         registry = CommandRegistry()
         registry.register(self._create_monitor_stocks_command())
         registry.register(self._create_list_monitors_command())
+        registry.register(self._create_stop_monitor_command())
         registry.register(self._create_get_stock_price_command())
         registry.register(self._create_get_stocks_prices_command())
         registry.register(self._create_check_readiness_command())

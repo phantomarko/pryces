@@ -146,9 +146,10 @@ Available commands:
 |---|---------|-------------|
 | 1 | Monitor Stocks | Launch stock monitor as background process |
 | 2 | List Monitor Processes | List running monitor processes |
-| 3 | Get Stock Price | Current price and details for one symbol |
-| 4 | Get Multiple Stock Prices | Current prices for multiple symbols |
-| 5 | Check Readiness | Verify env vars and Telegram connectivity |
+| 3 | Stop Monitor Process | Stop a running monitor process |
+| 4 | Get Stock Price | Current price and details for one symbol |
+| 5 | Get Multiple Stock Prices | Current prices for multiple symbols |
+| 6 | Check Readiness | Verify env vars and Telegram connectivity |
 | 0 | Exit | Exit the program |
 
 #### Monitor Stocks (CLI)
@@ -172,14 +173,34 @@ Lists all running monitor processes on the machine. No input required.
 Example output:
 ```
 Found 2 monitor process(es):
-  PID 12345 — config: /path/to/config.json
-  PID 67890 — config: /path/to/other.json
+  1. PID 12345 — config: /path/to/config.json
+  2. PID 67890 — config: /path/to/other.json
 ```
 
 If no monitors are running:
 ```
 No monitor processes found.
 ```
+
+#### Stop Monitor Process
+
+Lists running monitor processes with numbers and prompts to pick one to stop. No pre-collected input required.
+
+Example interaction:
+```
+Found 2 monitor process(es):
+  1. PID 12345 — config: /path/to/config.json
+  2. PID 67890 — config: /path/to/other.json
+
+Enter number to stop (1-2, 0 to cancel): 1
+```
+
+Example output:
+```
+Stopped monitor process PID 12345 (config: /path/to/config.json).
+```
+
+Enter `0` to cancel without stopping anything.
 
 #### Get Stock Price
 
