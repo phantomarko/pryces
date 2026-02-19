@@ -1,5 +1,5 @@
 {
-    "duration": 400,
-    "interval": 60,
-    "symbols": ["INTC","EL","LULU","NKE","PSKY","DG","SNOW","Z","PYPL","VOD.L","KWS.DE","BAYN.DE","BRBY.L","VNA.DE"]
+    "duration": 1,
+    "interval": 10,
+    "symbols": ["ASPI","HUMA","QTRX","OUST","ADUR"]
 }
