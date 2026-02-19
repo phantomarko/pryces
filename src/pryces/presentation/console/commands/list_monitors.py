@@ -22,7 +22,7 @@ class ListMonitorsCommand(Command):
 
         processes = []
         for line in lines:
-            if _MODULE in line and "ps aux" not in line:
+            if _MODULE in line and "ps aux" not in line and "/bin/sh" not in line:
                 parts = line.split()
                 pid = parts[1]
                 try:
