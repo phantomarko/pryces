@@ -23,6 +23,7 @@ from ..domain.stocks import MarketState, Stock
 @dataclass(frozen=True, slots=True)
 class YahooFinanceSettings:
     max_workers: int
+    extra_delay_in_minutes: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +35,7 @@ class TelegramSettings:
 class YahooFinanceProvider(StockProvider):
     def __init__(self, settings: YahooFinanceSettings) -> None:
         self._max_workers = settings.max_workers
+        self._extra_delay_in_minutes = settings.extra_delay_in_minutes
         self._logger = logging.getLogger(__name__)
 
     def _map_market_state(self, value: str | None) -> MarketState | None:
@@ -65,6 +67,8 @@ class YahooFinanceProvider(StockProvider):
         currency = info.get("currency")
         market_state = self._map_market_state(info.get("marketState"))
         price_delay_in_minutes = info.get("exchangeDataDelayedBy")
+        if price_delay_in_minutes and price_delay_in_minutes > 0:
+            price_delay_in_minutes += self._extra_delay_in_minutes
 
         return Stock(
             symbol=symbol.upper(),

@@ -58,6 +58,7 @@ Edit `.env` with your settings:
 | `TELEGRAM_GROUP_ID` | The Telegram group/chat ID where notifications are sent |
 | `MAX_FETCH_WORKERS` | Maximum number of concurrent workers for fetching stock data (values above 6 are not recommended on low-resource systems) |
 | `LOGS_DIRECTORY` | Directory path for log file output (use `/tmp` if you don't need persistent logs) |
+| `EXTRA_DELAY_IN_MINUTES` | Optional. Additional minutes added to the exchange-reported price delay. Only applied when the exchange already reports a non-zero delay. Defaults to 0 if unset. |
 
 The application loads these variables automatically from `.env` on startup via `python-dotenv`.
 

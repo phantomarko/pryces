@@ -184,6 +184,70 @@ class TestCheckReadinessEnv:
 
         assert result == "[READY] Environment variables"
 
+    @patch.dict(
+        "os.environ",
+        {
+            "TELEGRAM_BOT_TOKEN": "token",
+            "TELEGRAM_GROUP_ID": "123",
+            "MAX_FETCH_WORKERS": "4",
+            "EXTRA_DELAY_IN_MINUTES": "0",
+        },
+        clear=True,
+    )
+    def test_env_ready_when_extra_delay_is_zero(self):
+        result = self.command._check_env()
+
+        assert result == "[READY] Environment variables"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "TELEGRAM_BOT_TOKEN": "token",
+            "TELEGRAM_GROUP_ID": "123",
+            "MAX_FETCH_WORKERS": "4",
+            "EXTRA_DELAY_IN_MINUTES": "5",
+        },
+        clear=True,
+    )
+    def test_env_ready_when_extra_delay_is_positive(self):
+        result = self.command._check_env()
+
+        assert result == "[READY] Environment variables"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "TELEGRAM_BOT_TOKEN": "token",
+            "TELEGRAM_GROUP_ID": "123",
+            "MAX_FETCH_WORKERS": "4",
+            "EXTRA_DELAY_IN_MINUTES": "-1",
+        },
+        clear=True,
+    )
+    def test_env_not_ready_when_extra_delay_is_negative(self):
+        result = self.command._check_env()
+
+        assert "[NOT READY] Environment variables" in result
+        assert "EXTRA_DELAY_IN_MINUTES must be a non-negative integer" in result
+        assert self.command._all_ready is False
+
+    @patch.dict(
+        "os.environ",
+        {
+            "TELEGRAM_BOT_TOKEN": "token",
+            "TELEGRAM_GROUP_ID": "123",
+            "MAX_FETCH_WORKERS": "4",
+            "EXTRA_DELAY_IN_MINUTES": "abc",
+        },
+        clear=True,
+    )
+    def test_env_not_ready_when_extra_delay_is_not_integer(self):
+        result = self.command._check_env()
+
+        assert "[NOT READY] Environment variables" in result
+        assert "EXTRA_DELAY_IN_MINUTES is not a valid integer" in result
+        assert self.command._all_ready is False
+
 
 class TestCheckReadinessTelegram:
 

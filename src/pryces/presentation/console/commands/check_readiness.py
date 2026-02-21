@@ -58,6 +58,14 @@ class CheckReadinessCommand(Command):
         if logs_dir and not Path(logs_dir).is_dir():
             errors.append(f"  - LOGS_DIRECTORY is not a valid directory: {logs_dir}")
 
+        extra_delay = os.environ.get("EXTRA_DELAY_IN_MINUTES", "")
+        if extra_delay.strip():
+            try:
+                if int(extra_delay) < 0:
+                    errors.append("  - EXTRA_DELAY_IN_MINUTES must be a non-negative integer")
+            except ValueError:
+                errors.append("  - EXTRA_DELAY_IN_MINUTES is not a valid integer")
+
         if errors:
             self._all_ready = False
             return f"{_NOT_READY} Environment variables\n" + "\n".join(errors)
