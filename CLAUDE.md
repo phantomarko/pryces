@@ -141,7 +141,9 @@ Presentation → Application → Domain
 - `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`, `validate_file_path`), parsers (`parse_symbols_input`), and formatters (`format_stock`, `format_stock_list`)
 
 **Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
-- `monitor_stocks.py` — Standalone monitor script driven by JSON config (`MonitorStocksConfig` dataclass, `MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`
+- `config.py` — `MonitorStocksConfig` frozen dataclass (duration, interval, symbols with validation), `ConfigManager` (loads and validates JSON config file, raises `ConfigLoadingFailed` on any error)
+- `exceptions.py` — `ConfigLoadingFailed`
+- `monitor_stocks.py` — Standalone monitor script (`MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them

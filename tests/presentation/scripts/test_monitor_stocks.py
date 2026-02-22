@@ -1,6 +1,6 @@
 import pytest
 
-from pryces.presentation.scripts.monitor_stocks import MonitorStocksConfig
+from pryces.presentation.scripts.config import MonitorStocksConfig
 
 
 class TestMonitorStocksConfig:

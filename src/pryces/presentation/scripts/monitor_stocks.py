@@ -1,9 +1,7 @@
 import argparse
-import json
 import logging
 import sys
 import time
-from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -22,41 +20,29 @@ from ...infrastructure.implementations import (
     YahooFinanceProvider,
 )
 from pryces.infrastructure.logging import setup_monitor_logging
-
-
-@dataclass(frozen=True, slots=True)
-class MonitorStocksConfig:
-    duration: int
-    interval: int
-    symbols: list[str]
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.duration, int) or self.duration <= 0:
-            raise ValueError("duration must be a positive integer")
-        if not isinstance(self.interval, int) or self.interval <= 0:
-            raise ValueError("interval must be a positive integer")
-        if not isinstance(self.symbols, list) or not self.symbols:
-            raise ValueError("symbols must be a non-empty list")
+from .config import ConfigManager
+from .exceptions import ConfigLoadingFailed
 
 
 class MonitorStocksScript:
     def __init__(
         self,
         use_case: TriggerStocksNotifications,
-        config: MonitorStocksConfig,
+        config_manager: ConfigManager,
     ) -> None:
         self._use_case = use_case
-        self._config = config
+        self._config_manager = config_manager
         self._logger = logging.getLogger(__name__)
 
     def run(self) -> None:
-        self._logger.info(f"Config: {self._config}")
+        config = self._config_manager.load_monitor_stocks_config()
+        self._logger.info(f"Config: {config}")
         self._logger.info(
-            f"Duration: {self._config.duration}m, Interval: {self._config.interval}s, "
-            f"Stocks: {self._config.symbols}"
+            f"Duration: {config.duration}m, Interval: {config.interval}s, "
+            f"Stocks: {config.symbols}"
         )
-        request = TriggerStocksNotificationsRequest(symbols=self._config.symbols)
-        duration_seconds = self._config.duration * 60
+        request = TriggerStocksNotificationsRequest(symbols=config.symbols)
+        duration_seconds = config.duration * 60
         start = time.monotonic()
 
         while True:
@@ -68,20 +54,15 @@ class MonitorStocksScript:
             if time.monotonic() - start >= duration_seconds:
                 break
 
-            time.sleep(self._config.interval)
+            time.sleep(config.interval)
 
         self._logger.info(
-            f"Monitoring complete. {len(self._config.symbols)} stocks checked "
-            f"over {self._config.duration} minutes."
+            f"Monitoring complete. {len(config.symbols)} stocks checked "
+            f"over {config.duration} minutes."
         )
 
 
-def _get_config(path: Path) -> MonitorStocksConfig:
-    data = json.loads(path.read_text())
-    return MonitorStocksConfig(**data)
-
-
-def _create_script(config: MonitorStocksConfig) -> MonitorStocksScript:
+def _create_script(path: Path) -> MonitorStocksScript:
     yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings()
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
     telegram_settings = SettingsFactory.create_telegram_settings()
@@ -97,7 +78,7 @@ def _create_script(config: MonitorStocksConfig) -> MonitorStocksScript:
         notification_service=notification_service,
         stock_repository=stock_repository,
     )
-    return MonitorStocksScript(use_case, config)
+    return MonitorStocksScript(use_case, ConfigManager(path))
 
 
 def main() -> int:
@@ -106,23 +87,18 @@ def main() -> int:
     )
     parser.add_argument("config", type=Path, help="Path to the JSON configuration file")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging to stderr")
     args = parser.parse_args()
 
     load_dotenv()
-    setup_monitor_logging(debug=args.debug)
+    setup_monitor_logging(verbose=args.verbose, debug=args.debug)
 
     try:
-        config = _get_config(args.config)
-    except FileNotFoundError:
-        print(f"Error: config file not found: {args.config}")
-        return 1
-    except (json.JSONDecodeError, TypeError, ValueError) as e:
-        print(f"Error: invalid config file: {e}")
-        return 1
-
-    try:
-        script = _create_script(config)
+        script = _create_script(args.config)
         script.run()
+    except ConfigLoadingFailed as e:
+        print(f"Error: {e}")
+        return 1
     except Exception as e:
         message = f"Monitor error: {e}"
         print(message)
