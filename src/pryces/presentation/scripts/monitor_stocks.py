@@ -33,19 +33,33 @@ class MonitorStocksScript:
         self._use_case = use_case
         self._config_manager = config_manager
         self._logger = logging.getLogger(__name__)
+        self._config = self._config_manager.load_monitor_stocks_config()
+
+    def _refresh_config(self) -> None:
+        try:
+            new_config = self._config_manager.load_monitor_stocks_config()
+            if new_config != self._config:
+                self._config = new_config
+                self._logger.info("Config refreshed.")
+                self._log_config()
+        except Exception:
+            pass
+
+    def _log_config(self) -> None:
+        self._logger.info(
+            f"Duration: {self._config.duration}m, Interval: {self._config.interval}s, "
+            f"Stocks: {self._config.symbols}"
+        )
 
     def run(self) -> None:
-        config = self._config_manager.load_monitor_stocks_config()
-        self._logger.info(f"Config: {config}")
-        self._logger.info(
-            f"Duration: {config.duration}m, Interval: {config.interval}s, "
-            f"Stocks: {config.symbols}"
-        )
-        request = TriggerStocksNotificationsRequest(symbols=config.symbols)
-        duration_seconds = config.duration * 60
+        self._logger.info("Monitoring started.")
+        self._log_config()
+        duration_seconds = self._config.duration * 60
         start = time.monotonic()
 
         while True:
+            self._refresh_config()
+            request = TriggerStocksNotificationsRequest(symbols=self._config.symbols)
             try:
                 self._use_case.handle(request)
             except Exception as e:
@@ -54,12 +68,9 @@ class MonitorStocksScript:
             if time.monotonic() - start >= duration_seconds:
                 break
 
-            time.sleep(config.interval)
+            time.sleep(self._config.interval)
 
-        self._logger.info(
-            f"Monitoring complete. {len(config.symbols)} stocks checked "
-            f"over {config.duration} minutes."
-        )
+        self._logger.info("Monitoring finished.")
 
 
 def _create_script(path: Path) -> MonitorStocksScript:
