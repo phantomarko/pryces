@@ -1,9 +1,11 @@
 # Pryces
 
-Retrieves real-time stock data from Yahoo Finance, tracks moving average crossovers and significant price movements, and delivers Telegram notifications when relevant market events occur.
+Retrieves real-time stock data from Yahoo Finance and delivers Telegram notifications when relevant market events occur.
 
 ## Table of Contents
 
+- [Overview](#overview)
+- [Tracked Notifications](#tracked-notifications)
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
   - [Installation](#installation)
@@ -19,6 +21,24 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
 - [Contributing](#contributing)
 - [License](#license)
 
+## Overview
+
+Pryces uses **Yahoo Finance** as its data source, which means you can monitor virtually any asset class available on the Yahoo Finance website — stocks, ETFs, indexes, mutual funds, cryptocurrencies, currencies, futures, commodities, and more — simply by using the same symbol as shown there (e.g. `AAPL`, `BTC-USD`, `^GSPC`, `GC=F`, `EURUSD=X`).
+
+The monitoring tool is designed around the concept of a **daily market session**. Each monitor process tracks one session: it detects market opens, closes, and price milestones throughout that session. When the session ends the process exits, resetting all deduplication state and transition tracking so the next run starts clean for the following session. Despite this session-scoped design, a **single monitor process can track assets from all world markets simultaneously**, since each symbol is queried independently.
+
+> **Linux only**: Pryces has been developed and tested on Linux. All commands and setup steps in this document target Linux systems. Users on other operating systems may need to adapt them accordingly.
+
+## Tracked Notifications
+
+The following events are detected and sent as Telegram messages during a monitoring run:
+
+- Market open / market closed
+- Price is close to crossing the 50-day or 200-day moving average (within 5%)
+- Price crossed the 50-day or 200-day moving average
+- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
+- Price set a new 52-week high or low (compared to the previous monitoring run)
+
 ## Getting Started
 
 ### Requirements
@@ -30,7 +50,7 @@ Retrieves real-time stock data from Yahoo Finance, tracks moving average crossov
 1. Create and activate virtual environment:
 ```bash
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 ```
 
 2. Install the project in development mode:
@@ -80,7 +100,7 @@ make monitor  # defaults to monitor.json.example
 make monitor CONFIG=monitor_alternative.json  # alternative with custom config
 
 # or using Python
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 python -m pryces.presentation.scripts.monitor_stocks monitor.json.example
 ```
 
@@ -90,7 +110,7 @@ Run in the background (detached from the terminal):
 nohup make monitor CONFIG=monitor_alternative.json &
 
 # or using Python
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example &
 ```
 
@@ -115,17 +135,7 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 | `interval` | int | Seconds to wait between cycles |
 | `symbols` | list[str] | Stock symbols to monitor |
 
-**Tracked notifications:**
-- Market open / market closed
-- Price is close to crossing the 50-day or 200-day moving average (within 5%)
-- Price crossed the 50-day or 200-day moving average
-- Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
-- Price set a new 52-week high or low (compared to the previous monitoring run)
-
-**Notes:**
-- Duplicate notifications are automatically prevented within the same run
-- When a stock reports a non-zero `priceDelayInMinutes` (e.g. 15 for delayed exchanges), notifications are suppressed for that many minutes after a market state transition to OPEN or POST. This prevents sending stale prices at the exact moment the market opens or closes — once the delay has elapsed, notifications fire normally with fresh data.
-- Make sure your `.env` file is configured with valid `TELEGRAM_BOT_TOKEN` and `TELEGRAM_GROUP_ID` values (see [Environment Configuration](#environment-configuration))
+See [Tracked Notifications](#tracked-notifications) for the full list of events detected and sent during a run.
 
 ### Interactive CLI
 
@@ -136,7 +146,7 @@ Launch the interactive menu:
 make cli
 
 # or using Python
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 python -m pryces.presentation.console.cli
 ```
 
