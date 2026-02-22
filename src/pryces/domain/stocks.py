@@ -252,7 +252,7 @@ class Stock:
                 Notification.create_new_52_week_low(self.symbol, self.currentPrice)
             )
 
-    def _generate_market_open_notifications(self, past_stock: "Stock | None") -> None:
+    def _generate_regular_market_open_notification(self) -> None:
         self._notifications.append(
             Notification.create_regular_market_open(
                 self.symbol,
@@ -260,6 +260,8 @@ class Stock:
                 self.previousClosePrice,
             )
         )
+
+    def _generate_close_to_fifty_day_average_notification(self) -> None:
         if self._is_close_to_fifty_day_average():
             change_pct = (self.fiftyDayAverage - self.currentPrice) / self.currentPrice * 100
             self._notifications.append(
@@ -267,12 +269,16 @@ class Stock:
                     self.symbol, self.currentPrice, self.fiftyDayAverage, change_pct
                 )
             )
+
+    def _generate_fifty_day_average_crossed_notification(self) -> None:
         if self._has_crossed_fifty_day_average():
             self._notifications.append(
                 Notification.create_fifty_day_average_crossed(
                     self.symbol, self.currentPrice, self.fiftyDayAverage
                 )
             )
+
+    def _generate_close_to_two_hundred_day_average_notification(self) -> None:
         if self._is_close_to_two_hundred_day_average():
             change_pct = (self.twoHundredDayAverage - self.currentPrice) / self.currentPrice * 100
             self._notifications.append(
@@ -280,28 +286,45 @@ class Stock:
                     self.symbol, self.currentPrice, self.twoHundredDayAverage, change_pct
                 )
             )
+
+    def _generate_two_hundred_day_average_crossed_notification(self) -> None:
         if self._has_crossed_two_hundred_day_average():
             self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
                     self.symbol, self.currentPrice, self.twoHundredDayAverage
                 )
             )
+
+    def _generate_percentage_change_from_previous_close_notification(self) -> None:
         change_percentage = self._change_percentage_from_previous_close()
-        if change_percentage is not None:
-            percentage_notification = self._generate_percentage_change_notification(
-                change_percentage
-            )
-            if percentage_notification is not None:
-                self._notifications.append(percentage_notification)
+        if change_percentage is None:
+            return
+        notification = self._generate_percentage_change_notification(change_percentage)
+        if notification is not None:
+            self._notifications.append(notification)
+
+    def _generate_market_open_notifications(self, past_stock: "Stock | None") -> None:
+        self._generate_regular_market_open_notification()
+        self._generate_close_to_fifty_day_average_notification()
+        self._generate_fifty_day_average_crossed_notification()
+        self._generate_close_to_two_hundred_day_average_notification()
+        self._generate_two_hundred_day_average_crossed_notification()
+        self._generate_percentage_change_from_previous_close_notification()
         self._generate_new_52_week_high_notification(past_stock)
         self._generate_new_52_week_low_notification(past_stock)
+
+    def _generate_regular_market_closed_notification(self) -> None:
+        self._notifications.append(
+            Notification.create_regular_market_closed(
+                self.symbol, self.currentPrice, self.previousClosePrice
+            )
+        )
+
+    def _generate_market_closed_notifications(self) -> None:
+        self._generate_regular_market_closed_notification()
 
     def generate_notifications(self, past_stock: "Stock | None" = None) -> None:
         if self._is_market_state_open():
             self._generate_market_open_notifications(past_stock)
         elif self._is_market_state_post():
-            self._notifications.append(
-                Notification.create_regular_market_closed(
-                    self.symbol, self.currentPrice, self.previousClosePrice
-                )
-            )
+            self._generate_market_closed_notifications()
