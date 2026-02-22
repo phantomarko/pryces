@@ -135,6 +135,8 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 | `interval` | int | Seconds to wait between cycles |
 | `symbols` | list[str] | Stock symbols to monitor |
 
+The **configuration file is re-read on every monitoring cycle**, so you can edit `interval` or `symbols` while the script is running and the changes will take effect on the next iteration — no restart required. The `duration` is fixed at startup and cannot be changed mid-run.
+
 See [Tracked Notifications](#tracked-notifications) for the full list of events detected and sent during a run.
 
 ### Interactive CLI
