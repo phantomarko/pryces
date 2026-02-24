@@ -110,7 +110,8 @@ Presentation → Application → Domain
 
 **Domain** (`src/pryces/domain/`) — Core domain model:
 - `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice + optional: name, currency, marketState, and 10 Decimal price fields; generates milestone notifications via `generate_notifications(past_stock=None)` — accepts optional previous snapshot to detect new 52-week highs/lows)
-- `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, NEW_52_WEEK_HIGH, NEW_52_WEEK_LOW, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
+- `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, NEW_52_WEEK_HIGH, NEW_52_WEEK_LOW, TARGET_PRICE_REACHED, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
+- `price_targets.py` — `PriceTarget` entity (symbol, target_price, entry_price; `set_entry_price(stock)` captures entry price; `generate_notification(stock)` returns a `TARGET_PRICE_REACHED` notification when the target is reached, `None` otherwise)
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
 - `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port), `NotificationRepository` ABC (port: `save`, `exists_by_type`), `MarketTransitionRepository` ABC (port: `save`, `get`, `delete` — tracks first-detected market state transition timestamp per symbol)

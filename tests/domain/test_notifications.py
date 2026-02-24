@@ -300,6 +300,19 @@ def test_create_new_52_week_low_sets_message():
     assert len(notification.message) > 0
 
 
+def test_create_target_price_reached_sets_type():
+    notification = Notification.create_target_price_reached("AAPL", Decimal("200.00"))
+
+    assert notification.type == NotificationType.TARGET_PRICE_REACHED
+
+
+def test_create_target_price_reached_sets_message():
+    notification = Notification.create_target_price_reached("AAPL", Decimal("200.00"))
+
+    assert "AAPL" in notification.message
+    assert "200.00" in notification.message
+
+
 def test_notification_type_enum_has_expected_values():
     assert NotificationType.SMA50_CROSSED.value == "SMA50_CROSSED"
     assert NotificationType.SMA200_CROSSED.value == "SMA200_CROSSED"
@@ -317,3 +330,4 @@ def test_notification_type_enum_has_expected_values():
     assert NotificationType.TWENTY_PERCENT_DECREASE.value == "TWENTY_PERCENT_DECREASE"
     assert NotificationType.NEW_52_WEEK_HIGH.value == "NEW_52_WEEK_HIGH"
     assert NotificationType.NEW_52_WEEK_LOW.value == "NEW_52_WEEK_LOW"
+    assert NotificationType.TARGET_PRICE_REACHED.value == "TARGET_PRICE_REACHED"
