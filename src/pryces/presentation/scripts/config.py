@@ -1,15 +1,22 @@
 import json
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 
 from .exceptions import ConfigLoadingFailed
 
 
 @dataclass(frozen=True, slots=True)
+class SymbolConfig:
+    symbol: str
+    prices: list[Decimal]
+
+
+@dataclass(frozen=True, slots=True)
 class MonitorStocksConfig:
     duration: int
     interval: int
-    symbols: list[str]
+    symbols: list[SymbolConfig]
 
     def __post_init__(self) -> None:
         if not isinstance(self.duration, int) or self.duration <= 0:
@@ -27,10 +34,21 @@ class ConfigManager:
     def load_monitor_stocks_config(self) -> MonitorStocksConfig:
         try:
             data = json.loads(self._path.read_text())
-            return MonitorStocksConfig(**data)
+            symbols = [
+                SymbolConfig(
+                    symbol=s["symbol"],
+                    prices=[Decimal(str(p)) for p in s["prices"]],
+                )
+                for s in data["symbols"]
+            ]
+            return MonitorStocksConfig(
+                duration=data["duration"],
+                interval=data["interval"],
+                symbols=symbols,
+            )
         except FileNotFoundError:
             raise ConfigLoadingFailed(f"config file not found: {self._path}")
-        except (json.JSONDecodeError, TypeError, ValueError) as e:
+        except (json.JSONDecodeError, TypeError, ValueError, KeyError) as e:
             raise ConfigLoadingFailed(f"invalid config file: {e}")
         except Exception as e:
             raise ConfigLoadingFailed(f"unexpected error loading config: {e}")

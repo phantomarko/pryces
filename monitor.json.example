@@ -1,5 +1,26 @@
 {
     "duration": 1,
     "interval": 10,
-    "symbols": ["ASPI","HUMA","QTRX","OUST","ADUR"]
+    "symbols": [
+        {
+            "symbol": "ASPI",
+            "prices": [5]
+        },
+        {
+            "symbol": "HUMA",
+            "prices": [1]
+        },
+        {
+            "symbol": "QTRX",
+            "prices": [5.5]
+        },
+        {
+            "symbol": "OUST",
+            "prices": [17]
+        },
+        {
+            "symbol": "ADUR",
+            "prices": [10]
+        }
+    ]
 }

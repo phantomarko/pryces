@@ -46,10 +46,14 @@ class MonitorStocksScript:
             pass
 
     def _log_config(self) -> None:
-        self._logger.info(
-            f"Duration: {self._config.duration}m, Interval: {self._config.interval}s, "
-            f"Stocks: {self._config.symbols}"
+        duration_label = (
+            f"{self._config.duration} minute{'s' if self._config.duration != 1 else ''}"
         )
+        self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
+        stocks_info = [
+            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" for s in self._config.symbols
+        ]
+        self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
 
     def run(self) -> None:
         self._logger.info("Monitoring started.")
@@ -59,7 +63,9 @@ class MonitorStocksScript:
 
         while True:
             self._refresh_config()
-            request = TriggerStocksNotificationsRequest(symbols=self._config.symbols)
+            request = TriggerStocksNotificationsRequest(
+                symbols=[s.symbol for s in self._config.symbols]
+            )
             try:
                 self._use_case.handle(request)
             except Exception as e:
