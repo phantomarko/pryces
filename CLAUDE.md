@@ -122,7 +122,7 @@ Presentation → Application → Domain
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)
 - `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers notifications via NotificationService)
-- `use_cases/update_price_targets.py` — `UpdatePriceTargets` + `UpdatePriceTargetsRequest` (additive sync: saves only targets not already in `TargetPriceRepository`, preserving existing entries and their runtime `entry` state)
+- `use_cases/update_target_prices.py` — `UpdateTargetPrices` + `UpdateTargetPricesRequest` (additive sync: saves only targets not already in `TargetPriceRepository`, preserving existing entries and their runtime `entry` state)
 
 **Infrastructure** (`src/pryces/infrastructure/`) — Adapter implementations:
 - `implementations.py` — `YahooFinanceSettings` frozen dataclass (max_workers, extra_delay_in_minutes), `TelegramSettings` frozen dataclass (bot_token, group_id), `YahooFinanceProvider` implements `StockProvider` via `yfinance` (maps MarketState from yfinance values; adds `extra_delay_in_minutes` to yfinance-reported delay when delay > 0), `TelegramMessageSender` implements `MessageSender` via Telegram Bot API, `InMemoryNotificationRepository` implements `NotificationRepository` (in-memory dict store), `InMemoryMarketTransitionRepository` implements `MarketTransitionRepository` (in-memory dict store), `InMemoryStockRepository` implements `StockRepository` (in-memory dict store), `InMemoryTargetPriceRepository` implements `TargetPriceRepository` (nested dict `symbol → target → TargetPrice`; O(1) upsert/delete, supports multiple targets per symbol)

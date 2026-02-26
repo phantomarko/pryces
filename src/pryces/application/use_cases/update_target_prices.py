@@ -5,15 +5,15 @@ from pryces.application.interfaces import TargetPriceRepository
 
 
 @dataclass(frozen=True)
-class UpdatePriceTargetsRequest:
+class UpdateTargetPricesRequest:
     price_targets: list[TargetPriceDTO]
 
 
-class UpdatePriceTargets:
+class UpdateTargetPrices:
     def __init__(self, repository: TargetPriceRepository) -> None:
         self._repository = repository
 
-    def handle(self, request: UpdatePriceTargetsRequest) -> None:
+    def handle(self, request: UpdateTargetPricesRequest) -> None:
         existing = {(pt.symbol, pt.target) for pt in self._repository.get_all()}
 
         for dto in request.price_targets:
