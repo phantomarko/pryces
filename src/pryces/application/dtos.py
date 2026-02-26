@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
+from pryces.domain.price_targets import PriceTarget
 from pryces.domain.stocks import Stock
 
 
@@ -41,3 +42,12 @@ class StockDTO:
             marketState=stock.marketState.value if stock.marketState else None,
             priceDelayInMinutes=stock.priceDelayInMinutes,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class TargetPriceDTO:
+    symbol: str
+    target: Decimal
+
+    def to_price_target(self) -> PriceTarget:
+        return PriceTarget(self.symbol, self.target)

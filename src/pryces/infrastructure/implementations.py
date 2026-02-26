@@ -15,8 +15,10 @@ from ..application.interfaces import (
     NotificationRepository,
     StockProvider,
     StockRepository,
+    TargetPriceRepository,
 )
 from ..domain.notifications import Notification, NotificationType
+from ..domain.price_targets import PriceTarget
 from ..domain.stocks import MarketState, Stock
 
 
@@ -206,3 +208,21 @@ class InMemoryMarketTransitionRepository(MarketTransitionRepository):
 
     def delete(self, symbol: str) -> None:
         self._store.pop(symbol, None)
+
+
+class InMemoryTargetPriceRepository(TargetPriceRepository):
+    def __init__(self) -> None:
+        self._store: dict[str, dict[Decimal, PriceTarget]] = {}
+
+    def get_all(self) -> list[PriceTarget]:
+        return [pt for targets in self._store.values() for pt in targets.values()]
+
+    def save(self, price_target: PriceTarget) -> None:
+        if price_target.symbol not in self._store:
+            self._store[price_target.symbol] = {}
+        self._store[price_target.symbol][price_target.target_price] = price_target
+
+    def delete(self, price_target: PriceTarget) -> None:
+        symbol_store = self._store.get(price_target.symbol)
+        if symbol_store is not None:
+            symbol_store.pop(price_target.target_price, None)

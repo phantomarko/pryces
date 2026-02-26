@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 from pryces.domain.notifications import Notification, NotificationType
+from pryces.domain.price_targets import PriceTarget
 from pryces.domain.stocks import Stock
 
 
@@ -52,4 +53,18 @@ class MarketTransitionRepository(ABC):
 
     @abstractmethod
     def delete(self, symbol: str) -> None:
+        pass
+
+
+class TargetPriceRepository(ABC):
+    @abstractmethod
+    def get_all(self) -> list[PriceTarget]:
+        pass
+
+    @abstractmethod
+    def save(self, price_target: PriceTarget) -> None:
+        pass
+
+    @abstractmethod
+    def delete(self, price_target: PriceTarget) -> None:
         pass
