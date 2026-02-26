@@ -28,7 +28,7 @@ class TestUpdatePriceTargets:
         assert saved == {("ASPI", Decimal("4.0")), ("MSFT", Decimal("300.0"))}
 
     def test_existing_target_with_same_symbol_and_price_is_skipped(self):
-        existing = TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")).to_price_target()
+        existing = TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")).to_target_price()
         self.repository.save(existing)
         request = UpdatePriceTargetsRequest(
             price_targets=[TargetPriceDTO(symbol="ASPI", target=Decimal("4.0"))]
@@ -41,7 +41,7 @@ class TestUpdatePriceTargets:
         assert saved[0] is existing
 
     def test_same_symbol_different_price_is_saved(self):
-        self.repository.save(TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")).to_price_target())
+        self.repository.save(TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")).to_target_price())
         request = UpdatePriceTargetsRequest(
             price_targets=[TargetPriceDTO(symbol="ASPI", target=Decimal("5.1"))]
         )
@@ -52,7 +52,7 @@ class TestUpdatePriceTargets:
         assert saved == {("ASPI", Decimal("4.0")), ("ASPI", Decimal("5.1"))}
 
     def test_mixed_existing_and_new_saves_only_new(self):
-        self.repository.save(TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")).to_price_target())
+        self.repository.save(TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")).to_target_price())
         request = UpdatePriceTargetsRequest(
             price_targets=[
                 TargetPriceDTO(symbol="ASPI", target=Decimal("4.0")),

@@ -4,7 +4,7 @@ from pryces.domain.notifications import Notification
 from pryces.domain.stocks import Stock
 
 
-class PriceTarget:
+class TargetPrice:
     __slots__ = ("_symbol", "_target_price", "_entry_price")
 
     def __init__(self, symbol: str, target_price: Decimal) -> None:

@@ -18,7 +18,7 @@ from ..application.interfaces import (
     TargetPriceRepository,
 )
 from ..domain.notifications import Notification, NotificationType
-from ..domain.price_targets import PriceTarget
+from ..domain.target_prices import TargetPrice
 from ..domain.stocks import MarketState, Stock
 
 
@@ -212,17 +212,17 @@ class InMemoryMarketTransitionRepository(MarketTransitionRepository):
 
 class InMemoryTargetPriceRepository(TargetPriceRepository):
     def __init__(self) -> None:
-        self._store: dict[str, dict[Decimal, PriceTarget]] = {}
+        self._store: dict[str, dict[Decimal, TargetPrice]] = {}
 
-    def get_all(self) -> list[PriceTarget]:
+    def get_all(self) -> list[TargetPrice]:
         return [pt for targets in self._store.values() for pt in targets.values()]
 
-    def save(self, price_target: PriceTarget) -> None:
+    def save(self, price_target: TargetPrice) -> None:
         if price_target.symbol not in self._store:
             self._store[price_target.symbol] = {}
         self._store[price_target.symbol][price_target.target_price] = price_target
 
-    def delete(self, price_target: PriceTarget) -> None:
+    def delete(self, price_target: TargetPrice) -> None:
         symbol_store = self._store.get(price_target.symbol)
         if symbol_store is not None:
             symbol_store.pop(price_target.target_price, None)

@@ -18,4 +18,4 @@ class UpdatePriceTargets:
 
         for dto in request.price_targets:
             if (dto.symbol, dto.target) not in existing:
-                self._repository.save(dto.to_price_target())
+                self._repository.save(dto.to_target_price())

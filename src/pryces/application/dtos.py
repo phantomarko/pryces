@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
-from pryces.domain.price_targets import PriceTarget
+from pryces.domain.target_prices import TargetPrice
 from pryces.domain.stocks import Stock
 
 
@@ -49,5 +49,5 @@ class TargetPriceDTO:
     symbol: str
     target: Decimal
 
-    def to_price_target(self) -> PriceTarget:
-        return PriceTarget(self.symbol, self.target)
+    def to_target_price(self) -> TargetPrice:
+        return TargetPrice(self.symbol, self.target)
