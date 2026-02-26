@@ -14,7 +14,8 @@ class UpdateTargetPrices:
         self._repository = repository
 
     def handle(self, request: UpdateTargetPricesRequest) -> None:
-        existing = {(pt.symbol, pt.target) for pt in self._repository.get_all()}
+        symbols = list({dto.symbol for dto in request.price_targets})
+        existing = {(pt.symbol, pt.target) for pt in self._repository.get_by_symbol(symbols)}
 
         for dto in request.price_targets:
             if (dto.symbol, dto.target) not in existing:

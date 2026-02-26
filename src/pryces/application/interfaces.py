@@ -58,7 +58,7 @@ class MarketTransitionRepository(ABC):
 
 class TargetPriceRepository(ABC):
     @abstractmethod
-    def get_all(self) -> list[TargetPrice]:
+    def get_by_symbol(self, symbols: list[str]) -> list[TargetPrice]:
         pass
 
     @abstractmethod

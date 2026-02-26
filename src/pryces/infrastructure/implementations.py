@@ -214,8 +214,8 @@ class InMemoryTargetPriceRepository(TargetPriceRepository):
     def __init__(self) -> None:
         self._store: dict[str, dict[Decimal, TargetPrice]] = {}
 
-    def get_all(self) -> list[TargetPrice]:
-        return [pt for targets in self._store.values() for pt in targets.values()]
+    def get_by_symbol(self, symbols: list[str]) -> list[TargetPrice]:
+        return [pt for s in symbols for pt in self._store.get(s, {}).values()]
 
     def save(self, price_target: TargetPrice) -> None:
         if price_target.symbol not in self._store:

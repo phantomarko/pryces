@@ -49,5 +49,9 @@ class TargetPriceDTO:
     symbol: str
     target: Decimal
 
+    @staticmethod
+    def from_target_price(target_price: TargetPrice) -> TargetPriceDTO:
+        return TargetPriceDTO(symbol=target_price.symbol, target=target_price.target)
+
     def to_target_price(self) -> TargetPrice:
         return TargetPrice(self.symbol, self.target)
