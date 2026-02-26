@@ -6,16 +6,22 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from ...application.dtos import TargetPriceDTO
 from ...application.services import NotificationService
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
+)
+from ...application.use_cases.sync_target_prices import (
+    SyncTargetPrices,
+    SyncTargetPricesRequest,
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import (
     InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
     InMemoryStockRepository,
+    InMemoryTargetPriceRepository,
     TelegramMessageSender,
     YahooFinanceProvider,
 )
@@ -27,10 +33,12 @@ from .exceptions import ConfigLoadingFailed
 class MonitorStocksScript:
     def __init__(
         self,
-        use_case: TriggerStocksNotifications,
+        trigger_notifications: TriggerStocksNotifications,
+        sync_target_prices: SyncTargetPrices,
         config_manager: ConfigManager,
     ) -> None:
-        self._use_case = use_case
+        self._trigger_notifications = trigger_notifications
+        self._sync_target_prices = sync_target_prices
         self._config_manager = config_manager
         self._logger = logging.getLogger(__name__)
         self._config = self._config_manager.load_monitor_stocks_config()
@@ -42,6 +50,7 @@ class MonitorStocksScript:
                 self._config = new_config
                 self._logger.info("Config refreshed.")
                 self._log_config()
+                self._write_target_prices()
         except Exception:
             pass
 
@@ -55,9 +64,18 @@ class MonitorStocksScript:
         ]
         self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
 
+    def _write_target_prices(self) -> None:
+        price_targets = [
+            TargetPriceDTO(symbol=s.symbol, target=price)
+            for s in self._config.symbols
+            for price in s.prices
+        ]
+        self._sync_target_prices.handle(SyncTargetPricesRequest(price_targets=price_targets))
+
     def run(self) -> None:
         self._logger.info("Monitoring started.")
         self._log_config()
+        self._write_target_prices()
         duration_seconds = self._config.duration * 60
         start = time.monotonic()
 
@@ -67,7 +85,7 @@ class MonitorStocksScript:
                 symbols=[s.symbol for s in self._config.symbols]
             )
             try:
-                self._use_case.handle(request)
+                self._trigger_notifications.handle(request)
             except Exception as e:
                 self._logger.warning(f"Exception caught: {e}")
 
@@ -90,12 +108,18 @@ def _create_script(path: Path) -> MonitorStocksScript:
         message_sender, notification_repository, transition_repository
     )
     stock_repository = InMemoryStockRepository()
-    use_case = TriggerStocksNotifications(
+    trigger_notifications = TriggerStocksNotifications(
         provider=provider,
         notification_service=notification_service,
         stock_repository=stock_repository,
     )
-    return MonitorStocksScript(use_case, ConfigManager(path))
+    target_price_repository = InMemoryTargetPriceRepository()
+    sync_target_prices = SyncTargetPrices(target_price_repository)
+    return MonitorStocksScript(
+        trigger_notifications=trigger_notifications,
+        sync_target_prices=sync_target_prices,
+        config_manager=ConfigManager(path),
+    )
 
 
 def main() -> int:

@@ -213,6 +213,7 @@ class InMemoryMarketTransitionRepository(MarketTransitionRepository):
 class InMemoryTargetPriceRepository(TargetPriceRepository):
     def __init__(self) -> None:
         self._store: dict[str, dict[Decimal, TargetPrice]] = {}
+        self._logger = logging.getLogger(__name__)
 
     def get_by_symbol(self, symbols: list[str]) -> list[TargetPrice]:
         return [pt for s in symbols for pt in self._store.get(s, {}).values()]
@@ -221,8 +222,10 @@ class InMemoryTargetPriceRepository(TargetPriceRepository):
         if price_target.symbol not in self._store:
             self._store[price_target.symbol] = {}
         self._store[price_target.symbol][price_target.target] = price_target
+        self._logger.info(f"Target price saved: {price_target.symbol} @ {price_target.target}")
 
     def delete(self, price_target: TargetPrice) -> None:
         symbol_store = self._store.get(price_target.symbol)
         if symbol_store is not None:
             symbol_store.pop(price_target.target, None)
+        self._logger.info(f"Target price deleted: {price_target.symbol} @ {price_target.target}")

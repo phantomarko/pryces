@@ -12,11 +12,11 @@
         },
         {
             "symbol": "QTRX",
-            "prices": [5.5]
+            "prices": [5.5, 7]
         },
         {
             "symbol": "OUST",
-            "prices": [17]
+            "prices": [17, 22]
         },
         {
             "symbol": "ADUR",
