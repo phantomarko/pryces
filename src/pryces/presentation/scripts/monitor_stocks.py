@@ -41,11 +41,11 @@ class MonitorStocksScript:
         self._sync_target_prices = sync_target_prices
         self._config_manager = config_manager
         self._logger = logging.getLogger(__name__)
-        self._config = self._config_manager.load_monitor_stocks_config()
+        self._config = self._config_manager.read_monitor_stocks_config()
 
-    def _refresh_config(self) -> None:
+    def _read_config(self) -> None:
         try:
-            new_config = self._config_manager.load_monitor_stocks_config()
+            new_config = self._config_manager.read_monitor_stocks_config()
             if new_config != self._config:
                 self._config = new_config
                 self._logger.info("Config refreshed.")
@@ -80,7 +80,7 @@ class MonitorStocksScript:
         start = time.monotonic()
 
         while True:
-            self._refresh_config()
+            self._read_config()
             request = TriggerStocksNotificationsRequest(
                 symbols=[s.symbol for s in self._config.symbols]
             )

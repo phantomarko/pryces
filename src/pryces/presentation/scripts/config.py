@@ -31,7 +31,17 @@ class ConfigManager:
     def __init__(self, path: Path) -> None:
         self._path = path
 
-    def load_monitor_stocks_config(self) -> MonitorStocksConfig:
+    def write_monitor_stocks_config(self, config: MonitorStocksConfig) -> None:
+        data = {
+            "duration": config.duration,
+            "interval": config.interval,
+            "symbols": [
+                {"symbol": s.symbol, "prices": [float(p) for p in s.prices]} for s in config.symbols
+            ],
+        }
+        self._path.write_text(json.dumps(data, indent=2))
+
+    def read_monitor_stocks_config(self) -> MonitorStocksConfig:
         try:
             data = json.loads(self._path.read_text())
             symbols = [

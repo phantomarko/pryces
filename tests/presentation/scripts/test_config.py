@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from pryces.presentation.scripts.config import ConfigManager, SymbolConfig
+from pryces.presentation.scripts.config import ConfigManager, MonitorStocksConfig, SymbolConfig
 from pryces.presentation.scripts.exceptions import ConfigLoadingFailed
 
 
@@ -27,7 +27,7 @@ class TestConfigManager:
         manager = ConfigManager(tmp_path / "nonexistent.json")
 
         with pytest.raises(ConfigLoadingFailed, match="config file not found"):
-            manager.load_monitor_stocks_config()
+            manager.read_monitor_stocks_config()
 
     def test_raises_config_loading_failed_when_invalid_json(self, tmp_path):
         config_file = tmp_path / "config.json"
@@ -35,7 +35,7 @@ class TestConfigManager:
         manager = ConfigManager(config_file)
 
         with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
-            manager.load_monitor_stocks_config()
+            manager.read_monitor_stocks_config()
 
     def test_raises_config_loading_failed_when_fields_are_invalid(self, tmp_path):
         config_file = tmp_path / "config.json"
@@ -43,7 +43,7 @@ class TestConfigManager:
         manager = ConfigManager(config_file)
 
         with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
-            manager.load_monitor_stocks_config()
+            manager.read_monitor_stocks_config()
 
     def test_raises_config_loading_failed_when_symbol_missing_key(self, tmp_path):
         config_file = tmp_path / "config.json"
@@ -53,7 +53,7 @@ class TestConfigManager:
         manager = ConfigManager(config_file)
 
         with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
-            manager.load_monitor_stocks_config()
+            manager.read_monitor_stocks_config()
 
     def test_raises_config_loading_failed_on_unexpected_error(self, tmp_path, monkeypatch):
         config_file = tmp_path / "config.json"
@@ -65,14 +65,14 @@ class TestConfigManager:
         )
 
         with pytest.raises(ConfigLoadingFailed, match="unexpected error loading config"):
-            manager.load_monitor_stocks_config()
+            manager.read_monitor_stocks_config()
 
     def test_returns_valid_config_on_well_formed_file(self, tmp_path):
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps(make_config_data()))
         manager = ConfigManager(config_file)
 
-        config = manager.load_monitor_stocks_config()
+        config = manager.read_monitor_stocks_config()
 
         assert config.duration == 10
         assert config.interval == 30
@@ -90,6 +90,64 @@ class TestConfigManager:
         )
         manager = ConfigManager(config_file)
 
-        config = manager.load_monitor_stocks_config()
+        config = manager.read_monitor_stocks_config()
 
         assert config.symbols[0].prices == [Decimal("1"), Decimal("0.92")]
+
+    def test_write_creates_json_file_with_config_data(self, tmp_path):
+        config_file = tmp_path / "config.json"
+        manager = ConfigManager(config_file)
+        config = MonitorStocksConfig(
+            duration=10,
+            interval=30,
+            symbols=[
+                SymbolConfig(symbol="AAPL", prices=[Decimal("5")]),
+                SymbolConfig(symbol="MSFT", prices=[Decimal("1"), Decimal("0.92")]),
+            ],
+        )
+
+        manager.write_monitor_stocks_config(config)
+
+        saved = json.loads(config_file.read_text())
+        assert saved["duration"] == 10
+        assert saved["interval"] == 30
+        assert saved["symbols"] == [
+            {"symbol": "AAPL", "prices": [5.0]},
+            {"symbol": "MSFT", "prices": [1.0, 0.92]},
+        ]
+
+    def test_write_reflects_removed_prices(self, tmp_path):
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps(make_config_data()))
+        manager = ConfigManager(config_file)
+        original = manager.read_monitor_stocks_config()
+        trimmed = MonitorStocksConfig(
+            duration=original.duration,
+            interval=original.interval,
+            symbols=[
+                SymbolConfig(symbol="MSFT", prices=[Decimal("1")]),
+            ],
+        )
+
+        manager.write_monitor_stocks_config(trimmed)
+
+        saved = json.loads(config_file.read_text())
+        assert len(saved["symbols"]) == 1
+        assert saved["symbols"][0] == {"symbol": "MSFT", "prices": [1.0]}
+
+    def test_written_config_round_trips_through_read(self, tmp_path):
+        config_file = tmp_path / "config.json"
+        manager = ConfigManager(config_file)
+        config = MonitorStocksConfig(
+            duration=5,
+            interval=60,
+            symbols=[SymbolConfig(symbol="HUMA", prices=[Decimal("1"), Decimal("0.92")])],
+        )
+
+        manager.write_monitor_stocks_config(config)
+        restored = manager.read_monitor_stocks_config()
+
+        assert restored.duration == config.duration
+        assert restored.interval == config.interval
+        assert restored.symbols[0].symbol == "HUMA"
+        assert restored.symbols[0].prices == [Decimal("1"), Decimal("0.92")]
