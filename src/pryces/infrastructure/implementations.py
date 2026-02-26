@@ -220,9 +220,9 @@ class InMemoryTargetPriceRepository(TargetPriceRepository):
     def save(self, price_target: TargetPrice) -> None:
         if price_target.symbol not in self._store:
             self._store[price_target.symbol] = {}
-        self._store[price_target.symbol][price_target.target_price] = price_target
+        self._store[price_target.symbol][price_target.target] = price_target
 
     def delete(self, price_target: TargetPrice) -> None:
         symbol_store = self._store.get(price_target.symbol)
         if symbol_store is not None:
-            symbol_store.pop(price_target.target_price, None)
+            symbol_store.pop(price_target.target, None)
