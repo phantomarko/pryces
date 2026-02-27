@@ -38,6 +38,7 @@ The following events are detected and sent as Telegram messages during a monitor
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
 - Price set a new 52-week high or low (compared to the previous monitoring run)
+- Price reached a configured target level
 
 ## Getting Started
 
@@ -138,7 +139,7 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 | `interval` | int | Seconds to wait between cycles |
 | `symbols` | list[object] | Symbols to monitor, each with a `symbol` string and a `prices` list of target price levels |
 
-The `prices` list under each symbol defines **target price levels**. When a target is reached, a `TARGET_PRICE_REACHED` notification is sent and that price is automatically removed from the config file. The symbol itself is kept even if all its prices are fulfilled, so it continues to be monitored for all other notification types.
+The `prices` list under each symbol defines **target price levels**. When a target is reached, it is automatically removed from the config file — the symbol itself is kept even if all its prices are fulfilled, so it continues to be monitored for all other notification types.
 
 The **configuration file is re-read on every monitoring cycle**, so you can edit `interval` or `symbols` while the script is running and the changes will take effect on the next iteration — no restart required. The `duration` is fixed at startup and cannot be changed mid-run.
 
