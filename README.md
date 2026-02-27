@@ -125,7 +125,10 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 {
     "duration": 2,
     "interval": 5,
-    "symbols": ["AAPL", "GOOGL"]
+    "symbols": [
+        {"symbol": "AAPL", "prices": [150.0, 200.0]},
+        {"symbol": "GOOGL", "prices": [100.0]}
+    ]
 }
 ```
 
@@ -133,7 +136,9 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 |---|---|---|
 | `duration` | int | Monitoring duration in minutes |
 | `interval` | int | Seconds to wait between cycles |
-| `symbols` | list[str] | Stock symbols to monitor |
+| `symbols` | list[object] | Symbols to monitor, each with a `symbol` string and a `prices` list of target price levels |
+
+The `prices` list under each symbol defines **target price levels**. When a target is reached, a `TARGET_PRICE_REACHED` notification is sent and that price is automatically removed from the config file. The symbol itself is kept even if all its prices are fulfilled, so it continues to be monitored for all other notification types.
 
 The **configuration file is re-read on every monitoring cycle**, so you can edit `interval` or `symbols` while the script is running and the changes will take effect on the next iteration — no restart required. The `duration` is fixed at startup and cannot be changed mid-run.
 

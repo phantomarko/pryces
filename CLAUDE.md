@@ -117,11 +117,11 @@ Presentation → Application → Domain
 - `interfaces.py` — `StockProvider` ABC (port), `MessageSender` ABC (port), `NotificationRepository` ABC (port: `save`, `exists_by_type`), `MarketTransitionRepository` ABC (port: `save`, `get`, `delete` — tracks first-detected market state transition timestamp per symbol), `TargetPriceRepository` ABC (port: `get_by_symbol(symbols)`, `save`, `delete` — stores `TargetPrice` entities keyed by symbol+target)
 - `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes marketState), `TargetPriceDTO` (symbol + target Decimal; `from_target_price(target_price)` constructs from domain entity; `to_target_price()` converts to domain `TargetPrice`)
 - `exceptions.py` — `StockNotFound`
-- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection; suppresses notifications when `stock.priceDelayInMinutes > 0` and a market state transition to OPEN/POST was just detected — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing)
+- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection; suppresses notifications when `stock.priceDelayInMinutes > 0` and a market state transition to OPEN/POST was just detected — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing; `send_stock_targets_notifications(stock, targets)` sends TARGET_PRICE_REACHED notifications for each triggered target and returns the fulfilled `list[TargetPrice]`)
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)
-- `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers notifications via NotificationService)
+- `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` (fetches stocks, triggers milestone notifications via `NotificationService.send_stock_notifications`, then triggers target price notifications via `send_stock_targets_notifications`; deletes fulfilled targets from `TargetPriceRepository`; `handle()` returns `list[TargetPriceDTO]` of fulfilled targets)
 - `use_cases/get_target_prices.py` — `GetTargetPrices` + `GetTargetPricesRequest` (symbols: list[str] → list[TargetPriceDTO]; delegates filtering to `TargetPriceRepository.get_by_symbol`)
 - `use_cases/sync_target_prices.py` — `SyncTargetPrices` + `SyncTargetPricesRequest` (full sync: saves targets not already in `TargetPriceRepository`, deletes existing targets not present in the request; preserves existing entries and their runtime `entry` state)
 
@@ -146,7 +146,7 @@ Presentation → Application → Domain
 **Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
 - `config.py` — `SymbolConfig` frozen dataclass (symbol, prices as `list[Decimal]` — no validation), `MonitorStocksConfig` frozen dataclass (duration, interval, symbols as `list[SymbolConfig]` — with validation), `ConfigManager` (loads and validates JSON config file, raises `ConfigLoadingFailed` on any error)
 - `exceptions.py` — `ConfigLoadingFailed`
-- `monitor_stocks.py` — Standalone monitor script (`MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`
+- `monitor_stocks.py` — Standalone monitor script (`MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`. `_save_target_prices()` syncs config prices into `TargetPriceRepository` on start and config refresh. `_write_config(fulfilled)` removes fulfilled `TargetPriceDTO` prices from `self._config` symbols (keeping the symbol entry even when all its prices are removed), then persists the updated config to disk via `ConfigManager.write_monitor_stocks_config` if anything changed.
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them

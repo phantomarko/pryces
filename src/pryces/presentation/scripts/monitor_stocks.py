@@ -26,7 +26,7 @@ from ...infrastructure.implementations import (
     YahooFinanceProvider,
 )
 from pryces.infrastructure.logging import setup_monitor_logging
-from .config import ConfigManager
+from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
 from .exceptions import ConfigLoadingFailed
 
 
@@ -50,7 +50,7 @@ class MonitorStocksScript:
                 self._config = new_config
                 self._logger.info("Config refreshed.")
                 self._log_config()
-                self._write_target_prices()
+                self._save_target_prices()
         except Exception:
             pass
 
@@ -60,11 +60,12 @@ class MonitorStocksScript:
         )
         self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
         stocks_info = [
-            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" for s in self._config.symbols
+            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" if s.prices else s.symbol
+            for s in self._config.symbols
         ]
         self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
 
-    def _write_target_prices(self) -> None:
+    def _save_target_prices(self) -> None:
         price_targets = [
             TargetPriceDTO(symbol=s.symbol, target=price)
             for s in self._config.symbols
@@ -72,10 +73,39 @@ class MonitorStocksScript:
         ]
         self._sync_target_prices.handle(SyncTargetPricesRequest(price_targets=price_targets))
 
+    def _write_config(self, fulfilled: list[TargetPriceDTO]) -> None:
+        if not fulfilled:
+            return
+
+        self._logger.info(
+            f"Fulfilled targets: {', '.join(f'{tp.symbol}@{tp.target}' for tp in fulfilled)}"
+        )
+        fulfilled_pairs = {(tp.symbol, tp.target) for tp in fulfilled}
+        updated_symbols = [
+            SymbolConfig(
+                symbol=sc.symbol,
+                prices=[p for p in sc.prices if (sc.symbol, p) not in fulfilled_pairs],
+            )
+            for sc in self._config.symbols
+        ]
+
+        if updated_symbols == self._config.symbols:
+            return
+
+        new_config = MonitorStocksConfig(
+            duration=self._config.duration,
+            interval=self._config.interval,
+            symbols=updated_symbols,
+        )
+        self._config = new_config
+        self._log_config()
+        self._config_manager.write_monitor_stocks_config(new_config)
+        self._logger.info("Config updated after fulfilled targets.")
+
     def run(self) -> None:
         self._logger.info("Monitoring started.")
         self._log_config()
-        self._write_target_prices()
+        self._save_target_prices()
         duration_seconds = self._config.duration * 60
         start = time.monotonic()
 
@@ -85,7 +115,8 @@ class MonitorStocksScript:
                 symbols=[s.symbol for s in self._config.symbols]
             )
             try:
-                self._trigger_notifications.handle(request)
+                fulfilled = self._trigger_notifications.handle(request)
+                self._write_config(fulfilled)
             except Exception as e:
                 self._logger.warning(f"Exception caught: {e}")
 

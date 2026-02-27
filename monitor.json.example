@@ -1,26 +1,26 @@
 {
-    "duration": 1,
-    "interval": 10,
-    "symbols": [
-        {
-            "symbol": "ASPI",
-            "prices": [5]
-        },
-        {
-            "symbol": "HUMA",
-            "prices": [0.92, 1]
-        },
-        {
-            "symbol": "QTRX",
-            "prices": [5.5]
-        },
-        {
-            "symbol": "OUST",
-            "prices": [15, 17.5]
-        },
-        {
-            "symbol": "ADUR",
-            "prices": [10]
-        }
-    ]
+  "duration": 1,
+  "interval": 10,
+  "symbols": [
+    {
+      "symbol": "ASPI",
+      "prices": [5]
+    },
+    {
+      "symbol": "HUMA",
+      "prices": [0.92, 1]
+    },
+    {
+      "symbol": "QTRX",
+      "prices": [5.5]
+    },
+    {
+      "symbol": "OUST",
+      "prices": [15, 17.5]
+    },
+    {
+      "symbol": "ADUR",
+      "prices": [10]
+    }
+  ]
 }
