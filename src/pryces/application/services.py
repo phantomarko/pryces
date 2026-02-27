@@ -3,6 +3,7 @@ from typing import Callable
 
 from pryces.domain.notifications import Notification
 from pryces.domain.stocks import MarketState, Stock
+from pryces.domain.target_prices import TargetPrice
 
 from .interfaces import MarketTransitionRepository, MessageSender, NotificationRepository
 
@@ -61,3 +62,16 @@ class NotificationService:
             sent.append(notification)
 
         return sent
+
+    def send_stock_targets_notifications(
+        self, stock: Stock, targets: list[TargetPrice]
+    ) -> list[TargetPrice]:
+        triggered: list[TargetPrice] = []
+
+        for target in targets:
+            notification = target.generate_notification(stock)
+            if notification is not None:
+                self._message_sender.send_message(notification.message)
+                triggered.append(target)
+
+        return triggered

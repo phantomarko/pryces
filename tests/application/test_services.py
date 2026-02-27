@@ -6,11 +6,13 @@ from pryces.application.interfaces import MessageSender
 from pryces.application.services import NotificationService
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock
+from pryces.domain.target_prices import TargetPrice
 from pryces.infrastructure.implementations import (
     InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
 )
 from tests.fixtures.factories import (
+    create_stock,
     create_stock_crossing_both_averages,
     create_stock_crossing_fifty_day,
     create_stock_crossing_two_hundred_day,
@@ -262,3 +264,81 @@ class TestNotificationService:
         self.service.send_stock_notifications(stock, past_stock)
 
         assert self.transition_repo.get("AAPL") is None
+
+
+class TestSendStockTargetsNotifications:
+
+    def setup_method(self):
+        self.mock_sender = Mock(spec=MessageSender)
+        self.repo = InMemoryNotificationRepository()
+        self.transition_repo = InMemoryMarketTransitionRepository()
+        self.clock = Mock(return_value=datetime(2024, 1, 1, 9, 0, 0))
+        self.service = NotificationService(
+            self.mock_sender, self.repo, self.transition_repo, self.clock
+        )
+
+    def test_returns_empty_list_when_no_targets(self):
+        stock = create_stock("AAPL", Decimal("150.00"))
+
+        result = self.service.send_stock_targets_notifications(stock, [])
+
+        assert result == []
+        self.mock_sender.send_message.assert_not_called()
+
+    def test_returns_empty_list_when_no_target_is_reached(self):
+        # entry=100, target=200, current=150 — target not reached
+        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        target.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        stock = create_stock("AAPL", Decimal("150.00"))
+
+        result = self.service.send_stock_targets_notifications(stock, [target])
+
+        assert result == []
+        self.mock_sender.send_message.assert_not_called()
+
+    def test_returns_triggered_target_and_sends_message_when_target_reached(self):
+        # entry=100, target=200, current=200 — target reached
+        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        target.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        stock = create_stock("AAPL", Decimal("200.00"))
+
+        result = self.service.send_stock_targets_notifications(stock, [target])
+
+        assert result == [target]
+        self.mock_sender.send_message.assert_called_once()
+
+    def test_returns_all_triggered_targets_when_multiple_reach_price(self):
+        # Two targets both reached
+        target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        target1.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        target2 = TargetPrice(symbol="AAPL", target=Decimal("250.00"))
+        target2.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        stock = create_stock("AAPL", Decimal("300.00"))
+
+        result = self.service.send_stock_targets_notifications(stock, [target1, target2])
+
+        assert result == [target1, target2]
+        assert self.mock_sender.send_message.call_count == 2
+
+    def test_returns_only_triggered_targets_in_mixed_scenario(self):
+        # target1 reached, target2 not
+        target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        target1.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        target2 = TargetPrice(symbol="AAPL", target=Decimal("500.00"))
+        target2.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        stock = create_stock("AAPL", Decimal("250.00"))
+
+        result = self.service.send_stock_targets_notifications(stock, [target1, target2])
+
+        assert result == [target1]
+        self.mock_sender.send_message.assert_called_once()
+
+    def test_returns_empty_list_when_target_has_no_entry_price(self):
+        # entry not set — generate_notification returns None
+        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        stock = create_stock("AAPL", Decimal("200.00"))
+
+        result = self.service.send_stock_targets_notifications(stock, [target])
+
+        assert result == []
+        self.mock_sender.send_message.assert_not_called()
