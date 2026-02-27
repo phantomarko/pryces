@@ -5,10 +5,12 @@ from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock
+from pryces.domain.target_prices import TargetPrice
 from pryces.infrastructure.implementations import (
     InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
     InMemoryStockRepository,
+    InMemoryTargetPriceRepository,
 )
 from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
@@ -32,10 +34,12 @@ class TestTriggerStocksNotifications:
             InMemoryNotificationRepository(),
             InMemoryMarketTransitionRepository(),
         )
+        self.target_price_repository = InMemoryTargetPriceRepository()
         self.use_case = TriggerStocksNotifications(
             provider=self.mock_provider,
             notification_service=self.notification_service,
             stock_repository=InMemoryStockRepository(),
+            target_price_repository=self.target_price_repository,
         )
 
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):
@@ -121,6 +125,7 @@ class TestTriggerStocksNotifications:
             provider=self.mock_provider,
             notification_service=self.notification_service,
             stock_repository=stock_repo,
+            target_price_repository=self.target_price_repository,
         )
         current_stock = Stock(
             symbol="AAPL",
@@ -137,6 +142,31 @@ class TestTriggerStocksNotifications:
         sent_types = {n.type for n in current_stock.notifications}
         assert NotificationType.NEW_52_WEEK_HIGH in sent_types
 
+    def test_handle_sets_entry_price_on_targets_for_the_stock(self):
+        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        self.target_price_repository.save(target)
+        stock = create_stock_no_crossing("AAPL")
+        self.mock_provider.get_stocks.return_value = [stock]
+        request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
+
+        self.use_case.handle(request)
+
+        assert target.entry == stock.currentPrice
+
+    def test_handle_does_not_overwrite_existing_entry_on_subsequent_calls(self):
+        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        self.target_price_repository.save(target)
+        first_stock = create_stock_no_crossing("AAPL")
+        self.mock_provider.get_stocks.return_value = [first_stock]
+        self.use_case.handle(TriggerStocksNotificationsRequest(symbols=["AAPL"]))
+        original_entry = target.entry
+
+        second_stock = Stock(symbol="AAPL", currentPrice=Decimal("999.00"))
+        self.mock_provider.get_stocks.return_value = [second_stock]
+        self.use_case.handle(TriggerStocksNotificationsRequest(symbols=["AAPL"]))
+
+        assert target.entry == original_entry
+
     def test_handle_sends_new_52_week_low_notification_when_past_stock_exists(self):
         past_stock = Stock(
             symbol="AAPL", currentPrice=Decimal("120.00"), fiftyTwoWeekLow=Decimal("110.00")
@@ -147,6 +177,7 @@ class TestTriggerStocksNotifications:
             provider=self.mock_provider,
             notification_service=self.notification_service,
             stock_repository=stock_repo,
+            target_price_repository=self.target_price_repository,
         )
         current_stock = Stock(
             symbol="AAPL",

@@ -26,11 +26,11 @@ class TestSetEntryPrice:
         pt.set_entry_price(stock)
         assert pt.entry == Decimal("150.00")
 
-    def test_overwrites_previous_entry_price(self):
+    def test_does_not_overwrite_existing_entry_price(self):
         pt = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
         pt.set_entry_price(create_stock("AAPL", Decimal("150.00")))
         pt.set_entry_price(create_stock("AAPL", Decimal("160.00")))
-        assert pt.entry == Decimal("160.00")
+        assert pt.entry == Decimal("150.00")
 
 
 class TestGenerateNotification:

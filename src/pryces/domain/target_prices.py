@@ -25,7 +25,8 @@ class TargetPrice:
         return self._entry
 
     def set_entry_price(self, stock: Stock) -> None:
-        self._entry = stock.currentPrice
+        if self._entry is None:
+            self._entry = stock.currentPrice
 
     def generate_notification(self, stock: Stock) -> Notification | None:
         return (

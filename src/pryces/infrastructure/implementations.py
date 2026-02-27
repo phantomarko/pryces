@@ -222,10 +222,15 @@ class InMemoryTargetPriceRepository(TargetPriceRepository):
         if price_target.symbol not in self._store:
             self._store[price_target.symbol] = {}
         self._store[price_target.symbol][price_target.target] = price_target
-        self._logger.info(f"Target price saved: {price_target.symbol} @ {price_target.target}")
+        entry = price_target.entry if price_target.entry is not None else "NULL"
+        self._logger.info(
+            f"Target price saved: {price_target.symbol} / target={price_target.target} / entry={entry}"
+        )
 
     def delete(self, price_target: TargetPrice) -> None:
         symbol_store = self._store.get(price_target.symbol)
         if symbol_store is not None:
             symbol_store.pop(price_target.target, None)
-        self._logger.info(f"Target price deleted: {price_target.symbol} @ {price_target.target}")
+        self._logger.info(
+            f"Target price deleted: {price_target.symbol} / target={price_target.target}"
+        )

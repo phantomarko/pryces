@@ -108,12 +108,13 @@ def _create_script(path: Path) -> MonitorStocksScript:
         message_sender, notification_repository, transition_repository
     )
     stock_repository = InMemoryStockRepository()
+    target_price_repository = InMemoryTargetPriceRepository()
     trigger_notifications = TriggerStocksNotifications(
         provider=provider,
         notification_service=notification_service,
         stock_repository=stock_repository,
+        target_price_repository=target_price_repository,
     )
-    target_price_repository = InMemoryTargetPriceRepository()
     sync_target_prices = SyncTargetPrices(target_price_repository)
     return MonitorStocksScript(
         trigger_notifications=trigger_notifications,

@@ -8,15 +8,15 @@
         },
         {
             "symbol": "HUMA",
-            "prices": [1]
+            "prices": [0.92, 1]
         },
         {
             "symbol": "QTRX",
-            "prices": [5.5, 7]
+            "prices": [5.5]
         },
         {
             "symbol": "OUST",
-            "prices": [17, 22]
+            "prices": [15, 17.5]
         },
         {
             "symbol": "ADUR",
