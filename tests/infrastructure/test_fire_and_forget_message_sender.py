@@ -1,7 +1,7 @@
 import logging
 from unittest.mock import MagicMock
 
-from pryces.infrastructure.implementations import FireAndForgetMessageSender
+from pryces.infrastructure.senders import FireAndForgetMessageSender
 
 
 class TestFireAndForgetMessageSender:

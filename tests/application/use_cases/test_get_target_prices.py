@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.use_cases.get_target_prices import GetTargetPrices, GetTargetPricesRequest
-from pryces.infrastructure.implementations import InMemoryTargetPriceRepository
+from pryces.infrastructure.repositories import InMemoryTargetPriceRepository
 
 
 class TestGetTargetPrices:

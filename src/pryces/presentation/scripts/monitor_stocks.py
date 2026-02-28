@@ -17,14 +17,16 @@ from ...application.use_cases.sync_target_prices import (
     SyncTargetPricesRequest,
 )
 from ...infrastructure.factories import SettingsFactory
-from ...infrastructure.implementations import (
-    FireAndForgetMessageSender,
+from ...infrastructure.providers import YahooFinanceProvider
+from ...infrastructure.repositories import (
     InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
     InMemoryStockRepository,
     InMemoryTargetPriceRepository,
+)
+from ...infrastructure.senders import (
+    FireAndForgetMessageSender,
     TelegramMessageSender,
-    YahooFinanceProvider,
 )
 from pryces.infrastructure.logging import setup_monitor_logging
 from .config import ConfigManager, MonitorStocksConfig, SymbolConfig

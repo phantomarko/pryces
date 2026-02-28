@@ -1,6 +1,7 @@
 import os
 
-from .implementations import TelegramSettings, YahooFinanceSettings
+from .providers import YahooFinanceSettings
+from .senders import TelegramSettings
 
 
 class SettingsFactory:

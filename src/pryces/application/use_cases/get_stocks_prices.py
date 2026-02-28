@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ..dtos import StockDTO
-from ..interfaces import StockProvider
+from ..providers import StockProvider
 
 
 @dataclass(frozen=True)

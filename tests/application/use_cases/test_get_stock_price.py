@@ -5,7 +5,7 @@ import pytest
 
 from pryces.application.dtos import StockDTO
 from pryces.application.exceptions import StockNotFound
-from pryces.application.interfaces import StockProvider
+from pryces.application.providers import StockProvider
 from pryces.application.use_cases.get_stock_price import (
     GetStockPrice,
     GetStockPriceRequest,

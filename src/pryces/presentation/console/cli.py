@@ -5,7 +5,8 @@ import sys
 from dotenv import load_dotenv
 
 from ...infrastructure.factories import SettingsFactory
-from ...infrastructure.implementations import TelegramMessageSender, YahooFinanceProvider
+from ...infrastructure.providers import YahooFinanceProvider
+from ...infrastructure.senders import TelegramMessageSender
 from ...infrastructure.logging import setup_cli_logging
 from .factories import CommandFactory
 from .menu import InteractiveMenu

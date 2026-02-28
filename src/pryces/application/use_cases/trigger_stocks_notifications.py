@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from pryces.domain.stocks import Stock
 from pryces.domain.target_prices import TargetPrice
 from ..dtos import TargetPriceDTO
-from ..interfaces import StockProvider, StockRepository, TargetPriceRepository
+from ..providers import StockProvider
+from ..repositories import StockRepository, TargetPriceRepository
 from ..services import NotificationService
 
 

@@ -5,7 +5,8 @@ from pryces.domain.notifications import Notification
 from pryces.domain.stocks import MarketState, Stock
 from pryces.domain.target_prices import TargetPrice
 
-from .interfaces import MarketTransitionRepository, MessageSender, NotificationRepository
+from .repositories import MarketTransitionRepository, NotificationRepository
+from .senders import MessageSender
 
 
 class NotificationService:

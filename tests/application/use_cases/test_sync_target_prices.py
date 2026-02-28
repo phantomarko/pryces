@@ -5,7 +5,7 @@ from pryces.application.use_cases.sync_target_prices import (
     SyncTargetPrices,
     SyncTargetPricesRequest,
 )
-from pryces.infrastructure.implementations import InMemoryTargetPriceRepository
+from pryces.infrastructure.repositories import InMemoryTargetPriceRepository
 
 
 class TestSyncTargetPrices:

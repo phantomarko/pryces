@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from pryces.application.dtos import TargetPriceDTO
-from pryces.application.interfaces import TargetPriceRepository
+from pryces.application.repositories import TargetPriceRepository
 
 
 @dataclass(frozen=True)
