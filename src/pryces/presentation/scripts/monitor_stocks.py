@@ -18,6 +18,7 @@ from ...application.use_cases.sync_target_prices import (
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.implementations import (
+    FireAndForgetMessageSender,
     InMemoryMarketTransitionRepository,
     InMemoryNotificationRepository,
     InMemoryStockRepository,
@@ -128,11 +129,18 @@ class MonitorStocksScript:
         self._logger.info("Monitoring finished.")
 
 
-def _create_script(path: Path) -> MonitorStocksScript:
+class _ScriptContext:
+    def __init__(self, script: MonitorStocksScript, message_sender: FireAndForgetMessageSender):
+        self.script = script
+        self.message_sender = message_sender
+
+
+def _create_script(path: Path) -> _ScriptContext:
     yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings()
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
     telegram_settings = SettingsFactory.create_telegram_settings()
-    message_sender = TelegramMessageSender(settings=telegram_settings)
+    telegram_sender = TelegramMessageSender(settings=telegram_settings)
+    message_sender = FireAndForgetMessageSender(inner=telegram_sender)
     notification_repository = InMemoryNotificationRepository()
     transition_repository = InMemoryMarketTransitionRepository()
     notification_service = NotificationService(
@@ -147,11 +155,12 @@ def _create_script(path: Path) -> MonitorStocksScript:
         target_price_repository=target_price_repository,
     )
     sync_target_prices = SyncTargetPrices(target_price_repository)
-    return MonitorStocksScript(
+    script = MonitorStocksScript(
         trigger_notifications=trigger_notifications,
         sync_target_prices=sync_target_prices,
         config_manager=ConfigManager(path),
     )
+    return _ScriptContext(script=script, message_sender=message_sender)
 
 
 def main() -> int:
@@ -167,8 +176,11 @@ def main() -> int:
     setup_monitor_logging(verbose=args.verbose, debug=args.debug)
 
     try:
-        script = _create_script(args.config)
-        script.run()
+        context = _create_script(args.config)
+        try:
+            context.script.run()
+        finally:
+            context.message_sender.shutdown()
     except ConfigLoadingFailed as e:
         print(f"Error: {e}")
         return 1

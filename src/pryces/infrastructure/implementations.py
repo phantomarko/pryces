@@ -169,6 +169,26 @@ class TelegramMessageSender(MessageSender):
         return False
 
 
+class FireAndForgetMessageSender(MessageSender):
+    def __init__(self, inner: MessageSender) -> None:
+        self._inner = inner
+        self._executor = ThreadPoolExecutor(max_workers=1)
+        self._logger = logging.getLogger(__name__)
+
+    def _send(self, message: str) -> None:
+        try:
+            self._inner.send_message(message)
+        except Exception as e:
+            self._logger.error(f"Failed to send message: {e}")
+
+    def send_message(self, message: str) -> bool:
+        self._executor.submit(self._send, message)
+        return True
+
+    def shutdown(self) -> None:
+        self._executor.shutdown(wait=True)
+
+
 class InMemoryNotificationRepository(NotificationRepository):
     def __init__(self) -> None:
         self._store: dict[str, dict[str, bool]] = {}
