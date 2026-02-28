@@ -119,7 +119,7 @@ class TestTriggerStocksNotifications:
 
     def test_handle_sends_new_52_week_high_notification_when_past_stock_exists(self):
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("180.00"), fiftyTwoWeekHigh=Decimal("190.00")
+            symbol="AAPL", current_price=Decimal("180.00"), fifty_two_week_high=Decimal("190.00")
         )
         stock_repo = InMemoryStockRepository()
         stock_repo.save_batch([past_stock])
@@ -131,10 +131,10 @@ class TestTriggerStocksNotifications:
         )
         current_stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("200.00"),
-            openPrice=Decimal("195.00"),
-            previousClosePrice=Decimal("190.00"),
-            marketState=MarketState.OPEN,
+            current_price=Decimal("200.00"),
+            open_price=Decimal("195.00"),
+            previous_close_price=Decimal("190.00"),
+            market_state=MarketState.OPEN,
         )
         self.mock_provider.get_stocks.return_value = [current_stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
@@ -153,7 +153,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert target.entry == stock.currentPrice
+        assert target.entry == stock.current_price
 
     def test_handle_does_not_overwrite_existing_entry_on_subsequent_calls(self):
         target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
@@ -163,7 +163,7 @@ class TestTriggerStocksNotifications:
         self.use_case.handle(TriggerStocksNotificationsRequest(symbols=["AAPL"]))
         original_entry = target.entry
 
-        second_stock = Stock(symbol="AAPL", currentPrice=Decimal("999.00"))
+        second_stock = Stock(symbol="AAPL", current_price=Decimal("999.00"))
         self.mock_provider.get_stocks.return_value = [second_stock]
         self.use_case.handle(TriggerStocksNotificationsRequest(symbols=["AAPL"]))
 
@@ -180,18 +180,18 @@ class TestTriggerStocksNotifications:
 
     def test_handle_returns_fulfilled_target_as_dto(self):
         stock = create_stock_no_crossing("AAPL")
-        target = TargetPrice(symbol="AAPL", target=stock.currentPrice)
+        target = TargetPrice(symbol="AAPL", target=stock.current_price)
         self.target_price_repository.save(target)
         self.mock_provider.get_stocks.return_value = [stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
         result = self.use_case.handle(request)
 
-        assert result == [TargetPriceDTO(symbol="AAPL", target=stock.currentPrice)]
+        assert result == [TargetPriceDTO(symbol="AAPL", target=stock.current_price)]
 
     def test_handle_removes_fulfilled_target_from_repository(self):
         stock = create_stock_no_crossing("AAPL")
-        target = TargetPrice(symbol="AAPL", target=stock.currentPrice)
+        target = TargetPrice(symbol="AAPL", target=stock.current_price)
         self.target_price_repository.save(target)
         self.mock_provider.get_stocks.return_value = [stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
@@ -203,8 +203,8 @@ class TestTriggerStocksNotifications:
     def test_handle_returns_fulfilled_targets_from_multiple_stocks(self):
         stock_aapl = create_stock_no_crossing("AAPL")
         stock_googl = create_stock_no_crossing("GOOGL")
-        target_aapl = TargetPrice(symbol="AAPL", target=stock_aapl.currentPrice)
-        target_googl = TargetPrice(symbol="GOOGL", target=stock_googl.currentPrice)
+        target_aapl = TargetPrice(symbol="AAPL", target=stock_aapl.current_price)
+        target_googl = TargetPrice(symbol="GOOGL", target=stock_googl.current_price)
         self.target_price_repository.save(target_aapl)
         self.target_price_repository.save(target_googl)
         self.mock_provider.get_stocks.return_value = [stock_aapl, stock_googl]
@@ -213,12 +213,12 @@ class TestTriggerStocksNotifications:
         result = self.use_case.handle(request)
 
         assert len(result) == 2
-        assert TargetPriceDTO(symbol="AAPL", target=stock_aapl.currentPrice) in result
-        assert TargetPriceDTO(symbol="GOOGL", target=stock_googl.currentPrice) in result
+        assert TargetPriceDTO(symbol="AAPL", target=stock_aapl.current_price) in result
+        assert TargetPriceDTO(symbol="GOOGL", target=stock_googl.current_price) in result
 
     def test_handle_sends_new_52_week_low_notification_when_past_stock_exists(self):
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("120.00"), fiftyTwoWeekLow=Decimal("110.00")
+            symbol="AAPL", current_price=Decimal("120.00"), fifty_two_week_low=Decimal("110.00")
         )
         stock_repo = InMemoryStockRepository()
         stock_repo.save_batch([past_stock])
@@ -230,10 +230,10 @@ class TestTriggerStocksNotifications:
         )
         current_stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("100.00"),
-            openPrice=Decimal("105.00"),
-            previousClosePrice=Decimal("110.00"),
-            marketState=MarketState.OPEN,
+            current_price=Decimal("100.00"),
+            open_price=Decimal("105.00"),
+            previous_close_price=Decimal("110.00"),
+            market_state=MarketState.OPEN,
         )
         self.mock_provider.get_stocks.return_value = [current_stock]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])

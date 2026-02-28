@@ -25,13 +25,13 @@ class NotificationService:
     def _is_market_state_transition(self, stock: Stock, past_stock: Stock | None) -> bool:
         if past_stock is None:
             return False
-        return past_stock.marketState != stock.marketState and stock.marketState in (
+        return past_stock.market_state != stock.market_state and stock.market_state in (
             MarketState.OPEN,
             MarketState.POST,
         )
 
     def _is_in_delay_window(self, stock: Stock, past_stock: Stock | None) -> bool:
-        if not stock.priceDelayInMinutes:
+        if not stock.price_delay_in_minutes:
             return False
         if self._is_market_state_transition(stock, past_stock):
             self._transition_repository.save(stock.symbol, self._clock())
@@ -40,7 +40,7 @@ class NotificationService:
         if transition_time is None:
             return False
         elapsed_minutes = (self._clock() - transition_time).total_seconds() / 60
-        if elapsed_minutes < stock.priceDelayInMinutes:
+        if elapsed_minutes < stock.price_delay_in_minutes:
             return True
         self._transition_repository.delete(stock.symbol)
         return False

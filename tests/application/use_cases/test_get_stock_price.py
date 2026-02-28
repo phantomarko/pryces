@@ -24,14 +24,14 @@ class TestGetStockPrice:
             symbol,
             Decimal("150.25"),
             name="Apple Inc.",
-            previousClosePrice=Decimal("148.50"),
-            openPrice=Decimal("149.00"),
-            dayHigh=Decimal("151.00"),
-            dayLow=Decimal("148.00"),
-            fiftyDayAverage=Decimal("145.50"),
-            twoHundredDayAverage=Decimal("140.00"),
-            fiftyTwoWeekHigh=Decimal("180.00"),
-            fiftyTwoWeekLow=Decimal("120.00"),
+            previous_close_price=Decimal("148.50"),
+            open_price=Decimal("149.00"),
+            day_high=Decimal("151.00"),
+            day_low=Decimal("148.00"),
+            fifty_day_average=Decimal("145.50"),
+            two_hundred_day_average=Decimal("140.00"),
+            fifty_two_week_high=Decimal("180.00"),
+            fifty_two_week_low=Decimal("120.00"),
         )
         self.mock_provider.get_stock.return_value = provider_response
 
@@ -42,9 +42,9 @@ class TestGetStockPrice:
 
         assert isinstance(result, StockDTO)
         assert result.symbol == provider_response.symbol
-        assert result.currentPrice == provider_response.currentPrice
+        assert result.current_price == provider_response.current_price
         assert result.name == provider_response.name
-        assert result.dayHigh == provider_response.dayHigh
+        assert result.day_high == provider_response.day_high
         self.mock_provider.get_stock.assert_called_once_with(symbol)
 
     def test_handle_raises_stock_not_found_when_provider_returns_none(self):
@@ -63,7 +63,7 @@ class TestGetStockPrice:
 
     def test_handle_returns_dto_with_minimal_fields(self):
         symbol = "AAPL"
-        minimal_response = Stock(symbol=symbol, currentPrice=Decimal("150.25"))
+        minimal_response = Stock(symbol=symbol, current_price=Decimal("150.25"))
         self.mock_provider.get_stock.return_value = minimal_response
 
         use_case = GetStockPrice(provider=self.mock_provider)
@@ -73,7 +73,7 @@ class TestGetStockPrice:
 
         assert isinstance(result, StockDTO)
         assert result.symbol == symbol
-        assert result.currentPrice == Decimal("150.25")
+        assert result.current_price == Decimal("150.25")
         assert result.name is None
         assert result.currency is None
         self.mock_provider.get_stock.assert_called_once_with(symbol)

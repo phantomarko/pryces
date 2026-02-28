@@ -109,7 +109,7 @@ Presentation → Application → Domain
 ```
 
 **Domain** (`src/pryces/domain/`) — Core domain model:
-- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, currentPrice + optional: name, currency, marketState, and 10 Decimal price fields; generates milestone notifications via `generate_notifications(past_stock=None)` — accepts optional previous snapshot to detect new 52-week highs/lows)
+- `stocks.py` — `MarketState` enum (OPEN, PRE, POST, CLOSED), `Stock` entity (symbol, current_price + optional: name, currency, market_state, and 10 Decimal price fields; generates milestone notifications via `generate_notifications(past_stock=None)` — accepts optional previous snapshot to detect new 52-week highs/lows)
 - `notifications.py` — `NotificationType` enum (CLOSE_TO_SMA50, CLOSE_TO_SMA200, SMA50_CROSSED, SMA200_CROSSED, REGULAR_MARKET_OPEN, REGULAR_MARKET_CLOSED, NEW_52_WEEK_HIGH, NEW_52_WEEK_LOW, TARGET_PRICE_REACHED, plus percentage thresholds), `Notification` class (factory-based construction with static creators)
 - `target_prices.py` — `TargetPrice` entity (symbol, target, entry; `set_entry_price(stock)` captures entry price; `generate_notification(stock)` returns a `TARGET_PRICE_REACHED` notification when the target is reached, `None` otherwise)
 
@@ -117,9 +117,9 @@ Presentation → Application → Domain
 - `providers.py` — `StockProvider` ABC (port)
 - `senders.py` — `MessageSender` ABC (port)
 - `repositories.py` — `StockRepository` ABC (port: `save_batch`, `get`), `NotificationRepository` ABC (port: `save`, `exists_by_type`), `MarketTransitionRepository` ABC (port: `save`, `get`, `delete` — tracks first-detected market state transition timestamp per symbol), `TargetPriceRepository` ABC (port: `get_by_symbol(symbols)`, `save`, `delete` — stores `TargetPrice` entities keyed by symbol+target)
-- `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes marketState), `TargetPriceDTO` (symbol + target Decimal; `from_target_price(target_price)` constructs from domain entity; `to_target_price()` converts to domain `TargetPrice`)
+- `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes market_state), `TargetPriceDTO` (symbol + target Decimal; `from_target_price(target_price)` constructs from domain entity; `to_target_price()` converts to domain `TargetPrice`)
 - `exceptions.py` — `StockNotFound`
-- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection; suppresses notifications when `stock.priceDelayInMinutes > 0` and a market state transition to OPEN/POST was just detected — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing; `send_stock_targets_notifications(stock, targets)` sends TARGET_PRICE_REACHED notifications for each triggered target and returns the fulfilled `list[TargetPrice]`)
+- `services.py` — `NotificationService` (sends stock milestone notifications via MessageSender; delegates deduplication to injected `NotificationRepository`; `send_stock_notifications(stock, past_stock)` accepts optional previous snapshot for 52-week high/low detection; suppresses notifications when `stock.price_delay_in_minutes > 0` and a market state transition to OPEN/POST was just detected — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing; `send_stock_targets_notifications(stock, targets)` sends TARGET_PRICE_REACHED notifications for each triggered target and returns the fulfilled `list[TargetPrice]`)
 - `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)

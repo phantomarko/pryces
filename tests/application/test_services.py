@@ -108,13 +108,13 @@ class TestNotificationService:
     def test_sends_new_52_week_high_notification_when_past_stock_provided(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("200.00"),
-            openPrice=Decimal("195.00"),
-            previousClosePrice=Decimal("190.00"),
-            marketState=MarketState.OPEN,
+            current_price=Decimal("200.00"),
+            open_price=Decimal("195.00"),
+            previous_close_price=Decimal("190.00"),
+            market_state=MarketState.OPEN,
         )
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("180.00"), fiftyTwoWeekHigh=Decimal("190.00")
+            symbol="AAPL", current_price=Decimal("180.00"), fifty_two_week_high=Decimal("190.00")
         )
 
         result = self.service.send_stock_notifications(stock, past_stock)
@@ -125,13 +125,13 @@ class TestNotificationService:
     def test_sends_new_52_week_low_notification_when_past_stock_provided(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("100.00"),
-            openPrice=Decimal("105.00"),
-            previousClosePrice=Decimal("110.00"),
-            marketState=MarketState.OPEN,
+            current_price=Decimal("100.00"),
+            open_price=Decimal("105.00"),
+            previous_close_price=Decimal("110.00"),
+            market_state=MarketState.OPEN,
         )
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("120.00"), fiftyTwoWeekLow=Decimal("110.00")
+            symbol="AAPL", current_price=Decimal("120.00"), fifty_two_week_low=Decimal("110.00")
         )
 
         result = self.service.send_stock_notifications(stock, past_stock)
@@ -142,14 +142,14 @@ class TestNotificationService:
     def test_no_delay_when_price_delay_is_none(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.OPEN,
-            priceDelayInMinutes=None,
-            previousClosePrice=Decimal("148.00"),
-            openPrice=Decimal("149.00"),
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=None,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
         )
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("145.00"), marketState=MarketState.PRE
+            symbol="AAPL", current_price=Decimal("145.00"), market_state=MarketState.PRE
         )
 
         result = self.service.send_stock_notifications(stock, past_stock)
@@ -160,14 +160,14 @@ class TestNotificationService:
     def test_no_delay_when_price_delay_is_zero(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.OPEN,
-            priceDelayInMinutes=0,
-            previousClosePrice=Decimal("148.00"),
-            openPrice=Decimal("149.00"),
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=0,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
         )
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("145.00"), marketState=MarketState.PRE
+            symbol="AAPL", current_price=Decimal("145.00"), market_state=MarketState.PRE
         )
 
         result = self.service.send_stock_notifications(stock, past_stock)
@@ -178,12 +178,12 @@ class TestNotificationService:
     def test_suppresses_notifications_on_transition_cycle_when_delay_positive(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.OPEN,
-            priceDelayInMinutes=15,
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
         )
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("145.00"), marketState=MarketState.PRE
+            symbol="AAPL", current_price=Decimal("145.00"), market_state=MarketState.PRE
         )
 
         result = self.service.send_stock_notifications(stock, past_stock)
@@ -194,15 +194,15 @@ class TestNotificationService:
     def test_suppresses_notifications_during_delay_window(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.OPEN,
-            priceDelayInMinutes=15,
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
         )
         past_stock_pre = Stock(
-            symbol="AAPL", currentPrice=Decimal("145.00"), marketState=MarketState.PRE
+            symbol="AAPL", current_price=Decimal("145.00"), market_state=MarketState.PRE
         )
         past_stock_open = Stock(
-            symbol="AAPL", currentPrice=Decimal("149.00"), marketState=MarketState.OPEN
+            symbol="AAPL", current_price=Decimal("149.00"), market_state=MarketState.OPEN
         )
 
         self.service.send_stock_notifications(stock, past_stock_pre)
@@ -215,17 +215,17 @@ class TestNotificationService:
     def test_fires_notifications_after_delay_elapsed(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.OPEN,
-            priceDelayInMinutes=15,
-            previousClosePrice=Decimal("148.00"),
-            openPrice=Decimal("149.00"),
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
         )
         past_stock_pre = Stock(
-            symbol="AAPL", currentPrice=Decimal("145.00"), marketState=MarketState.PRE
+            symbol="AAPL", current_price=Decimal("145.00"), market_state=MarketState.PRE
         )
         past_stock_open = Stock(
-            symbol="AAPL", currentPrice=Decimal("149.00"), marketState=MarketState.OPEN
+            symbol="AAPL", current_price=Decimal("149.00"), market_state=MarketState.OPEN
         )
 
         self.service.send_stock_notifications(stock, past_stock_pre)
@@ -238,11 +238,11 @@ class TestNotificationService:
     def test_no_delay_suppression_when_past_stock_is_none(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.OPEN,
-            priceDelayInMinutes=15,
-            previousClosePrice=Decimal("148.00"),
-            openPrice=Decimal("149.00"),
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
         )
 
         result = self.service.send_stock_notifications(stock, None)
@@ -253,12 +253,12 @@ class TestNotificationService:
     def test_non_open_post_transitions_not_treated_as_delay_triggers(self):
         stock = Stock(
             symbol="AAPL",
-            currentPrice=Decimal("150.00"),
-            marketState=MarketState.PRE,
-            priceDelayInMinutes=15,
+            current_price=Decimal("150.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
         )
         past_stock = Stock(
-            symbol="AAPL", currentPrice=Decimal("145.00"), marketState=MarketState.OPEN
+            symbol="AAPL", current_price=Decimal("145.00"), market_state=MarketState.OPEN
         )
 
         self.service.send_stock_notifications(stock, past_stock)

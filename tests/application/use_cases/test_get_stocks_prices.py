@@ -88,8 +88,8 @@ class TestGetStocksPrices:
 
     def test_handle_returns_dtos_with_minimal_fields(self):
         responses = [
-            Stock(symbol="AAPL", currentPrice=Decimal("150.25")),
-            Stock(symbol="GOOGL", currentPrice=Decimal("2847.50")),
+            Stock(symbol="AAPL", current_price=Decimal("150.25")),
+            Stock(symbol="GOOGL", current_price=Decimal("2847.50")),
         ]
         self.mock_provider.get_stocks.return_value = responses
         request = GetStocksPricesRequest(symbols=["AAPL", "GOOGL"])

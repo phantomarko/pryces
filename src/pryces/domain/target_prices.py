@@ -26,7 +26,7 @@ class TargetPrice:
 
     def set_entry_price(self, stock: Stock) -> None:
         if self._entry is None:
-            self._entry = stock.currentPrice
+            self._entry = stock.current_price
 
     def generate_notification(self, stock: Stock) -> Notification | None:
         return (
@@ -39,5 +39,5 @@ class TargetPrice:
         if self._entry is None:
             return False
 
-        current = stock.currentPrice
+        current = stock.current_price
         return current <= self._target <= self._entry or current >= self._target >= self._entry

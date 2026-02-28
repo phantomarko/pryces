@@ -55,25 +55,27 @@ class YahooFinanceProvider(StockProvider):
 
         return Stock(
             symbol=symbol.upper(),
-            currentPrice=Decimal(str(current_price)),
+            current_price=Decimal(str(current_price)),
             name=company_name,
             currency=currency,
-            previousClosePrice=Decimal(str(previous_close)) if previous_close is not None else None,
-            openPrice=Decimal(str(open_price)) if open_price is not None else None,
-            dayHigh=Decimal(str(day_high)) if day_high is not None else None,
-            dayLow=Decimal(str(day_low)) if day_low is not None else None,
-            fiftyDayAverage=Decimal(str(fifty_day_avg)) if fifty_day_avg is not None else None,
-            twoHundredDayAverage=(
+            previous_close_price=(
+                Decimal(str(previous_close)) if previous_close is not None else None
+            ),
+            open_price=Decimal(str(open_price)) if open_price is not None else None,
+            day_high=Decimal(str(day_high)) if day_high is not None else None,
+            day_low=Decimal(str(day_low)) if day_low is not None else None,
+            fifty_day_average=Decimal(str(fifty_day_avg)) if fifty_day_avg is not None else None,
+            two_hundred_day_average=(
                 Decimal(str(two_hundred_day_avg)) if two_hundred_day_avg is not None else None
             ),
-            fiftyTwoWeekHigh=(
+            fifty_two_week_high=(
                 Decimal(str(fifty_two_week_high)) if fifty_two_week_high is not None else None
             ),
-            fiftyTwoWeekLow=(
+            fifty_two_week_low=(
                 Decimal(str(fifty_two_week_low)) if fifty_two_week_low is not None else None
             ),
-            marketState=market_state,
-            priceDelayInMinutes=price_delay_in_minutes,
+            market_state=market_state,
+            price_delay_in_minutes=price_delay_in_minutes,
         )
 
     def _build_stock_from_ticker(self, symbol: str, info: dict) -> Stock | None:

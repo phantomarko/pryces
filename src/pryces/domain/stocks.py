@@ -14,19 +14,19 @@ class MarketState(str, Enum):
 class Stock:
     __slots__ = (
         "_symbol",
-        "_currentPrice",
+        "_current_price",
         "_name",
         "_currency",
-        "_previousClosePrice",
-        "_openPrice",
-        "_dayHigh",
-        "_dayLow",
-        "_fiftyDayAverage",
-        "_twoHundredDayAverage",
-        "_fiftyTwoWeekHigh",
-        "_fiftyTwoWeekLow",
-        "_marketState",
-        "_priceDelayInMinutes",
+        "_previous_close_price",
+        "_open_price",
+        "_day_high",
+        "_day_low",
+        "_fifty_day_average",
+        "_two_hundred_day_average",
+        "_fifty_two_week_high",
+        "_fifty_two_week_low",
+        "_market_state",
+        "_price_delay_in_minutes",
         "_notifications",
     )
 
@@ -34,34 +34,34 @@ class Stock:
         self,
         *,
         symbol: str,
-        currentPrice: Decimal,
+        current_price: Decimal,
         name: str | None = None,
         currency: str | None = None,
-        previousClosePrice: Decimal | None = None,
-        openPrice: Decimal | None = None,
-        dayHigh: Decimal | None = None,
-        dayLow: Decimal | None = None,
-        fiftyDayAverage: Decimal | None = None,
-        twoHundredDayAverage: Decimal | None = None,
-        fiftyTwoWeekHigh: Decimal | None = None,
-        fiftyTwoWeekLow: Decimal | None = None,
-        marketState: MarketState | None = None,
-        priceDelayInMinutes: int | None = None,
+        previous_close_price: Decimal | None = None,
+        open_price: Decimal | None = None,
+        day_high: Decimal | None = None,
+        day_low: Decimal | None = None,
+        fifty_day_average: Decimal | None = None,
+        two_hundred_day_average: Decimal | None = None,
+        fifty_two_week_high: Decimal | None = None,
+        fifty_two_week_low: Decimal | None = None,
+        market_state: MarketState | None = None,
+        price_delay_in_minutes: int | None = None,
     ):
         self._symbol = symbol
-        self._currentPrice = currentPrice
+        self._current_price = current_price
         self._name = name
         self._currency = currency
-        self._previousClosePrice = previousClosePrice
-        self._openPrice = openPrice
-        self._dayHigh = dayHigh
-        self._dayLow = dayLow
-        self._fiftyDayAverage = fiftyDayAverage
-        self._twoHundredDayAverage = twoHundredDayAverage
-        self._fiftyTwoWeekHigh = fiftyTwoWeekHigh
-        self._fiftyTwoWeekLow = fiftyTwoWeekLow
-        self._marketState = marketState
-        self._priceDelayInMinutes = priceDelayInMinutes
+        self._previous_close_price = previous_close_price
+        self._open_price = open_price
+        self._day_high = day_high
+        self._day_low = day_low
+        self._fifty_day_average = fifty_day_average
+        self._two_hundred_day_average = two_hundred_day_average
+        self._fifty_two_week_high = fifty_two_week_high
+        self._fifty_two_week_low = fifty_two_week_low
+        self._market_state = market_state
+        self._price_delay_in_minutes = price_delay_in_minutes
         self._notifications: list[Notification] = []
 
     @property
@@ -69,8 +69,8 @@ class Stock:
         return self._symbol
 
     @property
-    def currentPrice(self) -> Decimal:
-        return self._currentPrice
+    def current_price(self) -> Decimal:
+        return self._current_price
 
     @property
     def name(self) -> str | None:
@@ -81,124 +81,124 @@ class Stock:
         return self._currency
 
     @property
-    def previousClosePrice(self) -> Decimal | None:
-        return self._previousClosePrice
+    def previous_close_price(self) -> Decimal | None:
+        return self._previous_close_price
 
     @property
-    def openPrice(self) -> Decimal | None:
-        return self._openPrice
+    def open_price(self) -> Decimal | None:
+        return self._open_price
 
     @property
-    def dayHigh(self) -> Decimal | None:
-        return self._dayHigh
+    def day_high(self) -> Decimal | None:
+        return self._day_high
 
     @property
-    def dayLow(self) -> Decimal | None:
-        return self._dayLow
+    def day_low(self) -> Decimal | None:
+        return self._day_low
 
     @property
-    def fiftyDayAverage(self) -> Decimal | None:
-        return self._fiftyDayAverage
+    def fifty_day_average(self) -> Decimal | None:
+        return self._fifty_day_average
 
     @property
-    def twoHundredDayAverage(self) -> Decimal | None:
-        return self._twoHundredDayAverage
+    def two_hundred_day_average(self) -> Decimal | None:
+        return self._two_hundred_day_average
 
     @property
-    def fiftyTwoWeekHigh(self) -> Decimal | None:
-        return self._fiftyTwoWeekHigh
+    def fifty_two_week_high(self) -> Decimal | None:
+        return self._fifty_two_week_high
 
     @property
-    def fiftyTwoWeekLow(self) -> Decimal | None:
-        return self._fiftyTwoWeekLow
+    def fifty_two_week_low(self) -> Decimal | None:
+        return self._fifty_two_week_low
 
     @property
-    def marketState(self) -> MarketState | None:
-        return self._marketState
+    def market_state(self) -> MarketState | None:
+        return self._market_state
 
     @property
-    def priceDelayInMinutes(self) -> int | None:
-        return self._priceDelayInMinutes
+    def price_delay_in_minutes(self) -> int | None:
+        return self._price_delay_in_minutes
 
     @property
     def notifications(self) -> list[Notification]:
         return self._notifications
 
     def _is_close_to_fifty_day_average(self) -> bool:
-        if self.fiftyDayAverage is None or self.previousClosePrice is None:
+        if self.fifty_day_average is None or self.previous_close_price is None:
             return False
 
-        change_percentage = (self.fiftyDayAverage - self.currentPrice) / self.currentPrice * 100
+        change_percentage = (self.fifty_day_average - self.current_price) / self.current_price * 100
 
         return (
-            self.previousClosePrice < self.fiftyDayAverage
-            and self.currentPrice < self.fiftyDayAverage
+            self.previous_close_price < self.fifty_day_average
+            and self.current_price < self.fifty_day_average
             and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
         ) or (
-            self.previousClosePrice > self.fiftyDayAverage
-            and self.currentPrice > self.fiftyDayAverage
+            self.previous_close_price > self.fifty_day_average
+            and self.current_price > self.fifty_day_average
             and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
         )
 
     def _has_crossed_fifty_day_average(self) -> bool:
-        if self.previousClosePrice is None or self.fiftyDayAverage is None:
+        if self.previous_close_price is None or self.fifty_day_average is None:
             return False
 
         crossed_above = (
-            self.previousClosePrice < self.fiftyDayAverage
-            and self.currentPrice >= self.fiftyDayAverage
+            self.previous_close_price < self.fifty_day_average
+            and self.current_price >= self.fifty_day_average
         )
         crossed_below = (
-            self.previousClosePrice > self.fiftyDayAverage
-            and self.currentPrice <= self.fiftyDayAverage
+            self.previous_close_price > self.fifty_day_average
+            and self.current_price <= self.fifty_day_average
         )
 
         return crossed_above or crossed_below
 
     def _is_close_to_two_hundred_day_average(self) -> bool:
-        if self.twoHundredDayAverage is None or self.previousClosePrice is None:
+        if self.two_hundred_day_average is None or self.previous_close_price is None:
             return False
 
         change_percentage = (
-            (self.twoHundredDayAverage - self.currentPrice) / self.currentPrice * 100
+            (self.two_hundred_day_average - self.current_price) / self.current_price * 100
         )
 
         return (
-            self.previousClosePrice < self.twoHundredDayAverage
-            and self.currentPrice < self.twoHundredDayAverage
+            self.previous_close_price < self.two_hundred_day_average
+            and self.current_price < self.two_hundred_day_average
             and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
         ) or (
-            self.previousClosePrice > self.twoHundredDayAverage
-            and self.currentPrice > self.twoHundredDayAverage
+            self.previous_close_price > self.two_hundred_day_average
+            and self.current_price > self.two_hundred_day_average
             and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
         )
 
     def _has_crossed_two_hundred_day_average(self) -> bool:
-        if self.previousClosePrice is None or self.twoHundredDayAverage is None:
+        if self.previous_close_price is None or self.two_hundred_day_average is None:
             return False
 
         crossed_above = (
-            self.previousClosePrice < self.twoHundredDayAverage
-            and self.currentPrice >= self.twoHundredDayAverage
+            self.previous_close_price < self.two_hundred_day_average
+            and self.current_price >= self.two_hundred_day_average
         )
         crossed_below = (
-            self.previousClosePrice > self.twoHundredDayAverage
-            and self.currentPrice <= self.twoHundredDayAverage
+            self.previous_close_price > self.two_hundred_day_average
+            and self.current_price <= self.two_hundred_day_average
         )
 
         return crossed_above or crossed_below
 
     def _change_percentage_from_previous_close(self) -> Decimal | None:
-        if self.previousClosePrice is None:
+        if self.previous_close_price is None:
             return None
 
-        return (self.currentPrice - self.previousClosePrice) / self.previousClosePrice * 100
+        return (self.current_price - self.previous_close_price) / self.previous_close_price * 100
 
     def _is_market_state_open(self) -> bool:
-        return self._marketState == MarketState.OPEN
+        return self._market_state == MarketState.OPEN
 
     def _is_market_state_post(self) -> bool:
-        return self._marketState == MarketState.POST
+        return self._market_state == MarketState.POST
 
     _CLOSE_TO_SMA_UPPER_THRESHOLD = Decimal("5")
     _CLOSE_TO_SMA_LOWER_THRESHOLD = Decimal("-5")
@@ -219,7 +219,7 @@ class Stock:
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
-        args = (self.symbol, self.currentPrice, change_percentage)
+        args = (self.symbol, self.current_price, change_percentage)
 
         if change_percentage > 0:
             for threshold, factory in self._INCREASE_THRESHOLDS:
@@ -235,53 +235,55 @@ class Stock:
     def _generate_new_52_week_high_notification(self, past_stock: "Stock | None") -> None:
         if (
             past_stock is not None
-            and past_stock.fiftyTwoWeekHigh is not None
-            and self.currentPrice > past_stock.fiftyTwoWeekHigh
+            and past_stock.fifty_two_week_high is not None
+            and self.current_price > past_stock.fifty_two_week_high
         ):
             self._notifications.append(
-                Notification.create_new_52_week_high(self.symbol, self.currentPrice)
+                Notification.create_new_52_week_high(self.symbol, self.current_price)
             )
 
     def _generate_new_52_week_low_notification(self, past_stock: "Stock | None") -> None:
         if (
             past_stock is not None
-            and past_stock.fiftyTwoWeekLow is not None
-            and self.currentPrice < past_stock.fiftyTwoWeekLow
+            and past_stock.fifty_two_week_low is not None
+            and self.current_price < past_stock.fifty_two_week_low
         ):
             self._notifications.append(
-                Notification.create_new_52_week_low(self.symbol, self.currentPrice)
+                Notification.create_new_52_week_low(self.symbol, self.current_price)
             )
 
     def _generate_regular_market_open_notification(self) -> None:
         self._notifications.append(
             Notification.create_regular_market_open(
                 self.symbol,
-                self.openPrice if self.openPrice is not None else self.currentPrice,
-                self.previousClosePrice,
+                self.open_price if self.open_price is not None else self.current_price,
+                self.previous_close_price,
             )
         )
 
     def _generate_close_to_fifty_day_average_notification(self) -> None:
         if self._is_close_to_fifty_day_average():
-            change_pct = (self.fiftyDayAverage - self.currentPrice) / self.currentPrice * 100
+            change_pct = (self.fifty_day_average - self.current_price) / self.current_price * 100
             self._notifications.append(
                 Notification.create_close_to_fifty_day_average(
-                    self.symbol, self.currentPrice, change_pct
+                    self.symbol, self.current_price, change_pct
                 )
             )
 
     def _generate_fifty_day_average_crossed_notification(self) -> None:
         if self._has_crossed_fifty_day_average():
             self._notifications.append(
-                Notification.create_fifty_day_average_crossed(self.symbol, self.fiftyDayAverage)
+                Notification.create_fifty_day_average_crossed(self.symbol, self.fifty_day_average)
             )
 
     def _generate_close_to_two_hundred_day_average_notification(self) -> None:
         if self._is_close_to_two_hundred_day_average():
-            change_pct = (self.twoHundredDayAverage - self.currentPrice) / self.currentPrice * 100
+            change_pct = (
+                (self.two_hundred_day_average - self.current_price) / self.current_price * 100
+            )
             self._notifications.append(
                 Notification.create_close_to_two_hundred_day_average(
-                    self.symbol, self.currentPrice, change_pct
+                    self.symbol, self.current_price, change_pct
                 )
             )
 
@@ -289,7 +291,7 @@ class Stock:
         if self._has_crossed_two_hundred_day_average():
             self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
-                    self.symbol, self.twoHundredDayAverage
+                    self.symbol, self.two_hundred_day_average
                 )
             )
 
@@ -314,7 +316,7 @@ class Stock:
     def _generate_regular_market_closed_notification(self) -> None:
         self._notifications.append(
             Notification.create_regular_market_closed(
-                self.symbol, self.currentPrice, self.previousClosePrice
+                self.symbol, self.current_price, self.previous_close_price
             )
         )
 

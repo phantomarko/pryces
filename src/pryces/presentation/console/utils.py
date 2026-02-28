@@ -34,17 +34,17 @@ def parse_symbols_input(value: str) -> list[str]:
 
 
 FIELD_LABELS = [
-    ("marketState", "Market State"),
-    ("currentPrice", "Current Price"),
-    ("previousClosePrice", "Previous Close"),
-    ("openPrice", "Open"),
-    ("dayHigh", "Day High"),
-    ("dayLow", "Day Low"),
-    ("fiftyDayAverage", "50-Day Average"),
-    ("twoHundredDayAverage", "200-Day Average"),
-    ("fiftyTwoWeekHigh", "52-Week High"),
-    ("fiftyTwoWeekLow", "52-Week Low"),
-    ("priceDelayInMinutes", "Price delay (min)"),
+    ("market_state", "Market State"),
+    ("current_price", "Current Price"),
+    ("previous_close_price", "Previous Close"),
+    ("open_price", "Open"),
+    ("day_high", "Day High"),
+    ("day_low", "Day Low"),
+    ("fifty_day_average", "50-Day Average"),
+    ("two_hundred_day_average", "200-Day Average"),
+    ("fifty_two_week_high", "52-Week High"),
+    ("fifty_two_week_low", "52-Week Low"),
+    ("price_delay_in_minutes", "Price delay (min)"),
 ]
 
 LABEL_WIDTH = max(len(label) for _, label in FIELD_LABELS)

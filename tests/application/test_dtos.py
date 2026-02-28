@@ -14,34 +14,34 @@ class TestStockDTO:
 
         assert isinstance(result, StockDTO)
         assert result.symbol == stock.symbol
-        assert result.currentPrice == stock.currentPrice
+        assert result.current_price == stock.current_price
         assert result.name == stock.name
         assert result.currency == stock.currency
-        assert result.previousClosePrice == stock.previousClosePrice
-        assert result.openPrice == stock.openPrice
-        assert result.dayHigh == stock.dayHigh
-        assert result.dayLow == stock.dayLow
-        assert result.fiftyDayAverage == stock.fiftyDayAverage
-        assert result.twoHundredDayAverage == stock.twoHundredDayAverage
-        assert result.fiftyTwoWeekHigh == stock.fiftyTwoWeekHigh
-        assert result.fiftyTwoWeekLow == stock.fiftyTwoWeekLow
-        assert result.priceDelayInMinutes == stock.priceDelayInMinutes
+        assert result.previous_close_price == stock.previous_close_price
+        assert result.open_price == stock.open_price
+        assert result.day_high == stock.day_high
+        assert result.day_low == stock.day_low
+        assert result.fifty_day_average == stock.fifty_day_average
+        assert result.two_hundred_day_average == stock.two_hundred_day_average
+        assert result.fifty_two_week_high == stock.fifty_two_week_high
+        assert result.fifty_two_week_low == stock.fifty_two_week_low
+        assert result.price_delay_in_minutes == stock.price_delay_in_minutes
 
     def test_from_stock_with_minimal_fields(self):
-        stock = Stock(symbol="AAPL", currentPrice=Decimal("150.25"))
+        stock = Stock(symbol="AAPL", current_price=Decimal("150.25"))
 
         result = StockDTO.from_stock(stock)
 
         assert isinstance(result, StockDTO)
         assert result.symbol == "AAPL"
-        assert result.currentPrice == Decimal("150.25")
+        assert result.current_price == Decimal("150.25")
         assert result.name is None
         assert result.currency is None
-        assert result.priceDelayInMinutes is None
+        assert result.price_delay_in_minutes is None
 
     def test_from_stock_maps_price_delay_in_minutes(self):
-        stock = Stock(symbol="AAPL", currentPrice=Decimal("150.25"), priceDelayInMinutes=15)
+        stock = Stock(symbol="AAPL", current_price=Decimal("150.25"), price_delay_in_minutes=15)
 
         result = StockDTO.from_stock(stock)
 
-        assert result.priceDelayInMinutes == 15
+        assert result.price_delay_in_minutes == 15
