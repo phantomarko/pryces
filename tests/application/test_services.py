@@ -40,15 +40,6 @@ class TestNotificationService:
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
         assert all("AAPL" in m for m in messages)
 
-    def test_returns_sent_notifications(self):
-        stock = create_stock_crossing_fifty_day("AAPL")
-
-        result = self.service.send_stock_notifications(stock)
-
-        assert len(result) == 2
-        assert result[0] is stock.notifications[0]
-        assert result[1] is stock.notifications[1]
-
     def test_saves_sent_notifications_to_repository(self):
         stock = create_stock_crossing_fifty_day("AAPL")
 
@@ -62,48 +53,42 @@ class TestNotificationService:
         stock2 = create_stock_crossing_fifty_day("AAPL")
 
         self.service.send_stock_notifications(stock1)
-        result = self.service.send_stock_notifications(stock2)
+        self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 2
-        assert result == []
 
     def test_handles_multiple_stocks_independently(self):
         stock1 = create_stock_crossing_fifty_day("AAPL")
         stock2 = create_stock_crossing_fifty_day("GOOGL")
 
-        result1 = self.service.send_stock_notifications(stock1)
-        result2 = self.service.send_stock_notifications(stock2)
+        self.service.send_stock_notifications(stock1)
+        self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 4
         for notification in stock1.notifications:
             assert self.repo.exists_by_type("AAPL", notification.type)
         for notification in stock2.notifications:
             assert self.repo.exists_by_type("GOOGL", notification.type)
-        assert len(result1) == 2
-        assert len(result2) == 2
 
     def test_handles_stock_with_no_crossing_notifications(self):
         stock = create_stock_no_crossing("AAPL")
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called_once()
         assert self.repo.exists_by_type("AAPL", NotificationType.REGULAR_MARKET_OPEN)
-        assert len(result) == 1
 
     def test_sends_unsent_notification_type_even_if_other_type_already_sent(self):
         stock_fifty = create_stock_crossing_fifty_day("AAPL")
-        result1 = self.service.send_stock_notifications(stock_fifty)
+        self.service.send_stock_notifications(stock_fifty)
 
         stock_both = create_stock_crossing_both_averages("AAPL")
-        result2 = self.service.send_stock_notifications(stock_both)
+        self.service.send_stock_notifications(stock_both)
 
         assert self.mock_sender.send_message.call_count == 3
         assert self.repo.exists_by_type("AAPL", NotificationType.REGULAR_MARKET_OPEN)
         assert self.repo.exists_by_type("AAPL", NotificationType.SMA50_CROSSED)
         assert self.repo.exists_by_type("AAPL", NotificationType.SMA200_CROSSED)
-        assert len(result1) == 2
-        assert len(result2) == 1
 
     def test_sends_new_52_week_high_notification_when_snapshot_exists(self):
         stock = Stock(
@@ -121,10 +106,9 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        types = {n.type for n in result}
-        assert NotificationType.NEW_52_WEEK_HIGH in types
+        assert self.repo.exists_by_type("AAPL", NotificationType.NEW_52_WEEK_HIGH)
 
     def test_sends_new_52_week_low_notification_when_snapshot_exists(self):
         stock = Stock(
@@ -142,10 +126,9 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        types = {n.type for n in result}
-        assert NotificationType.NEW_52_WEEK_LOW in types
+        assert self.repo.exists_by_type("AAPL", NotificationType.NEW_52_WEEK_LOW)
 
     def test_no_delay_when_price_delay_is_none(self):
         stock = Stock(
@@ -164,9 +147,8 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        assert len(result) > 0
         self.mock_sender.send_message.assert_called()
 
     def test_no_delay_when_price_delay_is_zero(self):
@@ -186,9 +168,8 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        assert len(result) > 0
         self.mock_sender.send_message.assert_called()
 
     def test_suppresses_notifications_on_transition_cycle_when_delay_positive(self):
@@ -206,9 +187,8 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        assert result == []
         self.mock_sender.send_message.assert_not_called()
 
     def test_suppresses_notifications_during_delay_window(self):
@@ -235,9 +215,8 @@ class TestNotificationService:
         )
         stock.update(source_same)
         self.clock.return_value = datetime(2024, 1, 1, 9, 5, 0)
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        assert result == []
         self.mock_sender.send_message.assert_not_called()
 
     def test_fires_notifications_after_delay_elapsed(self):
@@ -266,9 +245,8 @@ class TestNotificationService:
         )
         stock.update(source_same)
         self.clock.return_value = datetime(2024, 1, 1, 9, 16, 0)
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        assert len(result) > 0
         self.mock_sender.send_message.assert_called()
 
     def test_no_delay_suppression_when_no_snapshot(self):
@@ -281,9 +259,8 @@ class TestNotificationService:
             open_price=Decimal("149.00"),
         )
 
-        result = self.service.send_stock_notifications(stock)
+        self.service.send_stock_notifications(stock)
 
-        assert len(result) > 0
         self.mock_sender.send_message.assert_called()
 
     def test_non_open_post_transitions_not_treated_as_delay_triggers(self):
