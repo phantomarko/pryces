@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Callable
 
+from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import Stock
 from pryces.domain.target_prices import TargetPrice
 
@@ -42,20 +43,16 @@ class NotificationService:
         if self._is_in_delay_window(stock):
             return []
 
-        stock.generate_notifications()
+        triggered = stock.generate_notifications(targets)
 
         for notification in stock.notifications:
-            if self._notification_repository.exists_by_type(stock.symbol, notification.type):
+            if (
+                notification.type != NotificationType.TARGET_PRICE_REACHED
+                and self._notification_repository.exists_by_type(stock.symbol, notification.type)
+            ):
                 continue
 
             self._message_sender.send_message(notification.message)
             self._notification_repository.save(stock.symbol, notification)
-
-        triggered: list[TargetPrice] = []
-        for target in targets:
-            notification = target.generate_notification(stock)
-            if notification is not None:
-                self._message_sender.send_message(notification.message)
-                triggered.append(target)
 
         return triggered

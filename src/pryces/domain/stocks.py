@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from pryces.domain.notifications import Notification, NotificationType
+
+if TYPE_CHECKING:
+    from pryces.domain.target_prices import TargetPrice
 
 
 @dataclass(frozen=True, slots=True)
@@ -364,7 +370,17 @@ class Stock:
         if notification is not None:
             self._notifications.append(notification)
 
-    def _generate_market_open_notifications(self) -> None:
+    def _generate_target_price_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
+        triggered: list[TargetPrice] = []
+        for target in targets:
+            if target.is_reached(self):
+                self._notifications.append(
+                    Notification.create_target_price_reached(self._symbol, target.target)
+                )
+                triggered.append(target)
+        return triggered
+
+    def _generate_market_open_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
         self._generate_regular_market_open_notification()
         self._generate_close_to_fifty_day_average_notification()
         self._generate_fifty_day_average_crossed_notification()
@@ -373,6 +389,7 @@ class Stock:
         self._generate_percentage_change_from_previous_close_notification()
         self._generate_new_52_week_high_notification()
         self._generate_new_52_week_low_notification()
+        return self._generate_target_price_notifications(targets)
 
     def _generate_regular_market_closed_notification(self) -> None:
         self._notifications.append(
@@ -384,9 +401,10 @@ class Stock:
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()
 
-    def generate_notifications(self) -> None:
+    def generate_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
         self._notifications = []
         if self._is_market_state_open():
-            self._generate_market_open_notifications()
+            return self._generate_market_open_notifications(targets)
         elif self._is_market_state_post():
             self._generate_market_closed_notifications()
+        return []
