@@ -36,9 +36,11 @@ class NotificationService:
         self._transition_repository.delete(stock.symbol)
         return False
 
-    def send_stock_notifications(self, stock: Stock) -> None:
+    def send_stock_notifications(
+        self, stock: Stock, targets: list[TargetPrice]
+    ) -> list[TargetPrice]:
         if self._is_in_delay_window(stock):
-            return
+            return []
 
         stock.generate_notifications()
 
@@ -49,11 +51,7 @@ class NotificationService:
             self._message_sender.send_message(notification.message)
             self._notification_repository.save(stock.symbol, notification)
 
-    def send_stock_targets_notifications(
-        self, stock: Stock, targets: list[TargetPrice]
-    ) -> list[TargetPrice]:
         triggered: list[TargetPrice] = []
-
         for target in targets:
             notification = target.generate_notification(stock)
             if notification is not None:

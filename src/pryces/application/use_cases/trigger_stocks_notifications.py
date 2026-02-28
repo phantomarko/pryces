@@ -42,8 +42,7 @@ class TriggerStocksNotifications:
 
             targets = self._target_price_repository.get_by_symbol([stock.symbol])
             self._set_entry_prices(stock, targets)
-            self._notification_service.send_stock_notifications(stock)
-            triggered = self._notification_service.send_stock_targets_notifications(stock, targets)
+            triggered = self._notification_service.send_stock_notifications(stock, targets)
             for target in triggered:
                 self._target_price_repository.delete(target)
             fulfilled.extend(triggered)
