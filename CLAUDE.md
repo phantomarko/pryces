@@ -173,6 +173,15 @@ python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH  # Monitor scri
   - The package is secure, well-maintained, and clearly the best option for the use case
 - Prefer built-in language/platform features over external libraries
 
+### PEP 8 Compliance
+
+All Python code must follow [PEP 8](https://peps.python.org/pep-0008/) style guidelines:
+- **Line length**: Maximum 100 characters (enforced by `black`)
+- **Naming**: `snake_case` for variables/functions, `PascalCase` for classes, `UPPER_SNAKE_CASE` for constants, `_prefix` for private members
+- **Imports**: Standard library → third-party → local; one import per line; no wildcard imports
+- **Type hints**: Use built-in generics (`dict`, `list`, `tuple`) over `typing` equivalents (`Dict`, `List`, `Tuple`) — requires Python 3.9+
+- **Formatting**: Enforced automatically by the `black` pre-commit hook — never skip it
+
 ### Code Comments
 
 **Write self-documenting code.** Use clear names, structure, and type hints. Only add comments when they explain WHY, not WHAT.

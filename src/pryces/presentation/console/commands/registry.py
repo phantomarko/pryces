@@ -1,10 +1,9 @@
-from typing import Dict
 from .base import Command
 
 
 class CommandRegistry:
     def __init__(self) -> None:
-        self._commands: Dict[str, Command] = {}
+        self._commands: dict[str, Command] = {}
 
     def register(self, command: Command) -> None:
         metadata = command.get_metadata()
