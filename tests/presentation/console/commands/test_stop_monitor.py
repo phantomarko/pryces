@@ -27,7 +27,7 @@ class TestStopMonitorCommand:
 
         assert command.get_input_prompts() == []
 
-    @patch("pryces.presentation.console.commands.stop_monitor._get_monitor_processes")
+    @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_returns_early_when_no_processes(self, mock_get):
         mock_get.return_value = []
         command, _ = _make_command()
@@ -36,7 +36,7 @@ class TestStopMonitorCommand:
 
         assert result == "No monitor processes found."
 
-    @patch("pryces.presentation.console.commands.stop_monitor._get_monitor_processes")
+    @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_prints_numbered_list(self, mock_get):
         mock_get.return_value = [("11111", "/config/a.json"), ("22222", "/config/b.json")]
         command, output_stream = _make_command("0\n")
@@ -50,7 +50,7 @@ class TestStopMonitorCommand:
         assert "2. PID 22222" in output
         assert "/config/b.json" in output
 
-    @patch("pryces.presentation.console.commands.stop_monitor._get_monitor_processes")
+    @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_returns_cancelled_on_zero(self, mock_get):
         mock_get.return_value = [("12345", "/config/a.json")]
         command, _ = _make_command("0\n")
@@ -60,7 +60,7 @@ class TestStopMonitorCommand:
         assert result == "Cancelled."
 
     @patch("pryces.presentation.console.commands.stop_monitor.subprocess.run")
-    @patch("pryces.presentation.console.commands.stop_monitor._get_monitor_processes")
+    @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_kills_selected_process(self, mock_get, mock_run):
         mock_get.return_value = [("11111", "/config/a.json"), ("22222", "/config/b.json")]
         command, _ = _make_command("2\n")
@@ -72,7 +72,7 @@ class TestStopMonitorCommand:
         assert "/config/b.json" in result
 
     @patch("pryces.presentation.console.commands.stop_monitor.subprocess.run")
-    @patch("pryces.presentation.console.commands.stop_monitor._get_monitor_processes")
+    @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_rejects_out_of_range_then_accepts_valid(self, mock_get, mock_run):
         mock_get.return_value = [("12345", "/config/a.json")]
         command, output_stream = _make_command("5\n1\n")
@@ -85,7 +85,7 @@ class TestStopMonitorCommand:
         assert "12345" in result
 
     @patch("pryces.presentation.console.commands.stop_monitor.subprocess.run")
-    @patch("pryces.presentation.console.commands.stop_monitor._get_monitor_processes")
+    @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_rejects_non_numeric_then_accepts_valid(self, mock_get, mock_run):
         mock_get.return_value = [("12345", "/config/a.json")]
         command, output_stream = _make_command("abc\n1\n")

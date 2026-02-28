@@ -3,7 +3,7 @@ import sys
 from io import TextIOBase
 
 from .base import Command, CommandMetadata, InputPrompt
-from .list_monitors import _get_monitor_processes
+from ..utils import get_running_monitors
 
 
 class StopMonitorCommand(Command):
@@ -26,7 +26,7 @@ class StopMonitorCommand(Command):
         return []
 
     def execute(self, **kwargs) -> str:
-        processes = _get_monitor_processes()
+        processes = get_running_monitors()
 
         if not processes:
             return "No monitor processes found."
