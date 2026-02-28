@@ -41,37 +41,33 @@ class Notification:
         return self._message
 
     @staticmethod
-    def create_fifty_day_average_crossed(
-        symbol: str, current_price: Decimal, average_price: Decimal
-    ) -> "Notification":
-        message = f"{symbol} crossed SMA50 at {current_price} (SMA: {average_price})"
+    def create_fifty_day_average_crossed(symbol: str, average_price: Decimal) -> "Notification":
+        message = f"{symbol} crossed SMA50 at {average_price}"
         return Notification(Notification._CREATION_KEY, NotificationType.SMA50_CROSSED, message)
 
     @staticmethod
     def create_two_hundred_day_average_crossed(
-        symbol: str, current_price: Decimal, average_price: Decimal
+        symbol: str, average_price: Decimal
     ) -> "Notification":
-        message = f"{symbol} crossed SMA200 at {current_price} (SMA: {average_price})"
+        message = f"{symbol} crossed SMA200 at {average_price}"
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
 
     @staticmethod
     def create_close_to_fifty_day_average(
         symbol: str,
         current_price: Decimal,
-        average_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = f"{symbol} nearing SMA50 by {change_percentage:+.2f}% ({current_price} \u2192 SMA: {average_price})"
+        message = f"{symbol} at {current_price} ({change_percentage:+.2f}% from SMA50)"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
 
     @staticmethod
     def create_close_to_two_hundred_day_average(
         symbol: str,
         current_price: Decimal,
-        average_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = f"{symbol} nearing SMA200 by {change_percentage:+.2f}% ({current_price} \u2192 SMA: {average_price})"
+        message = f"{symbol} at {current_price} ({change_percentage:+.2f}% from SMA200)"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
 
     @staticmethod
@@ -182,7 +178,7 @@ class Notification:
 
     @staticmethod
     def create_target_price_reached(symbol: str, target_price: Decimal) -> "Notification":
-        message = f"{symbol} reached target price {target_price}"
+        message = f"{symbol} hit target {target_price}"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TARGET_PRICE_REACHED, message
         )

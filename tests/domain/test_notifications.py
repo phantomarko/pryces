@@ -11,34 +11,26 @@ def test_cannot_create_notification_directly():
 
 
 def test_create_fifty_day_average_crossed_sets_type():
-    notification = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("145.00")
-    )
+    notification = Notification.create_fifty_day_average_crossed("AAPL", Decimal("145.00"))
 
     assert notification.type == NotificationType.SMA50_CROSSED
 
 
 def test_create_fifty_day_average_crossed_sets_message():
-    notification = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("145.00")
-    )
+    notification = Notification.create_fifty_day_average_crossed("AAPL", Decimal("145.00"))
 
     assert isinstance(notification.message, str)
     assert len(notification.message) > 0
 
 
 def test_create_two_hundred_day_average_crossed_sets_type():
-    notification = Notification.create_two_hundred_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("140.00")
-    )
+    notification = Notification.create_two_hundred_day_average_crossed("AAPL", Decimal("140.00"))
 
     assert notification.type == NotificationType.SMA200_CROSSED
 
 
 def test_create_two_hundred_day_average_crossed_sets_message():
-    notification = Notification.create_two_hundred_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("140.00")
-    )
+    notification = Notification.create_two_hundred_day_average_crossed("AAPL", Decimal("140.00"))
 
     assert isinstance(notification.message, str)
     assert len(notification.message) > 0
@@ -46,7 +38,7 @@ def test_create_two_hundred_day_average_crossed_sets_message():
 
 def test_create_close_to_fifty_day_average_sets_type():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("100.00"), Decimal("110.00"), Decimal("10.00")
+        "AAPL", Decimal("100.00"), Decimal("10.00")
     )
 
     assert notification.type == NotificationType.CLOSE_TO_SMA50
@@ -54,7 +46,7 @@ def test_create_close_to_fifty_day_average_sets_type():
 
 def test_create_close_to_fifty_day_average_sets_message():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("100.00"), Decimal("110.00"), Decimal("10.00")
+        "AAPL", Decimal("100.00"), Decimal("10.00")
     )
 
     assert isinstance(notification.message, str)
@@ -63,7 +55,7 @@ def test_create_close_to_fifty_day_average_sets_message():
 
 def test_create_close_to_two_hundred_day_average_sets_type():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("100.00"), Decimal("90.00"), Decimal("-10.00")
+        "AAPL", Decimal("100.00"), Decimal("-10.00")
     )
 
     assert notification.type == NotificationType.CLOSE_TO_SMA200
@@ -71,7 +63,7 @@ def test_create_close_to_two_hundred_day_average_sets_type():
 
 def test_create_close_to_two_hundred_day_average_sets_message():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("100.00"), Decimal("90.00"), Decimal("-10.00")
+        "AAPL", Decimal("100.00"), Decimal("-10.00")
     )
 
     assert isinstance(notification.message, str)

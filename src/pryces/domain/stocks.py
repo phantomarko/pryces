@@ -266,16 +266,14 @@ class Stock:
             change_pct = (self.fiftyDayAverage - self.currentPrice) / self.currentPrice * 100
             self._notifications.append(
                 Notification.create_close_to_fifty_day_average(
-                    self.symbol, self.currentPrice, self.fiftyDayAverage, change_pct
+                    self.symbol, self.currentPrice, change_pct
                 )
             )
 
     def _generate_fifty_day_average_crossed_notification(self) -> None:
         if self._has_crossed_fifty_day_average():
             self._notifications.append(
-                Notification.create_fifty_day_average_crossed(
-                    self.symbol, self.currentPrice, self.fiftyDayAverage
-                )
+                Notification.create_fifty_day_average_crossed(self.symbol, self.fiftyDayAverage)
             )
 
     def _generate_close_to_two_hundred_day_average_notification(self) -> None:
@@ -283,7 +281,7 @@ class Stock:
             change_pct = (self.twoHundredDayAverage - self.currentPrice) / self.currentPrice * 100
             self._notifications.append(
                 Notification.create_close_to_two_hundred_day_average(
-                    self.symbol, self.currentPrice, self.twoHundredDayAverage, change_pct
+                    self.symbol, self.currentPrice, change_pct
                 )
             )
 
@@ -291,7 +289,7 @@ class Stock:
         if self._has_crossed_two_hundred_day_average():
             self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
-                    self.symbol, self.currentPrice, self.twoHundredDayAverage
+                    self.symbol, self.twoHundredDayAverage
                 )
             )
 

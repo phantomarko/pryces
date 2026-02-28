@@ -54,25 +54,6 @@ class MonitorStocksScript:
         except Exception:
             pass
 
-    def _log_config(self) -> None:
-        duration_label = (
-            f"{self._config.duration} minute{'s' if self._config.duration != 1 else ''}"
-        )
-        self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
-        stocks_info = [
-            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" if s.prices else s.symbol
-            for s in self._config.symbols
-        ]
-        self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
-
-    def _save_target_prices(self) -> None:
-        price_targets = [
-            TargetPriceDTO(symbol=s.symbol, target=price)
-            for s in self._config.symbols
-            for price in s.prices
-        ]
-        self._sync_target_prices.handle(SyncTargetPricesRequest(price_targets=price_targets))
-
     def _write_config(self, fulfilled: list[TargetPriceDTO]) -> None:
         if not fulfilled:
             return
@@ -101,6 +82,25 @@ class MonitorStocksScript:
         self._log_config()
         self._config_manager.write_monitor_stocks_config(new_config)
         self._logger.info("Config updated after fulfilled targets.")
+
+    def _log_config(self) -> None:
+        duration_label = (
+            f"{self._config.duration} minute{'s' if self._config.duration != 1 else ''}"
+        )
+        self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
+        stocks_info = [
+            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" if s.prices else s.symbol
+            for s in self._config.symbols
+        ]
+        self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
+
+    def _save_target_prices(self) -> None:
+        price_targets = [
+            TargetPriceDTO(symbol=s.symbol, target=price)
+            for s in self._config.symbols
+            for price in s.prices
+        ]
+        self._sync_target_prices.handle(SyncTargetPricesRequest(price_targets=price_targets))
 
     def run(self) -> None:
         self._logger.info("Monitoring started.")
