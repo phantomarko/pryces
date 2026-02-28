@@ -88,7 +88,7 @@ class InteractiveMenu:
 
         try:
             result = command.execute(**inputs)
-            self._output.write(result)
+            self._output.write(result.message)
             self._output.write("\n")
         except Exception as e:
             self._output.write(f"\nError executing command: {e}\n")

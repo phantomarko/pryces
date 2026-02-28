@@ -17,13 +17,9 @@ That's 4–5 responsibilities in one use case.
 **Suggestion:** Entry price capture belongs in `TargetPrice.set_entry_price()` (already exists) called
 by a dedicated service. The use case should coordinate, not implement.
 
-### 2. `Command.execute() -> str` — ISP violation
-**File:** `presentation/console/commands/base.py`
-**Violation:** ISP
-All commands are forced to return a formatted string, coupling presentation formatting
-into the command contract. Commands can't return structured results and formatting
-can't be tested independently.
-**Suggestion:** Return a structured `CommandResult` (or raw data). Let the menu/caller handle formatting.
+### ~~2. `Command.execute() -> str` — ISP violation~~ ✓ Resolved
+`CommandResult(message: str, success: bool = True)` introduced in `base.py`. All commands
+return `CommandResult`; `menu.py` reads `result.message`. Error paths set `success=False`.
 
 ### ~~3. `stop_monitor.py` imports from `list_monitors.py`~~ ✓ Resolved
 `_get_monitor_processes` moved to `utils.py` as `get_running_monitors()`. Both commands now
@@ -158,7 +154,7 @@ not structural ones.
 | Priority | # | Item |
 |---|---|---|
 | High | 1 | Break up `TriggerStocksNotifications` |
-| High | 2 | Fix `Command.execute() -> str` ISP issue |
+| ~~High~~ | ~~2~~ | ~~Fix `Command.execute() -> str` ISP issue~~ ✓ |
 | ~~High~~ | ~~3~~ | ~~Move `_get_monitor_processes` to `utils.py`~~ ✓ |
 | High | 4 | Break up `MonitorStocksScript` responsibilities |
 | Medium | 5 | Extract delay-window logic from `NotificationService` |

@@ -47,7 +47,7 @@ class TestMonitorStocksCommand:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        assert "PID: 12345" in result
+        assert "PID: 12345" in result.message
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
     def test_execute_strips_whitespace_from_config_path(self, mock_popen):
@@ -59,7 +59,7 @@ class TestMonitorStocksCommand:
 
         args = mock_popen.call_args[0][0]
         assert args[3] == "/path/to/config.json"
-        assert "PID: 99999" in result
+        assert "PID: 99999" in result.message
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
     def test_execute_accepts_kwargs_for_compatibility(self, mock_popen):
@@ -69,7 +69,7 @@ class TestMonitorStocksCommand:
 
         result = self.command.execute(config_path="/path/to/config.json", extra_arg="ignored")
 
-        assert "Monitor started in background" in result
+        assert "Monitor started in background" in result.message
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
     def test_execute_returns_message_with_background_info(self, mock_popen):
@@ -79,4 +79,4 @@ class TestMonitorStocksCommand:
 
         result = self.command.execute(config_path="/path/to/config.json")
 
-        assert result == "Monitor started in background (PID: 42)"
+        assert result.message == "Monitor started in background (PID: 42)"

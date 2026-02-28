@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from ....application.use_cases.send_messages import SendMessages, SendMessagesRequest
-from .base import Command, CommandMetadata, InputPrompt
+from .base import Command, CommandMetadata, CommandResult, InputPrompt
 
 _READY = "[READY]"
 _NOT_READY = "[NOT READY]"
@@ -26,7 +26,7 @@ class CheckReadinessCommand(Command):
     def get_input_prompts(self) -> list[InputPrompt]:
         return []
 
-    def execute(self, **kwargs) -> str:
+    def execute(self, **kwargs) -> CommandResult:
         self._logger.info("Check Readiness command started")
         self._all_ready = True
         results = [
@@ -37,7 +37,7 @@ class CheckReadinessCommand(Command):
             results.append("")
             results.append(_WARNING)
         self._logger.info("Check Readiness command finished")
-        return "\n".join(results)
+        return CommandResult(message="\n".join(results), success=self._all_ready)
 
     def _check_env(self) -> str:
         errors = []

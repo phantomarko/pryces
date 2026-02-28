@@ -34,7 +34,7 @@ class TestStopMonitorCommand:
 
         result = command.execute()
 
-        assert result == "No monitor processes found."
+        assert result.message == "No monitor processes found."
 
     @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_prints_numbered_list(self, mock_get):
@@ -57,7 +57,7 @@ class TestStopMonitorCommand:
 
         result = command.execute()
 
-        assert result == "Cancelled."
+        assert result.message == "Cancelled."
 
     @patch("pryces.presentation.console.commands.stop_monitor.subprocess.run")
     @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
@@ -68,8 +68,8 @@ class TestStopMonitorCommand:
         result = command.execute()
 
         mock_run.assert_called_once_with(["kill", "22222"])
-        assert "22222" in result
-        assert "/config/b.json" in result
+        assert "22222" in result.message
+        assert "/config/b.json" in result.message
 
     @patch("pryces.presentation.console.commands.stop_monitor.subprocess.run")
     @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
@@ -82,7 +82,7 @@ class TestStopMonitorCommand:
         output = output_stream.getvalue()
         assert "Invalid choice" in output
         mock_run.assert_called_once_with(["kill", "12345"])
-        assert "12345" in result
+        assert "12345" in result.message
 
     @patch("pryces.presentation.console.commands.stop_monitor.subprocess.run")
     @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
@@ -95,4 +95,4 @@ class TestStopMonitorCommand:
         output = output_stream.getvalue()
         assert "Invalid input" in output
         mock_run.assert_called_once_with(["kill", "12345"])
-        assert "12345" in result
+        assert "12345" in result.message

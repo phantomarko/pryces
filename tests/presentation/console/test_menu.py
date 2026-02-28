@@ -4,7 +4,12 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.presentation.console.menu import InteractiveMenu
-from pryces.presentation.console.commands.base import Command, CommandMetadata, InputPrompt
+from pryces.presentation.console.commands.base import (
+    Command,
+    CommandMetadata,
+    CommandResult,
+    InputPrompt,
+)
 from pryces.presentation.console.commands.registry import CommandRegistry
 
 
@@ -128,7 +133,7 @@ class TestInteractiveMenu:
         mock_command.get_input_prompts.return_value = [
             InputPrompt(key="symbol", prompt="Enter symbol: ", validator=None)
         ]
-        mock_command.execute.return_value = '{"success": true}'
+        mock_command.execute.return_value = CommandResult(message='{"success": true}')
 
         self.input_stream.write("AAPL\n")
         self.input_stream.seek(0)
@@ -175,7 +180,7 @@ class TestInteractiveMenu:
             id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = []
-        mock_command.execute.return_value = '{"success": true}'
+        mock_command.execute.return_value = CommandResult(message='{"success": true}')
 
         self.input_stream.write("\n")
         self.input_stream.seek(0)
@@ -191,7 +196,7 @@ class TestInteractiveMenu:
             id="test", name="Test Command", description="Test"
         )
         mock_command.get_input_prompts.return_value = []
-        mock_command.execute.return_value = '{"success": true}'
+        mock_command.execute.return_value = CommandResult(message='{"success": true}')
 
         self.registry.register(mock_command)
 

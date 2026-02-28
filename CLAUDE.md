@@ -137,7 +137,7 @@ Presentation → Application → Domain
 **Presentation** (`src/pryces/presentation/console/`) — Interactive CLI:
 - `cli.py` — Entry point, composition root (wires dependencies)
 - `menu.py` — `InteractiveMenu` (main loop, I/O via injectable streams)
-- `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`
+- `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`, `CommandResult` (frozen dataclass: `message: str`, `success: bool = True`)
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand` (one or multiple symbols → formatted output)
 - `commands/monitor_stocks.py` — `MonitorStocksCommand` (launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
 - `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path; displays numbered entries); exports `_get_monitor_processes() -> list[tuple[str, str]]` shared helper

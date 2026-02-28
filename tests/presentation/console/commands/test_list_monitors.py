@@ -27,7 +27,7 @@ class TestListMonitorsCommand:
 
         result = self.command.execute()
 
-        assert result == "No monitor processes found."
+        assert result.message == "No monitor processes found."
 
     @patch("pryces.presentation.console.commands.list_monitors.get_running_monitors")
     def test_execute_returns_single_process(self, mock_get):
@@ -35,9 +35,9 @@ class TestListMonitorsCommand:
 
         result = self.command.execute()
 
-        assert "Found 1 monitor process(es):" in result
-        assert "1. PID 12345" in result
-        assert "/path/to/config.json" in result
+        assert "Found 1 monitor process(es):" in result.message
+        assert "1. PID 12345" in result.message
+        assert "/path/to/config.json" in result.message
 
     @patch("pryces.presentation.console.commands.list_monitors.get_running_monitors")
     def test_execute_returns_multiple_processes(self, mock_get):
@@ -45,8 +45,8 @@ class TestListMonitorsCommand:
 
         result = self.command.execute()
 
-        assert "Found 2 monitor process(es):" in result
-        assert "1. PID 11111" in result
-        assert "/config/a.json" in result
-        assert "2. PID 22222" in result
-        assert "/config/b.json" in result
+        assert "Found 2 monitor process(es):" in result.message
+        assert "1. PID 11111" in result.message
+        assert "/config/a.json" in result.message
+        assert "2. PID 22222" in result.message
+        assert "/config/b.json" in result.message

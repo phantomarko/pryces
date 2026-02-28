@@ -17,6 +17,12 @@ class InputPrompt:
     validator: Callable[[str], bool] | None = None
 
 
+@dataclass(frozen=True)
+class CommandResult:
+    message: str
+    success: bool = True
+
+
 class Command(ABC):
     @abstractmethod
     def get_metadata(self) -> CommandMetadata:
@@ -27,5 +33,5 @@ class Command(ABC):
         pass
 
     @abstractmethod
-    def execute(self, **kwargs) -> str:
+    def execute(self, **kwargs) -> CommandResult:
         pass

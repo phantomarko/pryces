@@ -300,10 +300,11 @@ class TestCheckReadinessExecute:
 
         result = command.execute()
 
-        lines = result.split("\n")
+        lines = result.message.split("\n")
         assert lines[0] == "[READY] Environment variables"
         assert lines[1] == "[READY] Telegram notifications"
-        assert "restart the app" not in result
+        assert "restart the app" not in result.message
+        assert result.success is True
 
     @patch.dict(
         "os.environ",
@@ -320,9 +321,10 @@ class TestCheckReadinessExecute:
 
         result = command.execute()
 
-        assert result.index("[NOT READY] Environment variables") < result.index(
+        assert result.message.index("[NOT READY] Environment variables") < result.message.index(
             "[NOT READY] Telegram notifications"
         )
-        assert result.endswith(
+        assert result.message.endswith(
             "Fix the errors above and restart the app for changes to take effect."
         )
+        assert result.success is False

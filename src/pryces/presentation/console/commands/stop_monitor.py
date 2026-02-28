@@ -2,7 +2,7 @@ import subprocess
 import sys
 from io import TextIOBase
 
-from .base import Command, CommandMetadata, InputPrompt
+from .base import Command, CommandMetadata, CommandResult, InputPrompt
 from ..utils import get_running_monitors
 
 
@@ -25,11 +25,11 @@ class StopMonitorCommand(Command):
     def get_input_prompts(self) -> list[InputPrompt]:
         return []
 
-    def execute(self, **kwargs) -> str:
+    def execute(self, **kwargs) -> CommandResult:
         processes = get_running_monitors()
 
         if not processes:
-            return "No monitor processes found."
+            return CommandResult(message="No monitor processes found.")
 
         header = f"Found {len(processes)} monitor process(es):"
         entries = [
@@ -52,12 +52,14 @@ class StopMonitorCommand(Command):
             choice = int(raw)
 
             if choice == 0:
-                return "Cancelled."
+                return CommandResult(message="Cancelled.")
 
             if 1 <= choice <= len(processes):
                 pid, config_path = processes[choice - 1]
                 subprocess.run(["kill", pid])
-                return f"Stopped monitor process PID {pid} (config: {config_path})."
+                return CommandResult(
+                    message=f"Stopped monitor process PID {pid} (config: {config_path})."
+                )
 
             self._output_stream.write(
                 f"Invalid choice. Enter a number between 0 and {len(processes)}.\n"

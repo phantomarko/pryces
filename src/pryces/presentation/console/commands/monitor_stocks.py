@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from .base import Command, CommandMetadata, InputPrompt
+from .base import Command, CommandMetadata, CommandResult, InputPrompt
 from ..utils import validate_file_path
 
 
@@ -22,7 +22,7 @@ class MonitorStocksCommand(Command):
             ),
         ]
 
-    def execute(self, config_path: str = None, **kwargs) -> str:
+    def execute(self, config_path: str = None, **kwargs) -> CommandResult:
         cmd = [
             sys.executable,
             "-m",
@@ -35,4 +35,4 @@ class MonitorStocksCommand(Command):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        return f"Monitor started in background (PID: {process.pid})"
+        return CommandResult(message=f"Monitor started in background (PID: {process.pid})")

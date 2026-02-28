@@ -28,10 +28,10 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "AAPL - Apple Inc. (USD)" in result
-        assert "GOOGL - Alphabet Inc. (USD)" in result
-        assert "MSFT - Microsoft Corporation (USD)" in result
-        assert "Summary: 3 requested, 3 successful, 0 failed" in result
+        assert "AAPL - Apple Inc. (USD)" in result.message
+        assert "GOOGL - Alphabet Inc. (USD)" in result.message
+        assert "MSFT - Microsoft Corporation (USD)" in result.message
+        assert "Summary: 3 requested, 3 successful, 0 failed" in result.message
 
     def test_execute_handles_partial_failures(self):
         symbols = "AAPL,INVALID,GOOGL"
@@ -42,9 +42,9 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "AAPL - Apple Inc. (USD)" in result
-        assert "GOOGL - Alphabet Inc. (USD)" in result
-        assert "Summary: 3 requested, 2 successful, 1 failed" in result
+        assert "AAPL - Apple Inc. (USD)" in result.message
+        assert "GOOGL - Alphabet Inc. (USD)" in result.message
+        assert "Summary: 3 requested, 2 successful, 1 failed" in result.message
 
     def test_execute_handles_all_failures(self):
         symbols = "INVALID1,INVALID2,INVALID3"
@@ -52,7 +52,7 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "Summary: 3 requested, 0 successful, 3 failed" in result
+        assert "Summary: 3 requested, 0 successful, 3 failed" in result.message
 
     def test_execute_preserves_decimal_precision(self):
         symbols = "GOOGL"
@@ -62,7 +62,7 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "2847.123456789" in result
+        assert "2847.123456789" in result.message
 
     def test_execute_returns_error_on_unexpected_exception(self):
         symbols = "AAPL,GOOGL"
@@ -71,8 +71,9 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert result.startswith("Error:")
-        assert error_message in result
+        assert result.message.startswith("Error:")
+        assert error_message in result.message
+        assert result.success is False
 
     def test_execute_handles_responses_with_minimal_fields(self):
         symbols = "AAPL,GOOGL"
@@ -109,10 +110,10 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "AAPL\n" in result
-        assert "GOOGL\n" in result
-        assert "Current Price:" in result
-        assert "Previous Close:" not in result
+        assert "AAPL\n" in result.message
+        assert "GOOGL\n" in result.message
+        assert "Current Price:" in result.message
+        assert "Previous Close:" not in result.message
 
     def test_execute_handles_responses_with_all_fields(self):
         symbols = "AAPL"
@@ -134,23 +135,23 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "AAPL - Apple Inc. (USD)" in result
-        assert "Previous Close:" in result
-        assert "148.50" in result
-        assert "Open:" in result
-        assert "149.00" in result
-        assert "Day High:" in result
-        assert "151.00" in result
-        assert "Day Low:" in result
-        assert "148.00" in result
-        assert "50-Day Average:" in result
-        assert "145.50" in result
-        assert "200-Day Average:" in result
-        assert "140.00" in result
-        assert "52-Week High:" in result
-        assert "180.00" in result
-        assert "52-Week Low:" in result
-        assert "120.00" in result
+        assert "AAPL - Apple Inc. (USD)" in result.message
+        assert "Previous Close:" in result.message
+        assert "148.50" in result.message
+        assert "Open:" in result.message
+        assert "149.00" in result.message
+        assert "Day High:" in result.message
+        assert "151.00" in result.message
+        assert "Day Low:" in result.message
+        assert "148.00" in result.message
+        assert "50-Day Average:" in result.message
+        assert "145.50" in result.message
+        assert "200-Day Average:" in result.message
+        assert "140.00" in result.message
+        assert "52-Week High:" in result.message
+        assert "180.00" in result.message
+        assert "52-Week Low:" in result.message
+        assert "120.00" in result.message
 
     def test_get_metadata_returns_correct_metadata(self):
         metadata = self.command.get_metadata()
@@ -178,6 +179,6 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols=symbols, extra_arg="ignored")
 
-        assert "AAPL" in result
-        assert "GOOGL" in result
-        assert "Summary: 2 requested, 2 successful, 0 failed" in result
+        assert "AAPL" in result.message
+        assert "GOOGL" in result.message
+        assert "Summary: 2 requested, 2 successful, 0 failed" in result.message

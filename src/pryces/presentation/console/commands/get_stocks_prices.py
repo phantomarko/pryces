@@ -2,7 +2,7 @@ import logging
 
 from ....application.use_cases.get_stocks_prices import GetStocksPrices, GetStocksPricesRequest
 from ..utils import format_stock_list, parse_symbols_input, validate_symbols
-from .base import Command, CommandMetadata, InputPrompt
+from .base import Command, CommandMetadata, CommandResult, InputPrompt
 
 
 class GetStocksPricesCommand(Command):
@@ -26,7 +26,7 @@ class GetStocksPricesCommand(Command):
             )
         ]
 
-    def execute(self, symbols: str = None, **kwargs) -> str:
+    def execute(self, symbols: str = None, **kwargs) -> CommandResult:
         self._logger.info("Get Stocks Prices command started")
         try:
             symbol_list = parse_symbols_input(symbols)
@@ -35,8 +35,10 @@ class GetStocksPricesCommand(Command):
             responses = self._get_stocks_prices.handle(request)
 
             self._logger.info("Get Stocks Prices command finished")
-            return format_stock_list(responses, requested_count=len(symbol_list))
+            return CommandResult(
+                message=format_stock_list(responses, requested_count=len(symbol_list))
+            )
 
         except Exception as e:
             self._logger.error(f"Get Stocks Prices command finished with errors: {e}")
-            return f"Error: An unexpected error occurred: {e}"
+            return CommandResult(message=f"Error: An unexpected error occurred: {e}", success=False)
