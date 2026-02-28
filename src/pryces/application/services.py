@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Callable
 
 from pryces.domain.notifications import Notification
-from pryces.domain.stocks import MarketState, Stock
+from pryces.domain.stocks import Stock
 from pryces.domain.target_prices import TargetPrice
 
 from .repositories import MarketTransitionRepository, NotificationRepository
@@ -22,18 +22,10 @@ class NotificationService:
         self._transition_repository = transition_repository
         self._clock = clock
 
-    def _is_market_state_transition(self, stock: Stock, past_stock: Stock | None) -> bool:
-        if past_stock is None:
-            return False
-        return past_stock.market_state != stock.market_state and stock.market_state in (
-            MarketState.OPEN,
-            MarketState.POST,
-        )
-
-    def _is_in_delay_window(self, stock: Stock, past_stock: Stock | None) -> bool:
+    def _is_in_delay_window(self, stock: Stock) -> bool:
         if not stock.price_delay_in_minutes:
             return False
-        if self._is_market_state_transition(stock, past_stock):
+        if stock.is_market_state_transition():
             self._transition_repository.save(stock.symbol, self._clock())
             return True
         transition_time = self._transition_repository.get(stock.symbol)
@@ -45,13 +37,11 @@ class NotificationService:
         self._transition_repository.delete(stock.symbol)
         return False
 
-    def send_stock_notifications(
-        self, stock: Stock, past_stock: Stock | None
-    ) -> list[Notification]:
-        if self._is_in_delay_window(stock, past_stock):
+    def send_stock_notifications(self, stock: Stock) -> list[Notification]:
+        if self._is_in_delay_window(stock):
             return []
 
-        stock.generate_notifications(past_stock)
+        stock.generate_notifications()
         sent: list[Notification] = []
 
         for notification in stock.notifications:

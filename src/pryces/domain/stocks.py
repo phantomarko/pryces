@@ -1,7 +1,23 @@
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
 from pryces.domain.notifications import Notification, NotificationType
+
+
+@dataclass(frozen=True, slots=True)
+class StockSnapshot:
+    current_price: Decimal
+    previous_close_price: Decimal | None
+    open_price: Decimal | None
+    day_high: Decimal | None
+    day_low: Decimal | None
+    fifty_day_average: Decimal | None
+    two_hundred_day_average: Decimal | None
+    fifty_two_week_high: Decimal | None
+    fifty_two_week_low: Decimal | None
+    market_state: "MarketState | None"
+    price_delay_in_minutes: int | None
 
 
 class MarketState(str, Enum):
@@ -27,6 +43,7 @@ class Stock:
         "_fifty_two_week_low",
         "_market_state",
         "_price_delay_in_minutes",
+        "_snapshot",
         "_notifications",
     )
 
@@ -62,6 +79,7 @@ class Stock:
         self._fifty_two_week_low = fifty_two_week_low
         self._market_state = market_state
         self._price_delay_in_minutes = price_delay_in_minutes
+        self._snapshot: StockSnapshot | None = None
         self._notifications: list[Notification] = []
 
     @property
@@ -121,8 +139,51 @@ class Stock:
         return self._price_delay_in_minutes
 
     @property
+    def snapshot(self) -> StockSnapshot | None:
+        return self._snapshot
+
+    @property
     def notifications(self) -> list[Notification]:
         return self._notifications
+
+    def _capture_snapshot(self) -> StockSnapshot:
+        return StockSnapshot(
+            current_price=self._current_price,
+            previous_close_price=self._previous_close_price,
+            open_price=self._open_price,
+            day_high=self._day_high,
+            day_low=self._day_low,
+            fifty_day_average=self._fifty_day_average,
+            two_hundred_day_average=self._two_hundred_day_average,
+            fifty_two_week_high=self._fifty_two_week_high,
+            fifty_two_week_low=self._fifty_two_week_low,
+            market_state=self._market_state,
+            price_delay_in_minutes=self._price_delay_in_minutes,
+        )
+
+    def update(self, source: "Stock") -> None:
+        self._snapshot = self._capture_snapshot()
+        self._current_price = source._current_price
+        self._name = source._name
+        self._currency = source._currency
+        self._previous_close_price = source._previous_close_price
+        self._open_price = source._open_price
+        self._day_high = source._day_high
+        self._day_low = source._day_low
+        self._fifty_day_average = source._fifty_day_average
+        self._two_hundred_day_average = source._two_hundred_day_average
+        self._fifty_two_week_high = source._fifty_two_week_high
+        self._fifty_two_week_low = source._fifty_two_week_low
+        self._market_state = source._market_state
+        self._price_delay_in_minutes = source._price_delay_in_minutes
+        self._notifications = []
+
+    def is_market_state_transition(self) -> bool:
+        return (
+            self._snapshot is not None
+            and self._snapshot.market_state != self._market_state
+            and self._market_state in (MarketState.OPEN, MarketState.POST)
+        )
 
     def _is_close_to_fifty_day_average(self) -> bool:
         if self.fifty_day_average is None or self.previous_close_price is None:
@@ -232,21 +293,21 @@ class Stock:
 
         return None
 
-    def _generate_new_52_week_high_notification(self, past_stock: "Stock | None") -> None:
+    def _generate_new_52_week_high_notification(self) -> None:
         if (
-            past_stock is not None
-            and past_stock.fifty_two_week_high is not None
-            and self.current_price > past_stock.fifty_two_week_high
+            self._snapshot is not None
+            and self._snapshot.fifty_two_week_high is not None
+            and self.current_price > self._snapshot.fifty_two_week_high
         ):
             self._notifications.append(
                 Notification.create_new_52_week_high(self.symbol, self.current_price)
             )
 
-    def _generate_new_52_week_low_notification(self, past_stock: "Stock | None") -> None:
+    def _generate_new_52_week_low_notification(self) -> None:
         if (
-            past_stock is not None
-            and past_stock.fifty_two_week_low is not None
-            and self.current_price < past_stock.fifty_two_week_low
+            self._snapshot is not None
+            and self._snapshot.fifty_two_week_low is not None
+            and self.current_price < self._snapshot.fifty_two_week_low
         ):
             self._notifications.append(
                 Notification.create_new_52_week_low(self.symbol, self.current_price)
@@ -303,15 +364,15 @@ class Stock:
         if notification is not None:
             self._notifications.append(notification)
 
-    def _generate_market_open_notifications(self, past_stock: "Stock | None") -> None:
+    def _generate_market_open_notifications(self) -> None:
         self._generate_regular_market_open_notification()
         self._generate_close_to_fifty_day_average_notification()
         self._generate_fifty_day_average_crossed_notification()
         self._generate_close_to_two_hundred_day_average_notification()
         self._generate_two_hundred_day_average_crossed_notification()
         self._generate_percentage_change_from_previous_close_notification()
-        self._generate_new_52_week_high_notification(past_stock)
-        self._generate_new_52_week_low_notification(past_stock)
+        self._generate_new_52_week_high_notification()
+        self._generate_new_52_week_low_notification()
 
     def _generate_regular_market_closed_notification(self) -> None:
         self._notifications.append(
@@ -323,8 +384,9 @@ class Stock:
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()
 
-    def generate_notifications(self, past_stock: "Stock | None" = None) -> None:
+    def generate_notifications(self) -> None:
+        self._notifications = []
         if self._is_market_state_open():
-            self._generate_market_open_notifications(past_stock)
+            self._generate_market_open_notifications()
         elif self._is_market_state_post():
             self._generate_market_closed_notifications()

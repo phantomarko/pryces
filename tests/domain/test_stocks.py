@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.domain.notifications import NotificationType
-from pryces.domain.stocks import MarketState, Stock
+from pryces.domain.stocks import MarketState, Stock, StockSnapshot
 
 
 def test_stock_creation_with_required_fields():
@@ -1012,106 +1012,140 @@ def test_generate_notifications_percentage_at_exact_threshold():
     }
 
 
-def test_generate_new_52_week_high_notification_does_not_add_when_past_stock_is_none():
-    stock = Stock(symbol="AAPL", current_price=Decimal("200.00"))
+def test_generate_new_52_week_high_notification_does_not_add_when_no_snapshot():
+    stock = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
 
-    stock._generate_new_52_week_high_notification(None)
+    stock.generate_notifications()
 
-    assert stock.notifications == []
-
-
-def test_generate_new_52_week_high_notification_does_not_add_when_past_stock_has_no_52_week_high():
-    stock = Stock(symbol="AAPL", current_price=Decimal("200.00"))
-    past_stock = Stock(symbol="AAPL", current_price=Decimal("180.00"))
-
-    stock._generate_new_52_week_high_notification(past_stock)
-
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_HIGH not in types
 
 
-def test_generate_new_52_week_high_notification_does_not_add_when_current_price_equals_past_stock_52_week_high():
-    stock = Stock(symbol="AAPL", current_price=Decimal("180.00"))
-    past_stock = Stock(
-        symbol="AAPL", current_price=Decimal("170.00"), fifty_two_week_high=Decimal("180.00")
+def test_generate_new_52_week_high_notification_does_not_add_when_snapshot_has_no_52_week_high():
+    stock = Stock(symbol="AAPL", current_price=Decimal("180.00"), market_state=MarketState.OPEN)
+    source = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
+    stock.update(source)
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_HIGH not in types
+
+
+def test_generate_new_52_week_high_notification_does_not_add_when_current_price_equals_snapshot_52_week_high():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("170.00"),
+        fifty_two_week_high=Decimal("180.00"),
+        market_state=MarketState.OPEN,
     )
+    source = Stock(symbol="AAPL", current_price=Decimal("180.00"), market_state=MarketState.OPEN)
+    stock.update(source)
 
-    stock._generate_new_52_week_high_notification(past_stock)
+    stock.generate_notifications()
 
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_HIGH not in types
 
 
-def test_generate_new_52_week_high_notification_does_not_add_when_current_price_below_past_stock_52_week_high():
-    stock = Stock(symbol="AAPL", current_price=Decimal("170.00"))
-    past_stock = Stock(
-        symbol="AAPL", current_price=Decimal("160.00"), fifty_two_week_high=Decimal("180.00")
+def test_generate_new_52_week_high_notification_does_not_add_when_current_price_below_snapshot_52_week_high():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("160.00"),
+        fifty_two_week_high=Decimal("180.00"),
+        market_state=MarketState.OPEN,
     )
+    source = Stock(symbol="AAPL", current_price=Decimal("170.00"), market_state=MarketState.OPEN)
+    stock.update(source)
 
-    stock._generate_new_52_week_high_notification(past_stock)
+    stock.generate_notifications()
 
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_HIGH not in types
 
 
-def test_generate_new_52_week_high_notification_adds_notification_when_current_price_exceeds_past_stock_52_week_high():
-    stock = Stock(symbol="AAPL", current_price=Decimal("200.00"))
-    past_stock = Stock(
-        symbol="AAPL", current_price=Decimal("170.00"), fifty_two_week_high=Decimal("180.00")
+def test_generate_new_52_week_high_notification_adds_when_current_price_exceeds_snapshot_52_week_high():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("170.00"),
+        fifty_two_week_high=Decimal("180.00"),
+        market_state=MarketState.OPEN,
     )
+    source = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
+    stock.update(source)
 
-    stock._generate_new_52_week_high_notification(past_stock)
+    stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.NEW_52_WEEK_HIGH
-
-
-def test_generate_new_52_week_low_notification_does_not_add_when_past_stock_is_none():
-    stock = Stock(symbol="AAPL", current_price=Decimal("100.00"))
-
-    stock._generate_new_52_week_low_notification(None)
-
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_HIGH in types
 
 
-def test_generate_new_52_week_low_notification_does_not_add_when_past_stock_has_no_52_week_low():
-    stock = Stock(symbol="AAPL", current_price=Decimal("100.00"))
-    past_stock = Stock(symbol="AAPL", current_price=Decimal("120.00"))
+def test_generate_new_52_week_low_notification_does_not_add_when_no_snapshot():
+    stock = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
 
-    stock._generate_new_52_week_low_notification(past_stock)
+    stock.generate_notifications()
 
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_LOW not in types
 
 
-def test_generate_new_52_week_low_notification_does_not_add_when_current_price_equals_past_stock_52_week_low():
-    stock = Stock(symbol="AAPL", current_price=Decimal("120.00"))
-    past_stock = Stock(
-        symbol="AAPL", current_price=Decimal("130.00"), fifty_two_week_low=Decimal("120.00")
+def test_generate_new_52_week_low_notification_does_not_add_when_snapshot_has_no_52_week_low():
+    stock = Stock(symbol="AAPL", current_price=Decimal("120.00"), market_state=MarketState.OPEN)
+    source = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
+    stock.update(source)
+
+    stock.generate_notifications()
+
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_LOW not in types
+
+
+def test_generate_new_52_week_low_notification_does_not_add_when_current_price_equals_snapshot_52_week_low():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("130.00"),
+        fifty_two_week_low=Decimal("120.00"),
+        market_state=MarketState.OPEN,
     )
+    source = Stock(symbol="AAPL", current_price=Decimal("120.00"), market_state=MarketState.OPEN)
+    stock.update(source)
 
-    stock._generate_new_52_week_low_notification(past_stock)
+    stock.generate_notifications()
 
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_LOW not in types
 
 
-def test_generate_new_52_week_low_notification_does_not_add_when_current_price_above_past_stock_52_week_low():
-    stock = Stock(symbol="AAPL", current_price=Decimal("130.00"))
-    past_stock = Stock(
-        symbol="AAPL", current_price=Decimal("140.00"), fifty_two_week_low=Decimal("120.00")
+def test_generate_new_52_week_low_notification_does_not_add_when_current_price_above_snapshot_52_week_low():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("140.00"),
+        fifty_two_week_low=Decimal("120.00"),
+        market_state=MarketState.OPEN,
     )
+    source = Stock(symbol="AAPL", current_price=Decimal("130.00"), market_state=MarketState.OPEN)
+    stock.update(source)
 
-    stock._generate_new_52_week_low_notification(past_stock)
+    stock.generate_notifications()
 
-    assert stock.notifications == []
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_LOW not in types
 
 
-def test_generate_new_52_week_low_notification_adds_notification_when_current_price_falls_below_past_stock_52_week_low():
-    stock = Stock(symbol="AAPL", current_price=Decimal("100.00"))
-    past_stock = Stock(
-        symbol="AAPL", current_price=Decimal("130.00"), fifty_two_week_low=Decimal("120.00")
+def test_generate_new_52_week_low_notification_adds_when_current_price_falls_below_snapshot_52_week_low():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("130.00"),
+        fifty_two_week_low=Decimal("120.00"),
+        market_state=MarketState.OPEN,
     )
+    source = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
+    stock.update(source)
 
-    stock._generate_new_52_week_low_notification(past_stock)
+    stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.NEW_52_WEEK_LOW
+    types = {n.type for n in stock.notifications}
+    assert NotificationType.NEW_52_WEEK_LOW in types
 
 
 def test_generate_notifications_no_percentage_when_previous_close_none():
@@ -1138,3 +1172,170 @@ def test_stock_price_delay_in_minutes_accepts_int_and_none():
 
     stock_none = Stock(symbol="AAPL", current_price=Decimal("150.00"))
     assert stock_none.price_delay_in_minutes is None
+
+
+def test_snapshot_defaults_to_none():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
+
+    assert stock.snapshot is None
+
+
+def test_update_captures_snapshot_of_previous_state():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("150.00"),
+        fifty_two_week_high=Decimal("160.00"),
+        market_state=MarketState.OPEN,
+        price_delay_in_minutes=0,
+    )
+    source = Stock(
+        symbol="AAPL",
+        current_price=Decimal("155.00"),
+        fifty_two_week_high=Decimal("165.00"),
+        market_state=MarketState.OPEN,
+    )
+
+    stock.update(source)
+
+    assert stock.snapshot is not None
+    assert stock.snapshot.current_price == Decimal("150.00")
+    assert stock.snapshot.fifty_two_week_high == Decimal("160.00")
+    assert stock.snapshot.market_state == MarketState.OPEN
+    assert stock.snapshot.price_delay_in_minutes == 0
+
+
+def test_update_copies_fields_from_source():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
+    source = Stock(
+        symbol="AAPL",
+        current_price=Decimal("155.00"),
+        name="Apple Inc.",
+        currency="USD",
+        previous_close_price=Decimal("149.00"),
+        open_price=Decimal("150.00"),
+        day_high=Decimal("156.00"),
+        day_low=Decimal("148.00"),
+        fifty_day_average=Decimal("145.00"),
+        two_hundred_day_average=Decimal("140.00"),
+        fifty_two_week_high=Decimal("170.00"),
+        fifty_two_week_low=Decimal("120.00"),
+        market_state=MarketState.OPEN,
+        price_delay_in_minutes=15,
+    )
+
+    stock.update(source)
+
+    assert stock.current_price == Decimal("155.00")
+    assert stock.name == "Apple Inc."
+    assert stock.currency == "USD"
+    assert stock.previous_close_price == Decimal("149.00")
+    assert stock.open_price == Decimal("150.00")
+    assert stock.day_high == Decimal("156.00")
+    assert stock.day_low == Decimal("148.00")
+    assert stock.fifty_day_average == Decimal("145.00")
+    assert stock.two_hundred_day_average == Decimal("140.00")
+    assert stock.fifty_two_week_high == Decimal("170.00")
+    assert stock.fifty_two_week_low == Decimal("120.00")
+    assert stock.market_state == MarketState.OPEN
+    assert stock.price_delay_in_minutes == 15
+
+
+def test_update_preserves_symbol():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
+    source = Stock(symbol="AAPL", current_price=Decimal("155.00"))
+
+    stock.update(source)
+
+    assert stock.symbol == "AAPL"
+
+
+def test_update_clears_notifications():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("150.00"),
+        previous_close_price=Decimal("148.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.generate_notifications()
+    assert len(stock.notifications) > 0
+
+    source = Stock(symbol="AAPL", current_price=Decimal("155.00"))
+    stock.update(source)
+
+    assert stock.notifications == []
+
+
+def test_stock_snapshot_is_frozen():
+    snapshot = StockSnapshot(
+        current_price=Decimal("150.00"),
+        previous_close_price=None,
+        open_price=None,
+        day_high=None,
+        day_low=None,
+        fifty_day_average=None,
+        two_hundred_day_average=None,
+        fifty_two_week_high=None,
+        fifty_two_week_low=None,
+        market_state=None,
+        price_delay_in_minutes=None,
+    )
+
+    try:
+        snapshot.current_price = Decimal("200.00")
+        assert False, "Should not be able to modify frozen dataclass"
+    except AttributeError:
+        pass
+
+
+def test_is_market_state_transition_returns_false_when_no_snapshot():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+
+    assert stock.is_market_state_transition() is False
+
+
+def test_is_market_state_transition_returns_true_when_pre_to_open():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.PRE)
+    source = Stock(symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.OPEN)
+    stock.update(source)
+
+    assert stock.is_market_state_transition() is True
+
+
+def test_is_market_state_transition_returns_true_when_open_to_post():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+    source = Stock(symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.POST)
+    stock.update(source)
+
+    assert stock.is_market_state_transition() is True
+
+
+def test_is_market_state_transition_returns_false_when_same_state():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+    source = Stock(symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.OPEN)
+    stock.update(source)
+
+    assert stock.is_market_state_transition() is False
+
+
+def test_is_market_state_transition_returns_false_when_transition_to_non_open_post():
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+    source = Stock(symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.PRE)
+    stock.update(source)
+
+    assert stock.is_market_state_transition() is False
+
+
+def test_generate_notifications_clears_previous_notifications():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("150.00"),
+        previous_close_price=Decimal("148.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.generate_notifications()
+    first_count = len(stock.notifications)
+    assert first_count > 0
+
+    stock.generate_notifications()
+
+    assert len(stock.notifications) == first_count

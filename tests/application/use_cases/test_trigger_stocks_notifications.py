@@ -141,7 +141,8 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        sent_types = {n.type for n in current_stock.notifications}
+        # After handle(), past_stock has been updated via update() so check its notifications
+        sent_types = {n.type for n in past_stock.notifications}
         assert NotificationType.NEW_52_WEEK_HIGH in sent_types
 
     def test_handle_sets_entry_price_on_targets_for_the_stock(self):
@@ -240,5 +241,6 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        sent_types = {n.type for n in current_stock.notifications}
+        # After handle(), past_stock has been updated via update() so check its notifications
+        sent_types = {n.type for n in past_stock.notifications}
         assert NotificationType.NEW_52_WEEK_LOW in sent_types

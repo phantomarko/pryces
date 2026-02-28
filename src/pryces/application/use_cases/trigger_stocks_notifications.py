@@ -27,20 +27,28 @@ class TriggerStocksNotifications:
         self._target_price_repository = target_price_repository
 
     def handle(self, request: TriggerStocksNotificationsRequest) -> list[TargetPriceDTO]:
-        stocks = self._provider.get_stocks(request.symbols)
+        fresh_stocks = self._provider.get_stocks(request.symbols)
         fulfilled: list[TargetPrice] = []
+        stocks_to_save: list[Stock] = []
 
-        for stock in stocks:
-            past_stock = self._stock_repository.get(stock.symbol)
+        for fresh_stock in fresh_stocks:
+            existing = self._stock_repository.get(fresh_stock.symbol)
+            if existing is not None:
+                existing.update(fresh_stock)
+                stock = existing
+            else:
+                stock = fresh_stock
+            stocks_to_save.append(stock)
+
             targets = self._target_price_repository.get_by_symbol([stock.symbol])
             self._set_entry_prices(stock, targets)
-            self._notification_service.send_stock_notifications(stock, past_stock)
+            self._notification_service.send_stock_notifications(stock)
             triggered = self._notification_service.send_stock_targets_notifications(stock, targets)
             for target in triggered:
                 self._target_price_repository.delete(target)
             fulfilled.extend(triggered)
 
-        self._stock_repository.save_batch(stocks)
+        self._stock_repository.save_batch(stocks_to_save)
         return [TargetPriceDTO.from_target_price(t) for t in fulfilled]
 
     def _set_entry_prices(self, stock: Stock, targets: list[TargetPrice]) -> None:
