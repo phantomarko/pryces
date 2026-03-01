@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import yfinance as yf
 
-from ..application.providers import StockProvider
+from ..application.interfaces import StockProvider
 from ..domain.stocks import MarketState, Stock
 
 

@@ -5,7 +5,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
-from ..application.senders import MessageSender
+from ..application.interfaces import MessageSender
 
 
 @dataclass(frozen=True, slots=True)

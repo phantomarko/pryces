@@ -4,7 +4,6 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.application.dtos import TargetPriceDTO
-from pryces.application.use_cases.sync_target_prices import SyncTargetPrices
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
 from pryces.presentation.scripts.config import ConfigManager, MonitorStocksConfig, SymbolConfig
 from pryces.presentation.scripts.monitor_stocks import MonitorStocksScript
@@ -18,7 +17,6 @@ class TestMonitorStocksScriptWriteConfig:
 
     def setup_method(self):
         self.mock_trigger = Mock(spec=TriggerStocksNotifications)
-        self.mock_sync = Mock(spec=SyncTargetPrices)
         self.mock_config_manager = Mock(spec=ConfigManager)
         self.config = MonitorStocksConfig(
             duration=1,
@@ -31,7 +29,6 @@ class TestMonitorStocksScriptWriteConfig:
         self.mock_config_manager.read_monitor_stocks_config.return_value = self.config
         self.script = MonitorStocksScript(
             trigger_notifications=self.mock_trigger,
-            sync_target_prices=self.mock_sync,
             config_manager=self.mock_config_manager,
         )
 

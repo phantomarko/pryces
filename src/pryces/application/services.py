@@ -1,39 +1,26 @@
 from datetime import datetime
 from typing import Callable
 
-from pryces.domain.notifications import Notification
-from pryces.domain.stocks import MarketState, Stock
-from pryces.domain.target_prices import TargetPrice
+from pryces.domain.stocks import Stock
 
-from .repositories import MarketTransitionRepository, NotificationRepository
-from .senders import MessageSender
+from .interfaces import MarketTransitionRepository, MessageSender
 
 
 class NotificationService:
     def __init__(
         self,
         message_sender: MessageSender,
-        repository: NotificationRepository,
         transition_repository: MarketTransitionRepository,
         clock: Callable[[], datetime] = datetime.now,
     ) -> None:
         self._message_sender = message_sender
-        self._notification_repository = repository
         self._transition_repository = transition_repository
         self._clock = clock
 
-    def _is_market_state_transition(self, stock: Stock, past_stock: Stock | None) -> bool:
-        if past_stock is None:
-            return False
-        return past_stock.market_state != stock.market_state and stock.market_state in (
-            MarketState.OPEN,
-            MarketState.POST,
-        )
-
-    def _is_in_delay_window(self, stock: Stock, past_stock: Stock | None) -> bool:
+    def _is_in_delay_window(self, stock: Stock) -> bool:
         if not stock.price_delay_in_minutes:
             return False
-        if self._is_market_state_transition(stock, past_stock):
+        if stock.is_market_state_transition():
             self._transition_repository.save(stock.symbol, self._clock())
             return True
         transition_time = self._transition_repository.get(stock.symbol)
@@ -45,34 +32,11 @@ class NotificationService:
         self._transition_repository.delete(stock.symbol)
         return False
 
-    def send_stock_notifications(
-        self, stock: Stock, past_stock: Stock | None
-    ) -> list[Notification]:
-        if self._is_in_delay_window(stock, past_stock):
-            return []
+    def send_stock_notifications(self, stock: Stock) -> None:
+        if self._is_in_delay_window(stock):
+            return
 
-        stock.generate_notifications(past_stock)
-        sent: list[Notification] = []
+        messages = stock.generate_notifications()
 
-        for notification in stock.notifications:
-            if self._notification_repository.exists_by_type(stock.symbol, notification.type):
-                continue
-
-            self._message_sender.send_message(notification.message)
-            self._notification_repository.save(stock.symbol, notification)
-            sent.append(notification)
-
-        return sent
-
-    def send_stock_targets_notifications(
-        self, stock: Stock, targets: list[TargetPrice]
-    ) -> list[TargetPrice]:
-        triggered: list[TargetPrice] = []
-
-        for target in targets:
-            notification = target.generate_notification(stock)
-            if notification is not None:
-                self._message_sender.send_message(notification.message)
-                triggered.append(target)
-
-        return triggered
+        for message in messages:
+            self._message_sender.send_message(message)
