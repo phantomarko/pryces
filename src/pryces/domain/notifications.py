@@ -98,73 +98,108 @@ class Notification:
     def create_five_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_INCREASE, message
+        return Notification._create_price_change(
+            NotificationType.FIVE_PERCENT_INCREASE,
+            "rose to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_ten_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.TEN_PERCENT_INCREASE, message
+        return Notification._create_price_change(
+            NotificationType.TEN_PERCENT_INCREASE,
+            "rose to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_fifteen_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_INCREASE, message
+        return Notification._create_price_change(
+            NotificationType.FIFTEEN_PERCENT_INCREASE,
+            "rose to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_twenty_percent_increase(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} rose to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_INCREASE, message
+        return Notification._create_price_change(
+            NotificationType.TWENTY_PERCENT_INCREASE,
+            "rose to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_five_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.FIVE_PERCENT_DECREASE, message
+        return Notification._create_price_change(
+            NotificationType.FIVE_PERCENT_DECREASE,
+            "dropped to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_ten_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.TEN_PERCENT_DECREASE, message
+        return Notification._create_price_change(
+            NotificationType.TEN_PERCENT_DECREASE,
+            "dropped to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_fifteen_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.FIFTEEN_PERCENT_DECREASE, message
+        return Notification._create_price_change(
+            NotificationType.FIFTEEN_PERCENT_DECREASE,
+            "dropped to",
+            symbol,
+            current_price,
+            change_percentage,
         )
 
     @staticmethod
     def create_twenty_percent_decrease(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> "Notification":
-        message = f"{symbol} dropped to {current_price} ({change_percentage:+.2f}%)"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.TWENTY_PERCENT_DECREASE, message
+        return Notification._create_price_change(
+            NotificationType.TWENTY_PERCENT_DECREASE,
+            "dropped to",
+            symbol,
+            current_price,
+            change_percentage,
         )
+
+    @staticmethod
+    def _create_price_change(
+        notification_type: NotificationType,
+        verb: str,
+        symbol: str,
+        current_price: Decimal,
+        change_percentage: Decimal,
+    ) -> "Notification":
+        message = f"{symbol} {verb} {current_price} ({change_percentage:+.2f}%)"
+        return Notification(Notification._CREATION_KEY, notification_type, message)
 
     @staticmethod
     def create_new_52_week_high(symbol: str, current_price: Decimal) -> "Notification":

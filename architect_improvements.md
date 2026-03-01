@@ -111,10 +111,10 @@ is documented as a guard against incomplete API responses.
 
 ## Minor
 
-### 13. `Notification` factory methods — code duplication
-**File:** `domain/notifications.py`
-20+ near-identical factory methods. Could use a shared internal builder for percentage-based
-notifications to reduce boilerplate.
+### ~~13. `Notification` factory methods — code duplication~~ ✓ Resolved
+`_create_price_change(notification_type, verb, symbol, current_price, change_percentage)` private
+static method extracted. The 8 percentage factory methods are now one-liner delegations; the
+message format lives in one place.
 
 ### ~~14. `Stock` — duplicated SMA detection methods (code quality only)~~ ✓ Resolved
 Replaced 4 private SMA detection methods with 2 parametric ones (`_is_close_to_sma(sma)`,
@@ -122,10 +122,14 @@ Replaced 4 private SMA detection methods with 2 parametric ones (`_is_close_to_s
 unit tests for the 200-day pair removed; 50-day unit tests renamed to target the parametric
 methods.
 
-### 15. `Stock` — magic threshold constants (code quality only)
-**File:** `domain/stocks.py`
-`_CLOSE_TO_SMA_UPPER_THRESHOLD` and `_CLOSE_TO_SMA_LOWER_THRESHOLD` are hardcoded.
-Consider making them named domain constants or configurable at construction.
+### ~~15. `Stock` — magic threshold constants (code quality only)~~ ✓ Resolved
+~~**File:** `domain/stocks.py`~~
+~~`_CLOSE_TO_SMA_UPPER_THRESHOLD` and `_CLOSE_TO_SMA_LOWER_THRESHOLD` are hardcoded.~~
+~~Consider making them named domain constants or configurable at construction.~~
+Reviewed and intentionally left as-is. The inline `Decimal` values in `_INCREASE_THRESHOLDS` /
+`_DECREASE_THRESHOLDS` are self-documenting via paired factory method names. Extracting named
+constants would add ceremony without improving clarity, and would risk implying a shared concept
+between thresholds that are intentionally independent.
 
 ### ~~16. `registry.py` — old-style type hints~~ ✓ Resolved
 `CommandRegistry` now uses `dict[str, Command]` (Python 3.9+ built-in generic) correctly.
@@ -183,4 +187,6 @@ not structural ones.
 | ~~Medium~~ | ~~12~~ | ~~Extract `YahooFinanceMapper`~~ ✓ |
 | ~~Low~~ | ~~16~~ | ~~Fix old-style type hints in `registry.py`~~ ✓ |
 | ~~Low~~ | ~~18~~ | ~~`CommandFactory` stores unused dependencies~~ ✓ |
-| Low | 13–15, 17, 19–20 | Remaining minor items |
+| ~~Low~~ | ~~15~~ | ~~`Stock` magic threshold constants~~ ✓ |
+| ~~Low~~ | ~~13~~ | ~~`Notification` factory method duplication~~ ✓ |
+| Low | 17, 19–20 | Remaining minor items |
