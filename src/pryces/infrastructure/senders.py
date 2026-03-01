@@ -5,6 +5,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
+from ..application.exceptions import MessageSendingFailed
 from ..application.interfaces import MessageSender
 
 
@@ -34,7 +35,7 @@ class TelegramMessageSender(MessageSender):
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8")
             self._logger.error(f"Telegram API HTTP {e.code}: {error_body}")
-            raise
+            raise MessageSendingFailed(f"HTTP {e.code}: {error_body}") from e
 
         response_data = json.loads(response.read().decode("utf-8"))
 
