@@ -176,6 +176,17 @@ All Python code must follow [PEP 8](https://peps.python.org/pep-0008/) style gui
 - **Imports**: Standard library → third-party → local; one import per line; no wildcard imports
 - **Type hints**: Use built-in generics (`dict`, `list`, `tuple`) over `typing` equivalents (`Dict`, `List`, `Tuple`) — requires Python 3.9+
 - **Formatting**: Enforced automatically by the `black` pre-commit hook — never skip it
+- **No shadowing built-ins**: Never use built-in names (`type`, `id`, `list`, `dict`, `filter`, etc.) as parameter or variable names — rename to something more specific (e.g. `notification_type` instead of `type`)
+
+### Class Member Ordering
+
+Within every class, members must appear in this order:
+1. `__slots__`
+2. Class-level constants and attributes
+3. `__init__` (then other dunder/magic methods if any)
+4. Properties (`@property`)
+5. Public instance methods
+6. Private/protected methods (`_` prefix)
 
 ### Code Comments
 

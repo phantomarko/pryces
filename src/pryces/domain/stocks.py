@@ -55,6 +55,22 @@ class Stock:
         "_fulfilled_targets",
     )
 
+    _CLOSE_TO_SMA_UPPER_THRESHOLD = Decimal("5")
+    _CLOSE_TO_SMA_LOWER_THRESHOLD = Decimal("-5")
+
+    _INCREASE_THRESHOLDS = (
+        (Decimal("20"), Notification.create_twenty_percent_increase),
+        (Decimal("15"), Notification.create_fifteen_percent_increase),
+        (Decimal("10"), Notification.create_ten_percent_increase),
+        (Decimal("5"), Notification.create_five_percent_increase),
+    )
+    _DECREASE_THRESHOLDS = (
+        (Decimal("-20"), Notification.create_twenty_percent_decrease),
+        (Decimal("-15"), Notification.create_fifteen_percent_decrease),
+        (Decimal("-10"), Notification.create_ten_percent_decrease),
+        (Decimal("-5"), Notification.create_five_percent_decrease),
+    )
+
     def __init__(
         self,
         *,
@@ -182,21 +198,6 @@ class Stock:
 
         self._targets = synced
 
-    def _capture_snapshot(self) -> StockSnapshot:
-        return StockSnapshot(
-            current_price=self._current_price,
-            previous_close_price=self._previous_close_price,
-            open_price=self._open_price,
-            day_high=self._day_high,
-            day_low=self._day_low,
-            fifty_day_average=self._fifty_day_average,
-            two_hundred_day_average=self._two_hundred_day_average,
-            fifty_two_week_high=self._fifty_two_week_high,
-            fifty_two_week_low=self._fifty_two_week_low,
-            market_state=self._market_state,
-            price_delay_in_minutes=self._price_delay_in_minutes,
-        )
-
     def update(self, source: "Stock") -> None:
         self._snapshot = self._capture_snapshot()
         self._current_price = source._current_price
@@ -218,6 +219,29 @@ class Stock:
             self._snapshot is not None
             and self._snapshot.market_state != self._market_state
             and self._market_state in (MarketState.OPEN, MarketState.POST)
+        )
+
+    def generate_notifications(self) -> list[str]:
+        previous_count = len(self._notifications)
+        if self._is_market_state_open():
+            self._generate_market_open_notifications()
+        elif self._is_market_state_post():
+            self._generate_market_closed_notifications()
+        return [n.message for n in self._notifications[previous_count:]]
+
+    def _capture_snapshot(self) -> StockSnapshot:
+        return StockSnapshot(
+            current_price=self._current_price,
+            previous_close_price=self._previous_close_price,
+            open_price=self._open_price,
+            day_high=self._day_high,
+            day_low=self._day_low,
+            fifty_day_average=self._fifty_day_average,
+            two_hundred_day_average=self._two_hundred_day_average,
+            fifty_two_week_high=self._fifty_two_week_high,
+            fifty_two_week_low=self._fifty_two_week_low,
+            market_state=self._market_state,
+            price_delay_in_minutes=self._price_delay_in_minutes,
         )
 
     def _has_notification_type(self, notification_type: NotificationType) -> bool:
@@ -298,22 +322,6 @@ class Stock:
 
     def _is_market_state_post(self) -> bool:
         return self._market_state == MarketState.POST
-
-    _CLOSE_TO_SMA_UPPER_THRESHOLD = Decimal("5")
-    _CLOSE_TO_SMA_LOWER_THRESHOLD = Decimal("-5")
-
-    _INCREASE_THRESHOLDS = (
-        (Decimal("20"), Notification.create_twenty_percent_increase),
-        (Decimal("15"), Notification.create_fifteen_percent_increase),
-        (Decimal("10"), Notification.create_ten_percent_increase),
-        (Decimal("5"), Notification.create_five_percent_increase),
-    )
-    _DECREASE_THRESHOLDS = (
-        (Decimal("-20"), Notification.create_twenty_percent_decrease),
-        (Decimal("-15"), Notification.create_fifteen_percent_decrease),
-        (Decimal("-10"), Notification.create_ten_percent_decrease),
-        (Decimal("-5"), Notification.create_five_percent_decrease),
-    )
 
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
@@ -448,11 +456,3 @@ class Stock:
 
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()
-
-    def generate_notifications(self) -> list[str]:
-        previous_count = len(self._notifications)
-        if self._is_market_state_open():
-            self._generate_market_open_notifications()
-        elif self._is_market_state_post():
-            self._generate_market_closed_notifications()
-        return [n.message for n in self._notifications[previous_count:]]

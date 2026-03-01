@@ -26,10 +26,10 @@ class Notification:
     __slots__ = ("_type", "_message")
     _CREATION_KEY = object()
 
-    def __init__(self, key: object, type: NotificationType, message: str):
+    def __init__(self, key: object, notification_type: NotificationType, message: str):
         if key is not Notification._CREATION_KEY:
             raise TypeError("Use factory methods to create a Notification")
-        self._type = type
+        self._type = notification_type
         self._message = message
 
     @property
