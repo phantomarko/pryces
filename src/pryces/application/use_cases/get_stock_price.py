@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from ..dtos import StockDTO
 from ..exceptions import StockNotFound
-from ..providers import StockProvider
+from ..interfaces import StockProvider
 
 
 @dataclass(frozen=True)

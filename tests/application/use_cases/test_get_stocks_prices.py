@@ -7,7 +7,7 @@ from pryces.application.use_cases.get_stocks_prices import (
     GetStocksPrices,
     GetStocksPricesRequest,
 )
-from pryces.application.providers import StockProvider
+from pryces.application.interfaces import StockProvider
 from pryces.domain.stocks import Stock
 from tests.fixtures.factories import create_stock
 

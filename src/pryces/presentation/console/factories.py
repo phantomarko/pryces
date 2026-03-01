@@ -1,5 +1,4 @@
-from ...application.providers import StockProvider
-from ...application.senders import MessageSender
+from ...application.interfaces import MessageSender, StockProvider
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
 from .commands.get_stocks_prices import GetStocksPricesCommand

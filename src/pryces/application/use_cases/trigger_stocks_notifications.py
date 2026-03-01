@@ -3,8 +3,7 @@ from decimal import Decimal
 
 from pryces.domain.stocks import Stock
 from ..dtos import TargetPriceDTO
-from ..providers import StockProvider
-from ..repositories import StockRepository
+from ..interfaces import StockProvider, StockRepository
 from ..services import NotificationService
 
 

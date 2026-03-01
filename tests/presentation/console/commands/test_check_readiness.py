@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from pryces.application.senders import MessageSender
+from pryces.application.interfaces import MessageSender
 from pryces.application.use_cases.send_messages import SendMessages
 from pryces.presentation.console.commands.check_readiness import CheckReadinessCommand
 from pryces.presentation.console.commands.base import CommandMetadata

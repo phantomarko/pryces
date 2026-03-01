@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.application.providers import StockProvider
+from pryces.application.interfaces import StockProvider
 from pryces.application.use_cases.get_stocks_prices import GetStocksPrices
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.utils import validate_symbols

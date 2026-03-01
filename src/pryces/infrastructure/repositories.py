@@ -1,9 +1,6 @@
 from datetime import datetime
 
-from ..application.repositories import (
-    MarketTransitionRepository,
-    StockRepository,
-)
+from ..application.interfaces import MarketTransitionRepository, StockRepository
 from ..domain.stocks import Stock
 
 

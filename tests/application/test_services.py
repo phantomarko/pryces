@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.senders import MessageSender
+from pryces.application.interfaces import MessageSender
 from pryces.application.services import NotificationService
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import InMemoryMarketTransitionRepository

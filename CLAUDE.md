@@ -114,9 +114,7 @@ Presentation → Application → Domain
 - `target_prices.py` — `TargetPrice` entity (target, entry; `set_entry_price(stock)` captures entry price; `is_reached(stock)` returns bool indicating whether target price has been reached)
 
 **Application** (`src/pryces/application/`) — Use cases, services, and port interfaces:
-- `providers.py` — `StockProvider` ABC (port)
-- `senders.py` — `MessageSender` ABC (port)
-- `repositories.py` — `StockRepository` ABC (port: `save_batch`, `get`), `MarketTransitionRepository` ABC (port: `save`, `get`, `delete` — tracks first-detected market state transition timestamp per symbol)
+- `interfaces.py` — all port ABCs: `StockProvider` (get_stock, get_stocks), `StockRepository` (save_batch, get), `MarketTransitionRepository` (save, get, delete — tracks first-detected market state transition timestamp per symbol), `MessageSender` (send_message)
 - `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes market_state), `TargetPriceDTO` (symbol + target Decimal)
 - `exceptions.py` — `StockNotFound`
 - `services.py` — `NotificationService` (sends stock notifications via MessageSender; `send_stock_notifications(stock)` calls `stock.generate_notifications()`, sends each returned message string via sender; deduplication is handled at the domain level by `Stock`; suppresses all notifications (including targets) when `stock.price_delay_in_minutes > 0` and `stock.is_market_state_transition()` detects a transition to OPEN/POST — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing)

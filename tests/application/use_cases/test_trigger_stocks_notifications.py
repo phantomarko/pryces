@@ -2,8 +2,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 from pryces.application.dtos import TargetPriceDTO
-from pryces.application.providers import StockProvider
-from pryces.application.senders import MessageSender
+from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.application.services import NotificationService
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock

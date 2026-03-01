@@ -3,8 +3,7 @@ from typing import Callable
 
 from pryces.domain.stocks import Stock
 
-from .repositories import MarketTransitionRepository
-from .senders import MessageSender
+from .interfaces import MarketTransitionRepository, MessageSender
 
 
 class NotificationService:
