@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.interfaces import MessageSender, StockProvider
-from pryces.application.services import NotificationService
+from pryces.application.services import NotificationService, StockSynchronizer
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import (
@@ -32,10 +32,13 @@ class TestTriggerStocksNotifications:
             InMemoryMarketTransitionRepository(),
         )
         self.stock_repository = InMemoryStockRepository()
-        self.use_case = TriggerStocksNotifications(
+        self.stock_synchronizer = StockSynchronizer(
             provider=self.mock_provider,
-            notification_service=self.notification_service,
             stock_repository=self.stock_repository,
+        )
+        self.use_case = TriggerStocksNotifications(
+            stock_synchronizer=self.stock_synchronizer,
+            notification_service=self.notification_service,
         )
 
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):

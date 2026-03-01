@@ -2,10 +2,13 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.interfaces import MessageSender
-from pryces.application.services import NotificationService
+from pryces.application.interfaces import MessageSender, StockProvider
+from pryces.application.services import NotificationService, StockSynchronizer
 from pryces.domain.stocks import MarketState, Stock
-from pryces.infrastructure.repositories import InMemoryMarketTransitionRepository
+from pryces.infrastructure.repositories import (
+    InMemoryMarketTransitionRepository,
+    InMemoryStockRepository,
+)
 from tests.fixtures.factories import (
     create_stock,
     create_stock_crossing_both_averages,
@@ -302,3 +305,65 @@ class TestNotificationService:
         # Target should still be there since notifications were suppressed
         assert len(stock.targets) == 1
         self.mock_sender.send_message.assert_not_called()
+
+
+class TestStockSynchronizer:
+
+    def setup_method(self):
+        self.mock_provider = Mock(spec=StockProvider)
+        self.stock_repository = InMemoryStockRepository()
+        self.synchronizer = StockSynchronizer(
+            provider=self.mock_provider,
+            stock_repository=self.stock_repository,
+        )
+
+    def test_fetch_and_sync_returns_fresh_stock_when_no_existing(self):
+        stock = create_stock("AAPL")
+        self.mock_provider.get_stocks.return_value = [stock]
+
+        result = self.synchronizer.fetch_and_sync(["AAPL"], {})
+
+        assert result == [stock]
+
+    def test_fetch_and_sync_merges_with_existing_stock(self):
+        existing = Stock(
+            symbol="AAPL",
+            current_price=Decimal("180.00"),
+            fifty_two_week_high=Decimal("190.00"),
+        )
+        self.stock_repository.save_batch([existing])
+        fresh = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            market_state=MarketState.OPEN,
+        )
+        self.mock_provider.get_stocks.return_value = [fresh]
+
+        result = self.synchronizer.fetch_and_sync(["AAPL"], {})
+
+        assert result == [existing]
+        assert existing.current_price == Decimal("200.00")
+        assert existing.snapshot is not None
+
+    def test_fetch_and_sync_syncs_target_prices(self):
+        stock = create_stock("AAPL")
+        self.mock_provider.get_stocks.return_value = [stock]
+
+        result = self.synchronizer.fetch_and_sync(["AAPL"], {"AAPL": [Decimal("200.00")]})
+
+        assert len(result[0].targets) == 1
+        assert result[0].targets[0].target == Decimal("200.00")
+
+    def test_fetch_and_sync_with_empty_symbols_returns_empty(self):
+        self.mock_provider.get_stocks.return_value = []
+
+        result = self.synchronizer.fetch_and_sync([], {})
+
+        assert result == []
+
+    def test_persist_saves_stocks_to_repository(self):
+        stock = create_stock("AAPL")
+
+        self.synchronizer.persist([stock])
+
+        assert self.stock_repository.get("AAPL") is stock

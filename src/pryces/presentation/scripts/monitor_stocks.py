@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from ...application.dtos import TargetPriceDTO
-from ...application.services import NotificationService
+from ...application.services import NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
@@ -129,10 +129,10 @@ def _create_script(path: Path) -> _ScriptContext:
     transition_repository = InMemoryMarketTransitionRepository()
     notification_service = NotificationService(message_sender, transition_repository)
     stock_repository = InMemoryStockRepository()
+    stock_synchronizer = StockSynchronizer(provider=provider, stock_repository=stock_repository)
     trigger_notifications = TriggerStocksNotifications(
-        provider=provider,
+        stock_synchronizer=stock_synchronizer,
         notification_service=notification_service,
-        stock_repository=stock_repository,
     )
     script = MonitorStocksScript(
         trigger_notifications=trigger_notifications,

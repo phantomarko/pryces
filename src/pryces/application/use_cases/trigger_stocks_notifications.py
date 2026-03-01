@@ -1,10 +1,8 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from pryces.domain.stocks import Stock
 from ..dtos import TargetPriceDTO
-from ..interfaces import StockProvider, StockRepository
-from ..services import NotificationService
+from ..services import NotificationService, StockSynchronizer
 
 
 @dataclass(frozen=True)
@@ -16,36 +14,20 @@ class TriggerStocksNotificationsRequest:
 class TriggerStocksNotifications:
     def __init__(
         self,
-        provider: StockProvider,
+        stock_synchronizer: StockSynchronizer,
         notification_service: NotificationService,
-        stock_repository: StockRepository,
     ) -> None:
-        self._provider = provider
+        self._stock_synchronizer = stock_synchronizer
         self._notification_service = notification_service
-        self._stock_repository = stock_repository
 
     def handle(self, request: TriggerStocksNotificationsRequest) -> list[TargetPriceDTO]:
-        fresh_stocks = self._provider.get_stocks(request.symbols)
+        stocks = self._stock_synchronizer.fetch_and_sync(request.symbols, request.targets)
+
         fulfilled: list[TargetPriceDTO] = []
-        stocks_to_save: list[Stock] = []
-
-        for fresh_stock in fresh_stocks:
-            existing = self._stock_repository.get(fresh_stock.symbol)
-            if existing is not None:
-                existing.update(fresh_stock)
-                stock = existing
-            else:
-                stock = fresh_stock
-
-            target_values = request.targets.get(stock.symbol, [])
-            stock.sync_targets(target_values)
-
+        for stock in stocks:
             self._notification_service.send_stock_notifications(stock)
-
             for target_value in stock.drain_fulfilled_targets():
                 fulfilled.append(TargetPriceDTO(symbol=stock.symbol, target=target_value))
 
-            stocks_to_save.append(stock)
-
-        self._stock_repository.save_batch(stocks_to_save)
+        self._stock_synchronizer.persist(stocks)
         return fulfilled

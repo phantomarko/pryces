@@ -36,14 +36,10 @@ discovered accidentally during future changes.
 
 ## Critical
 
-### 1. `TriggerStocksNotifications` — god use case
-**File:** `application/use_cases/trigger_stocks_notifications.py`
-**Violation:** SRP
-Orchestrates fetching stocks, merging with existing state, syncing target prices, triggering
-notifications, draining fulfilled targets, and persisting stock state — 5 responsibilities in one
-use case.
-**Suggestion:** The use case should coordinate, not implement. Target synchronization and
-notification triggering can be delegated to focused domain services.
+### ~~1. `TriggerStocksNotifications` — god use case~~ ✓ Resolved
+Stock state management (fetch, merge, sync targets, persist) extracted into `StockSynchronizer`
+application service. The use case now coordinates two collaborators: `StockSynchronizer` and
+`NotificationService`.
 
 ### ~~2. `Command.execute() -> str` — ISP violation~~ ✓ Resolved
 `CommandResult(message: str, success: bool = True)` introduced in `base.py`. All commands
@@ -181,7 +177,7 @@ not structural ones.
 
 | Priority | # | Item |
 |---|---|---|
-| High | 1 | Break up `TriggerStocksNotifications` |
+| ~~High~~ | ~~1~~ | ~~Break up `TriggerStocksNotifications`~~ ✓ |
 | ~~High~~ | ~~2~~ | ~~Fix `Command.execute() -> str` ISP issue~~ ✓ |
 | ~~High~~ | ~~3~~ | ~~Move `_get_monitor_processes` to `utils.py`~~ ✓ |
 | High | 4 | Break up `MonitorStocksScript` responsibilities |
