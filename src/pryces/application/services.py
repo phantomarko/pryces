@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Callable
 
 from pryces.domain.stocks import Stock
-from pryces.domain.target_prices import TargetPrice
 
 from .repositories import MarketTransitionRepository
 from .senders import MessageSender
@@ -34,15 +33,11 @@ class NotificationService:
         self._transition_repository.delete(stock.symbol)
         return False
 
-    def send_stock_notifications(
-        self, stock: Stock, targets: list[TargetPrice]
-    ) -> list[TargetPrice]:
+    def send_stock_notifications(self, stock: Stock) -> None:
         if self._is_in_delay_window(stock):
-            return []
+            return
 
-        result = stock.generate_notifications(targets)
+        result = stock.generate_notifications()
 
         for notification in result.new_notifications:
             self._message_sender.send_message(notification.message)
-
-        return result.triggered_targets

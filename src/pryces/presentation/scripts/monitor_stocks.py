@@ -12,16 +12,11 @@ from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
 )
-from ...application.use_cases.sync_target_prices import (
-    SyncTargetPrices,
-    SyncTargetPricesRequest,
-)
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.providers import YahooFinanceProvider
 from ...infrastructure.repositories import (
     InMemoryMarketTransitionRepository,
     InMemoryStockRepository,
-    InMemoryTargetPriceRepository,
 )
 from ...infrastructure.senders import (
     FireAndForgetMessageSender,
@@ -36,11 +31,9 @@ class MonitorStocksScript:
     def __init__(
         self,
         trigger_notifications: TriggerStocksNotifications,
-        sync_target_prices: SyncTargetPrices,
         config_manager: ConfigManager,
     ) -> None:
         self._trigger_notifications = trigger_notifications
-        self._sync_target_prices = sync_target_prices
         self._config_manager = config_manager
         self._logger = logging.getLogger(__name__)
         self._config = self._config_manager.read_monitor_stocks_config()
@@ -52,7 +45,6 @@ class MonitorStocksScript:
                 self._config = new_config
                 self._logger.info("Config refreshed.")
                 self._log_config()
-                self._save_target_prices()
         except Exception:
             pass
 
@@ -96,25 +88,17 @@ class MonitorStocksScript:
         ]
         self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
 
-    def _save_target_prices(self) -> None:
-        price_targets = [
-            TargetPriceDTO(symbol=s.symbol, target=price)
-            for s in self._config.symbols
-            for price in s.prices
-        ]
-        self._sync_target_prices.handle(SyncTargetPricesRequest(price_targets=price_targets))
-
     def run(self) -> None:
         self._logger.info("Monitoring started.")
         self._log_config()
-        self._save_target_prices()
         duration_seconds = self._config.duration * 60
         start = time.monotonic()
 
         while True:
             self._read_config()
             request = TriggerStocksNotificationsRequest(
-                symbols=[s.symbol for s in self._config.symbols]
+                symbols=[s.symbol for s in self._config.symbols],
+                targets={s.symbol: s.prices for s in self._config.symbols},
             )
             try:
                 fulfilled = self._trigger_notifications.handle(request)
@@ -145,17 +129,13 @@ def _create_script(path: Path) -> _ScriptContext:
     transition_repository = InMemoryMarketTransitionRepository()
     notification_service = NotificationService(message_sender, transition_repository)
     stock_repository = InMemoryStockRepository()
-    target_price_repository = InMemoryTargetPriceRepository()
     trigger_notifications = TriggerStocksNotifications(
         provider=provider,
         notification_service=notification_service,
         stock_repository=stock_repository,
-        target_price_repository=target_price_repository,
     )
-    sync_target_prices = SyncTargetPrices(target_price_repository)
     script = MonitorStocksScript(
         trigger_notifications=trigger_notifications,
-        sync_target_prices=sync_target_prices,
         config_manager=ConfigManager(path),
     )
     return _ScriptContext(script=script, message_sender=message_sender)

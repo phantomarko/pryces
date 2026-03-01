@@ -27,7 +27,7 @@ class TestNotificationService:
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         assert self.mock_sender.send_message.call_count == 2
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
@@ -37,15 +37,15 @@ class TestNotificationService:
         stock1 = create_stock_crossing_fifty_day("AAPL")
         stock2 = create_stock_crossing_fifty_day("GOOGL")
 
-        self.service.send_stock_notifications(stock1, [])
-        self.service.send_stock_notifications(stock2, [])
+        self.service.send_stock_notifications(stock1)
+        self.service.send_stock_notifications(stock2)
 
         assert self.mock_sender.send_message.call_count == 4
 
     def test_handles_stock_with_no_crossing_notifications(self):
         stock = create_stock_no_crossing("AAPL")
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called_once()
 
@@ -65,7 +65,7 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
         assert any("52-week high" in m for m in messages)
@@ -86,7 +86,7 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
         assert any("52-week low" in m for m in messages)
@@ -108,7 +108,7 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
 
@@ -129,7 +129,7 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
 
@@ -148,7 +148,7 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_not_called()
 
@@ -166,7 +166,7 @@ class TestNotificationService:
             price_delay_in_minutes=15,
         )
         stock.update(source_transition)
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         source_same = Stock(
             symbol="AAPL",
@@ -176,7 +176,7 @@ class TestNotificationService:
         )
         stock.update(source_same)
         self.clock.return_value = datetime(2024, 1, 1, 9, 5, 0)
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_not_called()
 
@@ -194,7 +194,7 @@ class TestNotificationService:
             price_delay_in_minutes=15,
         )
         stock.update(source_transition)
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         source_same = Stock(
             symbol="AAPL",
@@ -206,7 +206,7 @@ class TestNotificationService:
         )
         stock.update(source_same)
         self.clock.return_value = datetime(2024, 1, 1, 9, 16, 0)
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
 
@@ -220,7 +220,7 @@ class TestNotificationService:
             open_price=Decimal("149.00"),
         )
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
 
@@ -239,73 +239,60 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock, [])
+        self.service.send_stock_notifications(stock)
 
         assert self.transition_repo.get("AAPL") is None
 
-    def test_returns_empty_list_when_no_targets(self):
-        stock = create_stock("AAPL", Decimal("150.00"))
-
-        result = self.service.send_stock_notifications(stock, [])
-
-        assert result == []
-
-    def test_returns_empty_list_when_no_target_is_reached(self):
+    def test_sends_target_notification_when_target_reached(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
         target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        target.set_entry_price(create_stock("AAPL", Decimal("100.00")))
-        stock = create_stock("AAPL", Decimal("150.00"))
+        stock.sync_targets([target])
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            previous_close_price=Decimal("195.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
 
-        result = self.service.send_stock_notifications(stock, [target])
+        self.service.send_stock_notifications(stock)
 
-        assert result == []
-
-    def test_returns_triggered_target_and_sends_message_when_target_reached(self):
-        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        target.set_entry_price(create_stock("AAPL", Decimal("100.00")))
-        stock = create_stock("AAPL", Decimal("200.00"))
-
-        result = self.service.send_stock_notifications(stock, [target])
-
-        assert result == [target]
         self.mock_sender.send_message.assert_called()
+        assert stock.targets == []
 
-    def test_returns_all_triggered_targets_when_multiple_reach_price(self):
-        target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        target1.set_entry_price(create_stock("AAPL", Decimal("100.00")))
-        target2 = TargetPrice(symbol="AAPL", target=Decimal("250.00"))
-        target2.set_entry_price(create_stock("AAPL", Decimal("100.00")))
-        stock = create_stock("AAPL", Decimal("300.00"))
-
-        result = self.service.send_stock_notifications(stock, [target1, target2])
-
-        assert result == [target1, target2]
-
-    def test_returns_only_triggered_targets_in_mixed_scenario(self):
-        target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        target1.set_entry_price(create_stock("AAPL", Decimal("100.00")))
-        target2 = TargetPrice(symbol="AAPL", target=Decimal("500.00"))
-        target2.set_entry_price(create_stock("AAPL", Decimal("100.00")))
-        stock = create_stock("AAPL", Decimal("250.00"))
-
-        result = self.service.send_stock_notifications(stock, [target1, target2])
-
-        assert result == [target1]
-
-    def test_returns_empty_list_when_target_has_no_entry_price(self):
+    def test_does_not_remove_unreached_target(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
         target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        stock = create_stock("AAPL", Decimal("200.00"))
+        stock.sync_targets([target])
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("148.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
 
-        result = self.service.send_stock_notifications(stock, [target])
+        self.service.send_stock_notifications(stock)
 
-        assert result == []
+        assert len(stock.targets) == 1
 
     def test_suppresses_target_notifications_during_delay_window(self):
         stock = Stock(
             symbol="AAPL",
-            current_price=Decimal("145.00"),
+            current_price=Decimal("100.00"),
             market_state=MarketState.PRE,
             price_delay_in_minutes=15,
         )
+        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+        stock.sync_targets([target])
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -314,10 +301,8 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        target.set_entry_price(create_stock("AAPL", Decimal("100.00")))
+        self.service.send_stock_notifications(stock)
 
-        result = self.service.send_stock_notifications(stock, [target])
-
-        assert result == []
+        # Target should still be there since notifications were suppressed
+        assert len(stock.targets) == 1
         self.mock_sender.send_message.assert_not_called()

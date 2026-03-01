@@ -132,7 +132,6 @@ callers to the HTTP transport.
 
 ### 20. Test coverage gaps
 - `SettingsFactory` has no tests (env var parsing, defaults, missing vars)
-- `TargetPriceDTO` missing round-trip test (`from_target_price` → `to_target_price`)
 
 ---
 

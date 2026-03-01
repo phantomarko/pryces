@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 @dataclass(frozen=True, slots=True)
 class GenerateNotificationsResult:
     new_notifications: list[Notification]
-    triggered_targets: list[TargetPrice]
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +56,7 @@ class Stock:
         "_price_delay_in_minutes",
         "_snapshot",
         "_notifications",
+        "_targets",
     )
 
     def __init__(
@@ -93,6 +93,7 @@ class Stock:
         self._price_delay_in_minutes = price_delay_in_minutes
         self._snapshot: StockSnapshot | None = None
         self._notifications: list[Notification] = []
+        self._targets: list[TargetPrice] = []
 
     @property
     def symbol(self) -> str:
@@ -157,6 +158,25 @@ class Stock:
     @property
     def notifications(self) -> list[Notification]:
         return self._notifications
+
+    @property
+    def targets(self) -> list[TargetPrice]:
+        return self._targets
+
+    def sync_targets(self, targets: list[TargetPrice]) -> None:
+        incoming_values = {t.target for t in targets}
+        existing_by_value = {t.target: t for t in self._targets}
+
+        synced: list[TargetPrice] = []
+        for target in targets:
+            existing = existing_by_value.get(target.target)
+            if existing is not None:
+                synced.append(existing)
+            else:
+                target.set_entry_price(self)
+                synced.append(target)
+
+        self._targets = synced
 
     def _capture_snapshot(self) -> StockSnapshot:
         return StockSnapshot(
@@ -390,17 +410,18 @@ class Stock:
         if notification is not None and not self._has_notification_type(notification.type):
             self._notifications.append(notification)
 
-    def _generate_target_price_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
-        triggered: list[TargetPrice] = []
-        for target in targets:
+    def _generate_target_price_notifications(self) -> None:
+        remaining: list[TargetPrice] = []
+        for target in self._targets:
             if target.is_reached(self):
                 self._notifications.append(
                     Notification.create_target_price_reached(self._symbol, target.target)
                 )
-                triggered.append(target)
-        return triggered
+            else:
+                remaining.append(target)
+        self._targets = remaining
 
-    def _generate_market_open_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
+    def _generate_market_open_notifications(self) -> None:
         self._generate_regular_market_open_notification()
         self._generate_close_to_fifty_day_average_notification()
         self._generate_fifty_day_average_crossed_notification()
@@ -409,7 +430,7 @@ class Stock:
         self._generate_percentage_change_from_previous_close_notification()
         self._generate_new_52_week_high_notification()
         self._generate_new_52_week_low_notification()
-        return self._generate_target_price_notifications(targets)
+        self._generate_target_price_notifications()
 
     def _generate_regular_market_closed_notification(self) -> None:
         if self._has_notification_type(NotificationType.REGULAR_MARKET_CLOSED):
@@ -423,14 +444,12 @@ class Stock:
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()
 
-    def generate_notifications(self, targets: list[TargetPrice]) -> GenerateNotificationsResult:
+    def generate_notifications(self) -> GenerateNotificationsResult:
         previous_count = len(self._notifications)
-        triggered: list[TargetPrice] = []
         if self._is_market_state_open():
-            triggered = self._generate_market_open_notifications(targets)
+            self._generate_market_open_notifications()
         elif self._is_market_state_post():
             self._generate_market_closed_notifications()
         return GenerateNotificationsResult(
             new_notifications=self._notifications[previous_count:],
-            triggered_targets=triggered,
         )
