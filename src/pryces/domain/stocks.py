@@ -168,14 +168,6 @@ class Stock:
     def snapshot(self) -> StockSnapshot | None:
         return self._snapshot
 
-    @property
-    def notifications(self) -> list[Notification]:
-        return self._notifications
-
-    @property
-    def targets(self) -> list[TargetPrice]:
-        return self._targets
-
     def drain_fulfilled_targets(self) -> list[Decimal]:
         fulfilled = [t.target for t in self._fulfilled_targets]
         self._fulfilled_targets = []

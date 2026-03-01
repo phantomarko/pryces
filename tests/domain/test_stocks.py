@@ -1,6 +1,5 @@
 from decimal import Decimal
 
-from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock, StockSnapshot
 
 
@@ -270,10 +269,9 @@ def test_generate_notifications_adds_close_to_sma50_when_approaching_from_below(
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA50 in types
+    assert any("to cross SMA50" in m for m in messages)
 
 
 def test_generate_notifications_adds_close_to_sma50_when_approaching_from_above():
@@ -285,10 +283,9 @@ def test_generate_notifications_adds_close_to_sma50_when_approaching_from_above(
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA50 in types
+    assert any("to cross SMA50" in m for m in messages)
 
 
 def test_generate_notifications_does_not_add_close_to_sma50_when_beyond_threshold():
@@ -300,10 +297,9 @@ def test_generate_notifications_does_not_add_close_to_sma50_when_beyond_threshol
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA50 not in types
+    assert not any("to cross SMA50" in m for m in messages)
 
 
 def test_generate_notifications_does_not_add_close_to_sma50_when_previous_close_on_same_side():
@@ -315,10 +311,9 @@ def test_generate_notifications_does_not_add_close_to_sma50_when_previous_close_
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA50 not in types
+    assert not any("to cross SMA50" in m for m in messages)
 
 
 def test_generate_notifications_adds_close_to_sma200_when_approaching_from_below():
@@ -330,10 +325,9 @@ def test_generate_notifications_adds_close_to_sma200_when_approaching_from_below
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA200 in types
+    assert any("to cross SMA200" in m for m in messages)
 
 
 def test_generate_notifications_adds_close_to_sma200_when_approaching_from_above():
@@ -345,10 +339,9 @@ def test_generate_notifications_adds_close_to_sma200_when_approaching_from_above
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA200 in types
+    assert any("to cross SMA200" in m for m in messages)
 
 
 def test_generate_notifications_does_not_add_close_to_sma200_when_beyond_threshold():
@@ -360,10 +353,9 @@ def test_generate_notifications_does_not_add_close_to_sma200_when_beyond_thresho
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA200 not in types
+    assert not any("to cross SMA200" in m for m in messages)
 
 
 def test_generate_notifications_does_not_add_close_to_sma200_when_previous_close_on_same_side():
@@ -375,10 +367,9 @@ def test_generate_notifications_does_not_add_close_to_sma200_when_previous_close
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.CLOSE_TO_SMA200 not in types
+    assert not any("to cross SMA200" in m for m in messages)
 
 
 def test_change_percentage_from_previous_close_returns_none_when_previous_close_is_none():
@@ -432,12 +423,6 @@ def test_stock_optional_fields_default_to_none():
     assert stock.fifty_two_week_low is None
 
 
-def test_stock_notifications_defaults_to_empty_list():
-    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-
-    assert stock.notifications == []
-
-
 def test_generate_notifications_adds_fifty_day_notification():
     stock = Stock(
         symbol="AAPL",
@@ -447,15 +432,12 @@ def test_generate_notifications_adds_fifty_day_notification():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 3
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.SMA50_CROSSED,
-        NotificationType.FIVE_PERCENT_INCREASE,
-    }
+    assert len(messages) == 3
+    assert any("opened at" in m for m in messages)
+    assert any("crossed SMA50" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_two_hundred_day_notification():
@@ -467,15 +449,12 @@ def test_generate_notifications_adds_two_hundred_day_notification():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 3
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.SMA200_CROSSED,
-        NotificationType.FIFTEEN_PERCENT_INCREASE,
-    }
+    assert len(messages) == 3
+    assert any("opened at" in m for m in messages)
+    assert any("crossed SMA200" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_both_notifications():
@@ -488,16 +467,13 @@ def test_generate_notifications_adds_both_notifications():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 4
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.SMA50_CROSSED,
-        NotificationType.SMA200_CROSSED,
-        NotificationType.FIFTEEN_PERCENT_INCREASE,
-    }
+    assert len(messages) == 4
+    assert any("opened at" in m for m in messages)
+    assert any("crossed SMA50" in m for m in messages)
+    assert any("crossed SMA200" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_no_notifications_when_no_crossing():
@@ -510,12 +486,12 @@ def test_generate_notifications_adds_no_notifications_when_no_crossing():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
-    sma_types = {NotificationType.SMA50_CROSSED, NotificationType.SMA200_CROSSED}
-    assert not any(n.type in sma_types for n in stock.notifications)
+    assert len(messages) == 1
+    assert any("opened at" in m for m in messages)
+    assert not any("crossed SMA50" in m for m in messages)
+    assert not any("crossed SMA200" in m for m in messages)
 
 
 def test_is_market_state_open_returns_true_when_market_state_is_open():
@@ -553,10 +529,10 @@ def test_generate_notifications_adds_regular_market_open_notification():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+    assert len(messages) == 1
+    assert any("opened at" in m for m in messages)
 
 
 def test_generate_notifications_adds_regular_market_open_with_current_price_fallback():
@@ -567,10 +543,10 @@ def test_generate_notifications_adds_regular_market_open_with_current_price_fall
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+    assert len(messages) == 1
+    assert any("opened at" in m for m in messages)
 
 
 def test_generate_notifications_does_not_add_regular_market_open_when_market_closed():
@@ -582,9 +558,9 @@ def test_generate_notifications_does_not_add_regular_market_open_when_market_clo
         market_state=MarketState.CLOSED,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert stock.notifications == []
+    assert messages == []
 
 
 def test_is_market_state_post_returns_true_when_market_state_is_post():
@@ -620,10 +596,10 @@ def test_generate_notifications_adds_regular_market_closed_when_post():
         market_state=MarketState.POST,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_CLOSED
+    assert len(messages) == 1
+    assert any("closed at" in m for m in messages)
 
 
 def test_generate_notifications_adds_twenty_percent_increase():
@@ -634,14 +610,11 @@ def test_generate_notifications_adds_twenty_percent_increase():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.TWENTY_PERCENT_INCREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_fifteen_percent_increase():
@@ -652,14 +625,11 @@ def test_generate_notifications_adds_fifteen_percent_increase():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.FIFTEEN_PERCENT_INCREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_ten_percent_increase():
@@ -670,14 +640,11 @@ def test_generate_notifications_adds_ten_percent_increase():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.TEN_PERCENT_INCREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_five_percent_increase():
@@ -688,14 +655,11 @@ def test_generate_notifications_adds_five_percent_increase():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.FIVE_PERCENT_INCREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_notifications_adds_twenty_percent_decrease():
@@ -706,14 +670,11 @@ def test_generate_notifications_adds_twenty_percent_decrease():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.TWENTY_PERCENT_DECREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("dropped to" in m for m in messages)
 
 
 def test_generate_notifications_adds_fifteen_percent_decrease():
@@ -724,14 +685,11 @@ def test_generate_notifications_adds_fifteen_percent_decrease():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.FIFTEEN_PERCENT_DECREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("dropped to" in m for m in messages)
 
 
 def test_generate_notifications_adds_ten_percent_decrease():
@@ -742,14 +700,11 @@ def test_generate_notifications_adds_ten_percent_decrease():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.TEN_PERCENT_DECREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("dropped to" in m for m in messages)
 
 
 def test_generate_notifications_adds_five_percent_decrease():
@@ -760,14 +715,11 @@ def test_generate_notifications_adds_five_percent_decrease():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.FIVE_PERCENT_DECREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("dropped to" in m for m in messages)
 
 
 def test_generate_notifications_no_percentage_below_threshold():
@@ -778,10 +730,10 @@ def test_generate_notifications_no_percentage_below_threshold():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+    assert len(messages) == 1
+    assert any("opened at" in m for m in messages)
 
 
 def test_generate_notifications_percentage_at_exact_threshold():
@@ -792,23 +744,19 @@ def test_generate_notifications_percentage_at_exact_threshold():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 2
-    types = {n.type for n in stock.notifications}
-    assert types == {
-        NotificationType.REGULAR_MARKET_OPEN,
-        NotificationType.FIVE_PERCENT_INCREASE,
-    }
+    assert len(messages) == 2
+    assert any("opened at" in m for m in messages)
+    assert any("rose to" in m for m in messages)
 
 
 def test_generate_new_52_week_high_notification_does_not_add_when_no_snapshot():
     stock = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_HIGH not in types
+    assert not any("52-week high" in m for m in messages)
 
 
 def test_generate_new_52_week_high_notification_does_not_add_when_snapshot_has_no_52_week_high():
@@ -816,10 +764,9 @@ def test_generate_new_52_week_high_notification_does_not_add_when_snapshot_has_n
     source = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_HIGH not in types
+    assert not any("52-week high" in m for m in messages)
 
 
 def test_generate_new_52_week_high_notification_does_not_add_when_current_price_equals_snapshot_52_week_high():
@@ -832,10 +779,9 @@ def test_generate_new_52_week_high_notification_does_not_add_when_current_price_
     source = Stock(symbol="AAPL", current_price=Decimal("180.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_HIGH not in types
+    assert not any("52-week high" in m for m in messages)
 
 
 def test_generate_new_52_week_high_notification_does_not_add_when_current_price_below_snapshot_52_week_high():
@@ -848,10 +794,9 @@ def test_generate_new_52_week_high_notification_does_not_add_when_current_price_
     source = Stock(symbol="AAPL", current_price=Decimal("170.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_HIGH not in types
+    assert not any("52-week high" in m for m in messages)
 
 
 def test_generate_new_52_week_high_notification_adds_when_current_price_exceeds_snapshot_52_week_high():
@@ -864,19 +809,17 @@ def test_generate_new_52_week_high_notification_adds_when_current_price_exceeds_
     source = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_HIGH in types
+    assert any("52-week high" in m for m in messages)
 
 
 def test_generate_new_52_week_low_notification_does_not_add_when_no_snapshot():
     stock = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_LOW not in types
+    assert not any("52-week low" in m for m in messages)
 
 
 def test_generate_new_52_week_low_notification_does_not_add_when_snapshot_has_no_52_week_low():
@@ -884,10 +827,9 @@ def test_generate_new_52_week_low_notification_does_not_add_when_snapshot_has_no
     source = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_LOW not in types
+    assert not any("52-week low" in m for m in messages)
 
 
 def test_generate_new_52_week_low_notification_does_not_add_when_current_price_equals_snapshot_52_week_low():
@@ -900,10 +842,9 @@ def test_generate_new_52_week_low_notification_does_not_add_when_current_price_e
     source = Stock(symbol="AAPL", current_price=Decimal("120.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_LOW not in types
+    assert not any("52-week low" in m for m in messages)
 
 
 def test_generate_new_52_week_low_notification_does_not_add_when_current_price_above_snapshot_52_week_low():
@@ -916,10 +857,9 @@ def test_generate_new_52_week_low_notification_does_not_add_when_current_price_a
     source = Stock(symbol="AAPL", current_price=Decimal("130.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_LOW not in types
+    assert not any("52-week low" in m for m in messages)
 
 
 def test_generate_new_52_week_low_notification_adds_when_current_price_falls_below_snapshot_52_week_low():
@@ -932,10 +872,9 @@ def test_generate_new_52_week_low_notification_adds_when_current_price_falls_bel
     source = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = {n.type for n in stock.notifications}
-    assert NotificationType.NEW_52_WEEK_LOW in types
+    assert any("52-week low" in m for m in messages)
 
 
 def test_generate_notifications_no_percentage_when_previous_close_none():
@@ -945,10 +884,10 @@ def test_generate_notifications_no_percentage_when_previous_close_none():
         market_state=MarketState.OPEN,
     )
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.notifications) == 1
-    assert stock.notifications[0].type == NotificationType.REGULAR_MARKET_OPEN
+    assert len(messages) == 1
+    assert any("opened at" in m for m in messages)
 
 
 def test_stock_price_delay_in_minutes_accepts_int_and_none():
@@ -1046,14 +985,14 @@ def test_update_preserves_notifications():
         previous_close_price=Decimal("148.00"),
         market_state=MarketState.OPEN,
     )
-    stock.generate_notifications()
-    count_before = len(stock.notifications)
-    assert count_before > 0
+    result1 = stock.generate_notifications()
+    assert len(result1) > 0
 
     source = Stock(symbol="AAPL", current_price=Decimal("155.00"))
     stock.update(source)
 
-    assert len(stock.notifications) == count_before
+    result2 = stock.generate_notifications()
+    assert result2 == []  # dedup works — notifications survived the update
 
 
 def test_stock_snapshot_is_frozen():
@@ -1124,13 +1063,10 @@ def test_generate_notifications_deduplicates_by_type():
         market_state=MarketState.OPEN,
     )
     result1 = stock.generate_notifications()
-    first_count = len(stock.notifications)
-    assert first_count > 0
-    assert len(result1) == first_count
+    assert len(result1) > 0
 
     result2 = stock.generate_notifications()
 
-    assert len(stock.notifications) == first_count
     assert result2 == []
 
 
@@ -1150,10 +1086,9 @@ def test_generate_notifications_appends_target_price_reached_when_target_is_reac
     )
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    types = [n.type for n in stock.notifications]
-    assert NotificationType.TARGET_PRICE_REACHED in types
+    assert any("hit target" in m for m in messages)
 
 
 def test_generate_notifications_removes_triggered_targets_from_stock():
@@ -1172,11 +1107,9 @@ def test_generate_notifications_removes_triggered_targets_from_stock():
     )
     stock.update(source)
 
-    result = stock.generate_notifications()
+    stock.generate_notifications()
 
-    assert isinstance(result, list)
-    assert len(result) > 0
-    assert stock.targets == []
+    assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
 
 def test_generate_notifications_does_not_include_unreached_target():
@@ -1195,11 +1128,10 @@ def test_generate_notifications_does_not_include_unreached_target():
     )
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.targets) == 1
-    types = [n.type for n in stock.notifications]
-    assert NotificationType.TARGET_PRICE_REACHED not in types
+    assert not any("hit target" in m for m in messages)
+    assert stock.drain_fulfilled_targets() == []
 
 
 def test_generate_notifications_target_notification_message_contains_symbol_and_target():
@@ -1218,14 +1150,12 @@ def test_generate_notifications_target_notification_message_contains_symbol_and_
     )
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    target_notifications = [
-        n for n in stock.notifications if n.type == NotificationType.TARGET_PRICE_REACHED
-    ]
-    assert len(target_notifications) == 1
-    assert "AAPL" in target_notifications[0].message
-    assert "200.00" in target_notifications[0].message
+    target_messages = [m for m in messages if "hit target" in m]
+    assert len(target_messages) == 1
+    assert "AAPL" in target_messages[0]
+    assert "200.00" in target_messages[0]
 
 
 def test_generate_notifications_ignores_targets_when_market_is_post():
@@ -1244,11 +1174,10 @@ def test_generate_notifications_ignores_targets_when_market_is_post():
     )
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert len(stock.targets) == 1
-    types = [n.type for n in stock.notifications]
-    assert NotificationType.TARGET_PRICE_REACHED not in types
+    assert not any("hit target" in m for m in messages)
+    assert stock.drain_fulfilled_targets() == []
 
 
 def test_generate_notifications_removes_multiple_triggered_targets():
@@ -1267,13 +1196,11 @@ def test_generate_notifications_removes_multiple_triggered_targets():
     )
     stock.update(source)
 
-    stock.generate_notifications()
+    messages = stock.generate_notifications()
 
-    assert stock.targets == []
-    target_notifications = [
-        n for n in stock.notifications if n.type == NotificationType.TARGET_PRICE_REACHED
-    ]
-    assert len(target_notifications) == 2
+    target_messages = [m for m in messages if "hit target" in m]
+    assert len(target_messages) == 2
+    assert set(stock.drain_fulfilled_targets()) == {Decimal("200.00"), Decimal("250.00")}
 
 
 def test_generate_notifications_target_price_reached_is_never_deduplicated():
@@ -1291,7 +1218,8 @@ def test_generate_notifications_target_price_reached_is_never_deduplicated():
         market_state=MarketState.OPEN,
     )
     stock.update(source1)
-    stock.generate_notifications()
+    result1 = stock.generate_notifications()
+    assert any("hit target" in m for m in result1)
 
     stock.sync_targets([Decimal("250.00")])
     source2 = Stock(
@@ -1301,12 +1229,8 @@ def test_generate_notifications_target_price_reached_is_never_deduplicated():
         market_state=MarketState.OPEN,
     )
     stock.update(source2)
-    stock.generate_notifications()
-
-    target_notifications = [
-        n for n in stock.notifications if n.type == NotificationType.TARGET_PRICE_REACHED
-    ]
-    assert len(target_notifications) == 2
+    result2 = stock.generate_notifications()
+    assert any("hit target" in m for m in result2)
 
 
 def test_generate_notifications_returns_new_notifications_only():
@@ -1327,56 +1251,78 @@ def test_generate_notifications_returns_new_notifications_only():
 
 
 def test_sync_targets_sets_entry_price():
-    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
     stock.sync_targets([Decimal("200.00")])
 
-    assert len(stock.targets) == 1
-    assert stock.targets[0].entry == Decimal("150.00")
+    source_below = Stock(
+        symbol="AAPL",
+        current_price=Decimal("180.00"),
+        previous_close_price=Decimal("148.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.update(source_below)
+    assert not any("hit target" in m for m in stock.generate_notifications())
+    assert stock.drain_fulfilled_targets() == []
 
-
-def test_sync_targets_preserves_existing_target():
-    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-    stock.sync_targets([Decimal("200.00")])
-    original_target = stock.targets[0]
-
-    stock.sync_targets([Decimal("200.00")])
-
-    assert len(stock.targets) == 1
-    assert stock.targets[0].entry == Decimal("150.00")
-    assert stock.targets[0] is original_target
+    source_hit = Stock(
+        symbol="AAPL",
+        current_price=Decimal("200.00"),
+        previous_close_price=Decimal("195.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.update(source_hit)
+    assert any("hit target" in m for m in stock.generate_notifications())
 
 
 def test_sync_targets_removes_missing_targets():
-    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
     stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
-
     stock.sync_targets([Decimal("200.00")])
 
-    assert len(stock.targets) == 1
-    assert stock.targets[0].target == Decimal("200.00")
+    source = Stock(
+        symbol="AAPL",
+        current_price=Decimal("260.00"),
+        previous_close_price=Decimal("148.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.update(source)
+    stock.generate_notifications()
+
+    assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
 
 def test_sync_targets_clears_all_on_empty_list():
-    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
     stock.sync_targets([Decimal("200.00")])
-
     stock.sync_targets([])
 
-    assert stock.targets == []
+    source = Stock(
+        symbol="AAPL",
+        current_price=Decimal("200.00"),
+        previous_close_price=Decimal("148.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.update(source)
+    stock.generate_notifications()
+
+    assert stock.drain_fulfilled_targets() == []
 
 
 def test_sync_targets_adds_new_and_preserves_existing():
-    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
+    stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
     stock.sync_targets([Decimal("200.00")])
-    original_target = stock.targets[0]
-
     stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
 
-    assert len(stock.targets) == 2
-    assert stock.targets[0] is original_target
-    assert stock.targets[1].target == Decimal("250.00")
-    assert stock.targets[1].entry == Decimal("150.00")
+    source = Stock(
+        symbol="AAPL",
+        current_price=Decimal("260.00"),
+        previous_close_price=Decimal("148.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.update(source)
+    stock.generate_notifications()
+
+    assert set(stock.drain_fulfilled_targets()) == {Decimal("200.00"), Decimal("250.00")}
 
 
 def test_drain_fulfilled_targets_returns_fulfilled_targets():

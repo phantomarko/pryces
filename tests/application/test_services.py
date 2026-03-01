@@ -279,7 +279,7 @@ class TestNotificationService:
         self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
-        assert stock.targets == []
+        assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
     def test_does_not_remove_unreached_target(self):
         stock = Stock(
@@ -298,7 +298,7 @@ class TestNotificationService:
 
         self.service.send_stock_notifications(stock)
 
-        assert len(stock.targets) == 1
+        assert stock.drain_fulfilled_targets() == []
 
     def test_suppresses_when_checker_returns_true(self):
         self.mock_checker.is_in_delay_window.return_value = True
@@ -353,8 +353,16 @@ class TestStockSynchronizer:
 
         result = self.synchronizer.fetch_and_sync(["AAPL"], {"AAPL": [Decimal("200.00")]})
 
-        assert len(result[0].targets) == 1
-        assert result[0].targets[0].target == Decimal("200.00")
+        synced_stock = result[0]
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            previous_close_price=Decimal("195.00"),
+            market_state=MarketState.OPEN,
+        )
+        synced_stock.update(source)
+        synced_stock.generate_notifications()
+        assert synced_stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
     def test_fetch_and_sync_with_empty_symbols_returns_empty(self):
         self.mock_provider.get_stocks.return_value = []
