@@ -104,13 +104,11 @@ Inconsistent with the `SettingsFactory` pattern used elsewhere. Also has unexpla
 magic constants (`5 * 1024 * 1024`, `backupCount=3`).
 **Suggestion:** Either use `SettingsFactory` or extract constants with explanatory names.
 
-### 12. `YahooFinanceProvider` — SRP violation
-**File:** `infrastructure/providers.py`
-**Violation:** SRP
-Fetches data, maps market state, builds `Stock` objects (37-line `_build_response`),
-and handles errors. The `len(info) <= 3` guard is also unexplained.
-**Suggestion:** Extract a `YahooFinanceMapper` responsible for converting raw yfinance
-data to domain objects. Document the `<= 3` threshold.
+### ~~12. `YahooFinanceProvider` — SRP violation~~ ✓ Resolved
+`YahooFinanceMapper` extracted into a separate class responsible for converting raw yfinance
+data to domain `Stock` objects. `YahooFinanceProvider` now delegates mapping to the
+`YahooFinanceMapper`, maintaining focus on data fetching. The `len(info) <= 3` threshold
+is documented as a guard against incomplete API responses.
 
 ---
 
@@ -185,7 +183,7 @@ not structural ones.
 | Medium | 9 | `tuple` instead of `list` in `SymbolConfig` |
 | Medium | 10 | Add `from e` in `ConfigManager` exception re-raise (all 3 branches) |
 | Medium | 11 | Fix `logging.py` env access + magic constants |
-| Medium | 12 | Extract `YahooFinanceMapper` |
+| ~~Medium~~ | ~~12~~ | ~~Extract `YahooFinanceMapper`~~ ✓ |
 | ~~Low~~ | ~~16~~ | ~~Fix old-style type hints in `registry.py`~~ ✓ |
 | ~~Low~~ | ~~18~~ | ~~`CommandFactory` stores unused dependencies~~ ✓ |
 | Low | 13–15, 17, 19–20 | Remaining minor items |

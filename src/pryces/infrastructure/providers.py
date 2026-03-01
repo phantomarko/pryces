@@ -15,29 +15,30 @@ class YahooFinanceSettings:
     extra_delay_in_minutes: int
 
 
-class YahooFinanceProvider(StockProvider):
-    def __init__(self, settings: YahooFinanceSettings) -> None:
-        self._max_workers = settings.max_workers
-        self._extra_delay_in_minutes = settings.extra_delay_in_minutes
+class YahooFinanceMapper:
+    def __init__(self, extra_delay_in_minutes: int) -> None:
+        self._extra_delay_in_minutes = extra_delay_in_minutes
         self._logger = logging.getLogger(__name__)
 
-    def _map_market_state(self, value: str | None) -> MarketState | None:
-        match value:
-            case "REGULAR":
-                return MarketState.OPEN
-            case "PRE" | "PREPRE":
-                return MarketState.PRE
-            case "POST" | "POSTPOST":
-                return MarketState.POST
-            case "CLOSED":
-                return MarketState.CLOSED
-            case None:
-                return None
-            case _:
-                self._logger.warning(f"Unknown market state: {value}")
-                return None
+    def map(self, symbol: str, info: dict) -> Stock | None:
+        # yfinance returns a small metadata-only dict (≤3 keys) for invalid/delisted symbols
+        if not info or len(info) <= 3:
+            self._logger.error(f"No data available for symbol: {symbol}")
+            return None
 
-    def _build_response(self, symbol: str, info: dict, current_price: float) -> Stock:
+        current_price = None
+        for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
+            if price_key in info and info[price_key] is not None:
+                current_price = info[price_key]
+                break
+
+        if current_price is None:
+            self._logger.error(f"Unable to retrieve current price for symbol: {symbol}")
+            return None
+
+        return self._to_stock(symbol, info, current_price)
+
+    def _to_stock(self, symbol: str, info: dict, current_price: float) -> Stock:
         previous_close = info.get("previousClose")
         open_price = info.get("open")
         day_high = info.get("dayHigh")
@@ -78,28 +79,34 @@ class YahooFinanceProvider(StockProvider):
             price_delay_in_minutes=price_delay_in_minutes,
         )
 
-    def _build_stock_from_ticker(self, symbol: str, info: dict) -> Stock | None:
-        if not info or len(info) <= 3:
-            self._logger.error(f"No data available for symbol: {symbol}")
-            return None
+    def _map_market_state(self, value: str | None) -> MarketState | None:
+        match value:
+            case "REGULAR":
+                return MarketState.OPEN
+            case "PRE" | "PREPRE":
+                return MarketState.PRE
+            case "POST" | "POSTPOST":
+                return MarketState.POST
+            case "CLOSED":
+                return MarketState.CLOSED
+            case None:
+                return None
+            case _:
+                self._logger.warning(f"Unknown market state: {value}")
+                return None
 
-        current_price = None
-        for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
-            if price_key in info and info[price_key] is not None:
-                current_price = info[price_key]
-                break
 
-        if current_price is None:
-            self._logger.error(f"Unable to retrieve current price for symbol: {symbol}")
-            return None
-
-        return self._build_response(symbol, info, current_price)
+class YahooFinanceProvider(StockProvider):
+    def __init__(self, settings: YahooFinanceSettings) -> None:
+        self._max_workers = settings.max_workers
+        self._mapper = YahooFinanceMapper(settings.extra_delay_in_minutes)
+        self._logger = logging.getLogger(__name__)
 
     def get_stock(self, symbol: str) -> Stock | None:
         self._logger.debug(f"Fetching stock data for {symbol}")
         ticker_obj = yf.Ticker(symbol)
         info = ticker_obj.info
-        stock = self._build_stock_from_ticker(symbol, info)
+        stock = self._mapper.map(symbol, info)
         del info, ticker_obj
         return stock
 
