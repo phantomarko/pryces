@@ -73,9 +73,9 @@ class MonitorStocksScript:
             symbols=updated_symbols,
         )
         self._config = new_config
-        self._log_config()
         self._config_manager.write_monitor_stocks_config(new_config)
-        self._logger.info("Config updated after fulfilled targets.")
+        self._logger.info("Removing fulfilled targets from config.")
+        self._log_config()
 
     def _log_config(self) -> None:
         duration_label = (

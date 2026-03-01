@@ -41,13 +41,10 @@ class TriggerStocksNotifications:
             target_values = request.targets.get(stock.symbol, [])
             stock.sync_targets(target_values)
 
-            targets_before = [t.target for t in stock.targets]
             self._notification_service.send_stock_notifications(stock)
-            targets_after = {t.target for t in stock.targets}
 
-            for target_value in targets_before:
-                if target_value not in targets_after:
-                    fulfilled.append(TargetPriceDTO(symbol=stock.symbol, target=target_value))
+            for target_value in stock.drain_fulfilled_targets():
+                fulfilled.append(TargetPriceDTO(symbol=stock.symbol, target=target_value))
 
             stocks_to_save.append(stock)
 

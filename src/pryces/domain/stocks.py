@@ -57,6 +57,7 @@ class Stock:
         "_snapshot",
         "_notifications",
         "_targets",
+        "_fulfilled_targets",
     )
 
     def __init__(
@@ -94,6 +95,7 @@ class Stock:
         self._snapshot: StockSnapshot | None = None
         self._notifications: list[Notification] = []
         self._targets: list[TargetPrice] = []
+        self._fulfilled_targets: list[TargetPrice] = []
 
     @property
     def symbol(self) -> str:
@@ -162,6 +164,11 @@ class Stock:
     @property
     def targets(self) -> list[TargetPrice]:
         return self._targets
+
+    def drain_fulfilled_targets(self) -> list[Decimal]:
+        fulfilled = [t.target for t in self._fulfilled_targets]
+        self._fulfilled_targets = []
+        return fulfilled
 
     def sync_targets(self, target_values: list[Decimal]) -> None:
         from pryces.domain.target_prices import TargetPrice
@@ -419,6 +426,7 @@ class Stock:
                 self._notifications.append(
                     Notification.create_target_price_reached(self._symbol, target.target)
                 )
+                self._fulfilled_targets.append(target)
             else:
                 remaining.append(target)
         self._targets = remaining

@@ -1587,3 +1587,50 @@ def test_sync_targets_adds_new_and_preserves_existing():
     assert stock.targets[0] is original_target
     assert stock.targets[1].target == Decimal("250.00")
     assert stock.targets[1].entry == Decimal("150.00")
+
+
+def test_drain_fulfilled_targets_returns_fulfilled_targets():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("150.00"),
+        previous_close_price=Decimal("145.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.sync_targets([Decimal("150.00")])
+    stock.generate_notifications()
+
+    fulfilled = stock.drain_fulfilled_targets()
+
+    assert len(fulfilled) == 1
+    assert fulfilled[0] == Decimal("150.00")
+
+
+def test_drain_fulfilled_targets_clears_list_after_drain():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("150.00"),
+        previous_close_price=Decimal("145.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.sync_targets([Decimal("150.00")])
+    stock.generate_notifications()
+    stock.drain_fulfilled_targets()
+
+    second_drain = stock.drain_fulfilled_targets()
+
+    assert second_drain == []
+
+
+def test_drain_fulfilled_targets_returns_empty_when_no_targets_fulfilled():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("150.00"),
+        previous_close_price=Decimal("145.00"),
+        market_state=MarketState.OPEN,
+    )
+    stock.sync_targets([Decimal("200.00")])
+    stock.generate_notifications()
+
+    fulfilled = stock.drain_fulfilled_targets()
+
+    assert fulfilled == []
