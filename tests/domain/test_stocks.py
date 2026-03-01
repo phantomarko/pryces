@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.domain.notifications import NotificationType
-from pryces.domain.stocks import MarketState, Stock, StockSnapshot
+from pryces.domain.stocks import GenerateNotificationsResult, MarketState, Stock, StockSnapshot
 from pryces.domain.target_prices import TargetPrice
 
 
@@ -1250,7 +1250,7 @@ def test_update_preserves_symbol():
     assert stock.symbol == "AAPL"
 
 
-def test_update_clears_notifications():
+def test_update_preserves_notifications():
     stock = Stock(
         symbol="AAPL",
         current_price=Decimal("150.00"),
@@ -1258,12 +1258,13 @@ def test_update_clears_notifications():
         market_state=MarketState.OPEN,
     )
     stock.generate_notifications([])
-    assert len(stock.notifications) > 0
+    count_before = len(stock.notifications)
+    assert count_before > 0
 
     source = Stock(symbol="AAPL", current_price=Decimal("155.00"))
     stock.update(source)
 
-    assert stock.notifications == []
+    assert len(stock.notifications) == count_before
 
 
 def test_stock_snapshot_is_frozen():
@@ -1326,20 +1327,22 @@ def test_is_market_state_transition_returns_false_when_transition_to_non_open_po
     assert stock.is_market_state_transition() is False
 
 
-def test_generate_notifications_clears_previous_notifications():
+def test_generate_notifications_deduplicates_by_type():
     stock = Stock(
         symbol="AAPL",
         current_price=Decimal("150.00"),
         previous_close_price=Decimal("148.00"),
         market_state=MarketState.OPEN,
     )
-    stock.generate_notifications([])
+    result1 = stock.generate_notifications([])
     first_count = len(stock.notifications)
     assert first_count > 0
+    assert len(result1.new_notifications) == first_count
 
-    stock.generate_notifications([])
+    result2 = stock.generate_notifications([])
 
     assert len(stock.notifications) == first_count
+    assert result2.new_notifications == []
 
 
 def test_generate_notifications_appends_target_price_reached_when_target_is_reached():
@@ -1358,7 +1361,7 @@ def test_generate_notifications_appends_target_price_reached_when_target_is_reac
     assert NotificationType.TARGET_PRICE_REACHED in types
 
 
-def test_generate_notifications_returns_triggered_targets():
+def test_generate_notifications_returns_result_with_triggered_targets():
     stock = Stock(
         symbol="AAPL",
         current_price=Decimal("200.00"),
@@ -1370,10 +1373,12 @@ def test_generate_notifications_returns_triggered_targets():
 
     result = stock.generate_notifications([target])
 
-    assert result == [target]
+    assert isinstance(result, GenerateNotificationsResult)
+    assert result.triggered_targets == [target]
+    assert len(result.new_notifications) > 0
 
 
-def test_generate_notifications_returns_empty_list_with_no_targets():
+def test_generate_notifications_returns_empty_triggered_targets_with_no_targets():
     stock = Stock(
         symbol="AAPL",
         current_price=Decimal("150.00"),
@@ -1383,7 +1388,7 @@ def test_generate_notifications_returns_empty_list_with_no_targets():
 
     result = stock.generate_notifications([])
 
-    assert result == []
+    assert result.triggered_targets == []
 
 
 def test_generate_notifications_does_not_include_unreached_target():
@@ -1398,7 +1403,7 @@ def test_generate_notifications_does_not_include_unreached_target():
 
     result = stock.generate_notifications([target])
 
-    assert result == []
+    assert result.triggered_targets == []
     types = [n.type for n in stock.notifications]
     assert NotificationType.TARGET_PRICE_REACHED not in types
 
@@ -1435,7 +1440,7 @@ def test_generate_notifications_ignores_targets_when_market_is_post():
 
     result = stock.generate_notifications([target])
 
-    assert result == []
+    assert result.triggered_targets == []
     types = [n.type for n in stock.notifications]
     assert NotificationType.TARGET_PRICE_REACHED not in types
 
@@ -1454,4 +1459,44 @@ def test_generate_notifications_returns_multiple_triggered_targets():
 
     result = stock.generate_notifications([target1, target2])
 
-    assert result == [target1, target2]
+    assert result.triggered_targets == [target1, target2]
+
+
+def test_generate_notifications_target_price_reached_is_never_deduplicated():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("200.00"),
+        previous_close_price=Decimal("195.00"),
+        market_state=MarketState.OPEN,
+    )
+    target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
+    target1.set_entry_price(Stock(symbol="AAPL", current_price=Decimal("100.00")))
+    target2 = TargetPrice(symbol="AAPL", target=Decimal("190.00"))
+    target2.set_entry_price(Stock(symbol="AAPL", current_price=Decimal("100.00")))
+
+    stock.generate_notifications([target1])
+    result = stock.generate_notifications([target2])
+
+    target_notifications = [
+        n for n in stock.notifications if n.type == NotificationType.TARGET_PRICE_REACHED
+    ]
+    assert len(target_notifications) == 2
+    assert result.triggered_targets == [target2]
+
+
+def test_generate_notifications_returns_new_notifications_only():
+    stock = Stock(
+        symbol="AAPL",
+        current_price=Decimal("101.00"),
+        previous_close_price=Decimal("99.00"),
+        fifty_day_average=Decimal("100.00"),
+        two_hundred_day_average=Decimal("80.00"),
+        market_state=MarketState.OPEN,
+    )
+    result1 = stock.generate_notifications([])
+    assert len(result1.new_notifications) > 0
+
+    result2 = stock.generate_notifications([])
+
+    assert result2.new_notifications == []
+    assert result2.triggered_targets == []

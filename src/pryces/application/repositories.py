@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from pryces.domain.notifications import Notification, NotificationType
 from pryces.domain.target_prices import TargetPrice
 from pryces.domain.stocks import Stock
 
@@ -13,16 +12,6 @@ class StockRepository(ABC):
 
     @abstractmethod
     def get(self, symbol: str) -> Stock | None:
-        pass
-
-
-class NotificationRepository(ABC):
-    @abstractmethod
-    def save(self, symbol: str, notification: Notification) -> None:
-        pass
-
-    @abstractmethod
-    def exists_by_type(self, symbol: str, notification_type: NotificationType) -> bool:
         pass
 
 

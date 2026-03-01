@@ -10,7 +10,6 @@ from pryces.domain.stocks import MarketState, Stock
 from pryces.domain.target_prices import TargetPrice
 from pryces.infrastructure.repositories import (
     InMemoryMarketTransitionRepository,
-    InMemoryNotificationRepository,
     InMemoryStockRepository,
     InMemoryTargetPriceRepository,
 )
@@ -33,7 +32,6 @@ class TestTriggerStocksNotifications:
         self.mock_sender = Mock(spec=MessageSender)
         self.notification_service = NotificationService(
             self.mock_sender,
-            InMemoryNotificationRepository(),
             InMemoryMarketTransitionRepository(),
         )
         self.target_price_repository = InMemoryTargetPriceRepository()

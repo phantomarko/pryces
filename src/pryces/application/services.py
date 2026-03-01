@@ -1,11 +1,10 @@
 from datetime import datetime
 from typing import Callable
 
-from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import Stock
 from pryces.domain.target_prices import TargetPrice
 
-from .repositories import MarketTransitionRepository, NotificationRepository
+from .repositories import MarketTransitionRepository
 from .senders import MessageSender
 
 
@@ -13,12 +12,10 @@ class NotificationService:
     def __init__(
         self,
         message_sender: MessageSender,
-        repository: NotificationRepository,
         transition_repository: MarketTransitionRepository,
         clock: Callable[[], datetime] = datetime.now,
     ) -> None:
         self._message_sender = message_sender
-        self._notification_repository = repository
         self._transition_repository = transition_repository
         self._clock = clock
 
@@ -43,16 +40,9 @@ class NotificationService:
         if self._is_in_delay_window(stock):
             return []
 
-        triggered = stock.generate_notifications(targets)
+        result = stock.generate_notifications(targets)
 
-        for notification in stock.notifications:
-            if (
-                notification.type != NotificationType.TARGET_PRICE_REACHED
-                and self._notification_repository.exists_by_type(stock.symbol, notification.type)
-            ):
-                continue
-
+        for notification in result.new_notifications:
             self._message_sender.send_message(notification.message)
-            self._notification_repository.save(stock.symbol, notification)
 
-        return triggered
+        return result.triggered_targets

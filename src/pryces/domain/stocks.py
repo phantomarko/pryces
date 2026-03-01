@@ -12,6 +12,12 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
+class GenerateNotificationsResult:
+    new_notifications: list[Notification]
+    triggered_targets: list[TargetPrice]
+
+
+@dataclass(frozen=True, slots=True)
 class StockSnapshot:
     current_price: Decimal
     previous_close_price: Decimal | None
@@ -182,7 +188,6 @@ class Stock:
         self._fifty_two_week_low = source._fifty_two_week_low
         self._market_state = source._market_state
         self._price_delay_in_minutes = source._price_delay_in_minutes
-        self._notifications = []
 
     def is_market_state_transition(self) -> bool:
         return (
@@ -190,6 +195,9 @@ class Stock:
             and self._snapshot.market_state != self._market_state
             and self._market_state in (MarketState.OPEN, MarketState.POST)
         )
+
+    def _has_notification_type(self, notification_type: NotificationType) -> bool:
+        return any(n.type == notification_type for n in self._notifications)
 
     def _is_close_to_fifty_day_average(self) -> bool:
         if self.fifty_day_average is None or self.previous_close_price is None:
@@ -304,6 +312,7 @@ class Stock:
             self._snapshot is not None
             and self._snapshot.fifty_two_week_high is not None
             and self.current_price > self._snapshot.fifty_two_week_high
+            and not self._has_notification_type(NotificationType.NEW_52_WEEK_HIGH)
         ):
             self._notifications.append(
                 Notification.create_new_52_week_high(self.symbol, self.current_price)
@@ -314,12 +323,15 @@ class Stock:
             self._snapshot is not None
             and self._snapshot.fifty_two_week_low is not None
             and self.current_price < self._snapshot.fifty_two_week_low
+            and not self._has_notification_type(NotificationType.NEW_52_WEEK_LOW)
         ):
             self._notifications.append(
                 Notification.create_new_52_week_low(self.symbol, self.current_price)
             )
 
     def _generate_regular_market_open_notification(self) -> None:
+        if self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN):
+            return
         self._notifications.append(
             Notification.create_regular_market_open(
                 self.symbol,
@@ -329,7 +341,9 @@ class Stock:
         )
 
     def _generate_close_to_fifty_day_average_notification(self) -> None:
-        if self._is_close_to_fifty_day_average():
+        if self._is_close_to_fifty_day_average() and not self._has_notification_type(
+            NotificationType.CLOSE_TO_SMA50
+        ):
             change_pct = (self.fifty_day_average - self.current_price) / self.current_price * 100
             self._notifications.append(
                 Notification.create_close_to_fifty_day_average(
@@ -338,13 +352,17 @@ class Stock:
             )
 
     def _generate_fifty_day_average_crossed_notification(self) -> None:
-        if self._has_crossed_fifty_day_average():
+        if self._has_crossed_fifty_day_average() and not self._has_notification_type(
+            NotificationType.SMA50_CROSSED
+        ):
             self._notifications.append(
                 Notification.create_fifty_day_average_crossed(self.symbol, self.fifty_day_average)
             )
 
     def _generate_close_to_two_hundred_day_average_notification(self) -> None:
-        if self._is_close_to_two_hundred_day_average():
+        if self._is_close_to_two_hundred_day_average() and not self._has_notification_type(
+            NotificationType.CLOSE_TO_SMA200
+        ):
             change_pct = (
                 (self.two_hundred_day_average - self.current_price) / self.current_price * 100
             )
@@ -355,7 +373,9 @@ class Stock:
             )
 
     def _generate_two_hundred_day_average_crossed_notification(self) -> None:
-        if self._has_crossed_two_hundred_day_average():
+        if self._has_crossed_two_hundred_day_average() and not self._has_notification_type(
+            NotificationType.SMA200_CROSSED
+        ):
             self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
                     self.symbol, self.two_hundred_day_average
@@ -367,7 +387,7 @@ class Stock:
         if change_percentage is None:
             return
         notification = self._generate_percentage_change_notification(change_percentage)
-        if notification is not None:
+        if notification is not None and not self._has_notification_type(notification.type):
             self._notifications.append(notification)
 
     def _generate_target_price_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
@@ -392,6 +412,8 @@ class Stock:
         return self._generate_target_price_notifications(targets)
 
     def _generate_regular_market_closed_notification(self) -> None:
+        if self._has_notification_type(NotificationType.REGULAR_MARKET_CLOSED):
+            return
         self._notifications.append(
             Notification.create_regular_market_closed(
                 self.symbol, self.current_price, self.previous_close_price
@@ -401,10 +423,14 @@ class Stock:
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()
 
-    def generate_notifications(self, targets: list[TargetPrice]) -> list[TargetPrice]:
-        self._notifications = []
+    def generate_notifications(self, targets: list[TargetPrice]) -> GenerateNotificationsResult:
+        previous_count = len(self._notifications)
+        triggered: list[TargetPrice] = []
         if self._is_market_state_open():
-            return self._generate_market_open_notifications(targets)
+            triggered = self._generate_market_open_notifications(targets)
         elif self._is_market_state_post():
             self._generate_market_closed_notifications()
-        return []
+        return GenerateNotificationsResult(
+            new_notifications=self._notifications[previous_count:],
+            triggered_targets=triggered,
+        )

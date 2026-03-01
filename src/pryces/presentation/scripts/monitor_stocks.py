@@ -20,7 +20,6 @@ from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.providers import YahooFinanceProvider
 from ...infrastructure.repositories import (
     InMemoryMarketTransitionRepository,
-    InMemoryNotificationRepository,
     InMemoryStockRepository,
     InMemoryTargetPriceRepository,
 )
@@ -143,11 +142,8 @@ def _create_script(path: Path) -> _ScriptContext:
     telegram_settings = SettingsFactory.create_telegram_settings()
     telegram_sender = TelegramMessageSender(settings=telegram_settings)
     message_sender = FireAndForgetMessageSender(inner=telegram_sender)
-    notification_repository = InMemoryNotificationRepository()
     transition_repository = InMemoryMarketTransitionRepository()
-    notification_service = NotificationService(
-        message_sender, notification_repository, transition_repository
-    )
+    notification_service = NotificationService(message_sender, transition_repository)
     stock_repository = InMemoryStockRepository()
     target_price_repository = InMemoryTargetPriceRepository()
     trigger_notifications = TriggerStocksNotifications(

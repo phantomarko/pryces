@@ -4,28 +4,11 @@ from decimal import Decimal
 
 from ..application.repositories import (
     MarketTransitionRepository,
-    NotificationRepository,
     StockRepository,
     TargetPriceRepository,
 )
-from ..domain.notifications import Notification, NotificationType
 from ..domain.target_prices import TargetPrice
 from ..domain.stocks import Stock
-
-
-class InMemoryNotificationRepository(NotificationRepository):
-    def __init__(self) -> None:
-        self._store: dict[str, dict[str, bool]] = {}
-
-    def save(self, symbol: str, notification: Notification) -> None:
-        if symbol not in self._store:
-            self._store[symbol] = {}
-        self._store[symbol][notification.type.value] = True
-
-    def exists_by_type(self, symbol: str, notification_type: NotificationType) -> bool:
-        if symbol not in self._store:
-            return False
-        return notification_type.value in self._store[symbol]
 
 
 class InMemoryStockRepository(StockRepository):
