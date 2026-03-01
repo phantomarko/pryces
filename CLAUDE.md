@@ -118,7 +118,6 @@ Presentation → Application → Domain
 - `dtos.py` — `StockDTO` (maps domain Stock to DTO, includes market_state), `TargetPriceDTO` (symbol + target Decimal)
 - `exceptions.py` — `StockNotFound`
 - `services.py` — `NotificationService` (sends stock notifications via MessageSender; `send_stock_notifications(stock)` calls `stock.generate_notifications()`, sends each returned message string via sender; deduplication is handled at the domain level by `Stock`; suppresses all notifications (including targets) when `stock.price_delay_in_minutes > 0` and `stock.is_market_state_transition()` detects a transition to OPEN/POST — delay window tracked via injected `MarketTransitionRepository`; accepts injectable `clock: Callable[[], datetime]` for testing)
-- `use_cases/get_stock_price.py` — `GetStockPrice` (single symbol → StockDTO)
 - `use_cases/get_stocks_prices.py` — `GetStocksPrices` (batch symbols → list[StockDTO])
 - `use_cases/send_messages.py` — `SendMessages` (sends list of messages → success/failed counts)
 - `use_cases/trigger_stocks_notifications.py` — `TriggerStocksNotifications` + `TriggerStocksNotificationsRequest` (symbols + targets: `dict[str, list[Decimal]]`; fetches fresh stocks, merges with existing via `Stock.update()` to preserve snapshot history, syncs targets onto stock via `stock.sync_targets()`, triggers notifications via `NotificationService.send_stock_notifications(stock)`, drains fulfilled targets from stock via `stock.drain_fulfilled_targets()`; `handle()` returns `list[TargetPriceDTO]` of fulfilled targets)
@@ -136,12 +135,12 @@ Presentation → Application → Domain
 - `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`, `CommandResult` (frozen dataclass: `message: str`, `success: bool = True`)
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand` (one or multiple symbols → formatted output)
 - `commands/monitor_stocks.py` — `MonitorStocksCommand` (launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
-- `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path; displays numbered entries); exports `_get_monitor_processes() -> list[tuple[str, str]]` shared helper
+- `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path; displays numbered entries)
 - `commands/stop_monitor.py` — `StopMonitorCommand` (lists monitor processes with numbers, prompts user to pick one, kills selected process; handles own I/O via injectable `input_stream`/`output_stream` defaulting to `sys.stdin`/`sys.stdout`)
 - `commands/check_readiness.py` — `CheckReadinessCommand` (verifies env vars and Telegram connectivity; tracks `_all_ready` state and appends warning on failures)
 - `commands/registry.py` — `CommandRegistry` (registry pattern)
 - `factories.py` — `CommandFactory` (DI + object creation)
-- `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`, `validate_file_path`), parsers (`parse_symbols_input`), and formatters (`format_stock`, `format_stock_list`)
+- `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`, `validate_file_path`), parsers (`parse_symbols_input`), formatters (`format_stock`, `format_stock_list`), and `get_running_monitors() -> list[tuple[str, str]]` (queries `ps aux` for monitor script processes)
 
 **Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
 - `config.py` — `SymbolConfig` frozen dataclass (symbol, prices as `list[Decimal]` — no validation), `MonitorStocksConfig` frozen dataclass (duration, interval, symbols as `list[SymbolConfig]` — with validation), `ConfigManager` (loads and validates JSON config file, raises `ConfigLoadingFailed` on any error)
