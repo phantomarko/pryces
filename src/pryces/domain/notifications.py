@@ -58,7 +58,7 @@ class Notification:
         current_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = f"{symbol} at {current_price} ({change_percentage:+.2f}% to cross SMA50)"
+        message = f"{symbol} at {current_price}, {change_percentage:+.2f}% to cross SMA50"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
 
     @staticmethod
@@ -67,7 +67,7 @@ class Notification:
         current_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = f"{symbol} at {current_price} ({change_percentage:+.2f}% to cross SMA200)"
+        message = f"{symbol} at {current_price}, {change_percentage:+.2f}% to cross SMA200"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
 
     @staticmethod

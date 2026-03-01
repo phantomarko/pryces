@@ -247,67 +247,28 @@ class Stock:
     def _has_notification_type(self, notification_type: NotificationType) -> bool:
         return any(n.type == notification_type for n in self._notifications)
 
-    def _is_close_to_fifty_day_average(self) -> bool:
-        if self.fifty_day_average is None or self.previous_close_price is None:
+    def _is_close_to_sma(self, sma: Decimal | None) -> bool:
+        if sma is None or self.previous_close_price is None:
             return False
 
-        change_percentage = (self.fifty_day_average - self.current_price) / self.current_price * 100
+        change_percentage = (sma - self.current_price) / self.current_price * 100
 
         return (
-            self.previous_close_price < self.fifty_day_average
-            and self.current_price < self.fifty_day_average
+            self.previous_close_price < sma
+            and self.current_price < sma
             and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
         ) or (
-            self.previous_close_price > self.fifty_day_average
-            and self.current_price > self.fifty_day_average
+            self.previous_close_price > sma
+            and self.current_price > sma
             and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
         )
 
-    def _has_crossed_fifty_day_average(self) -> bool:
-        if self.previous_close_price is None or self.fifty_day_average is None:
+    def _has_crossed_sma(self, sma: Decimal | None) -> bool:
+        if self.previous_close_price is None or sma is None:
             return False
 
-        crossed_above = (
-            self.previous_close_price < self.fifty_day_average
-            and self.current_price >= self.fifty_day_average
-        )
-        crossed_below = (
-            self.previous_close_price > self.fifty_day_average
-            and self.current_price <= self.fifty_day_average
-        )
-
-        return crossed_above or crossed_below
-
-    def _is_close_to_two_hundred_day_average(self) -> bool:
-        if self.two_hundred_day_average is None or self.previous_close_price is None:
-            return False
-
-        change_percentage = (
-            (self.two_hundred_day_average - self.current_price) / self.current_price * 100
-        )
-
-        return (
-            self.previous_close_price < self.two_hundred_day_average
-            and self.current_price < self.two_hundred_day_average
-            and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
-        ) or (
-            self.previous_close_price > self.two_hundred_day_average
-            and self.current_price > self.two_hundred_day_average
-            and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
-        )
-
-    def _has_crossed_two_hundred_day_average(self) -> bool:
-        if self.previous_close_price is None or self.two_hundred_day_average is None:
-            return False
-
-        crossed_above = (
-            self.previous_close_price < self.two_hundred_day_average
-            and self.current_price >= self.two_hundred_day_average
-        )
-        crossed_below = (
-            self.previous_close_price > self.two_hundred_day_average
-            and self.current_price <= self.two_hundred_day_average
-        )
+        crossed_above = self.previous_close_price < sma and self.current_price >= sma
+        crossed_below = self.previous_close_price > sma and self.current_price <= sma
 
         return crossed_above or crossed_below
 
@@ -373,7 +334,7 @@ class Stock:
         )
 
     def _generate_close_to_fifty_day_average_notification(self) -> None:
-        if self._is_close_to_fifty_day_average() and not self._has_notification_type(
+        if self._is_close_to_sma(self.fifty_day_average) and not self._has_notification_type(
             NotificationType.CLOSE_TO_SMA50
         ):
             change_pct = (self.fifty_day_average - self.current_price) / self.current_price * 100
@@ -384,7 +345,7 @@ class Stock:
             )
 
     def _generate_fifty_day_average_crossed_notification(self) -> None:
-        if self._has_crossed_fifty_day_average() and not self._has_notification_type(
+        if self._has_crossed_sma(self.fifty_day_average) and not self._has_notification_type(
             NotificationType.SMA50_CROSSED
         ):
             self._notifications.append(
@@ -392,7 +353,7 @@ class Stock:
             )
 
     def _generate_close_to_two_hundred_day_average_notification(self) -> None:
-        if self._is_close_to_two_hundred_day_average() and not self._has_notification_type(
+        if self._is_close_to_sma(self.two_hundred_day_average) and not self._has_notification_type(
             NotificationType.CLOSE_TO_SMA200
         ):
             change_pct = (
@@ -405,7 +366,7 @@ class Stock:
             )
 
     def _generate_two_hundred_day_average_crossed_notification(self) -> None:
-        if self._has_crossed_two_hundred_day_average() and not self._has_notification_type(
+        if self._has_crossed_sma(self.two_hundred_day_average) and not self._has_notification_type(
             NotificationType.SMA200_CROSSED
         ):
             self._notifications.append(

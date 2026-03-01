@@ -116,11 +116,11 @@ is documented as a guard against incomplete API responses.
 20+ near-identical factory methods. Could use a shared internal builder for percentage-based
 notifications to reduce boilerplate.
 
-### 14. `Stock` — duplicated SMA detection methods (code quality only)
-**File:** `domain/stocks.py`
-**Note:** `Stock` as aggregate root generating notifications is valid DDD — this is NOT an SRP
-violation in that context. However, the 50-day and 200-day SMA private methods are
-near-identical duplicates that could be unified into one parametric method.
+### ~~14. `Stock` — duplicated SMA detection methods (code quality only)~~ ✓ Resolved
+Replaced 4 private SMA detection methods with 2 parametric ones (`_is_close_to_sma(sma)`,
+`_has_crossed_sma(sma)`). The 4 notification generator methods now call these directly. Mirror
+unit tests for the 200-day pair removed; 50-day unit tests renamed to target the parametric
+methods.
 
 ### 15. `Stock` — magic threshold constants (code quality only)
 **File:** `domain/stocks.py`
