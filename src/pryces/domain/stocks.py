@@ -12,11 +12,6 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class GenerateNotificationsResult:
-    new_notifications: list[Notification]
-
-
-@dataclass(frozen=True, slots=True)
 class StockSnapshot:
     current_price: Decimal
     previous_close_price: Decimal | None
@@ -454,12 +449,10 @@ class Stock:
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()
 
-    def generate_notifications(self) -> GenerateNotificationsResult:
+    def generate_notifications(self) -> list[str]:
         previous_count = len(self._notifications)
         if self._is_market_state_open():
             self._generate_market_open_notifications()
         elif self._is_market_state_post():
             self._generate_market_closed_notifications()
-        return GenerateNotificationsResult(
-            new_notifications=self._notifications[previous_count:],
-        )
+        return [n.message for n in self._notifications[previous_count:]]

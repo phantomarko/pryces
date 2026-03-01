@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.domain.notifications import NotificationType
-from pryces.domain.stocks import GenerateNotificationsResult, MarketState, Stock, StockSnapshot
+from pryces.domain.stocks import MarketState, Stock, StockSnapshot
 
 
 def test_stock_creation_with_required_fields():
@@ -1336,12 +1336,12 @@ def test_generate_notifications_deduplicates_by_type():
     result1 = stock.generate_notifications()
     first_count = len(stock.notifications)
     assert first_count > 0
-    assert len(result1.new_notifications) == first_count
+    assert len(result1) == first_count
 
     result2 = stock.generate_notifications()
 
     assert len(stock.notifications) == first_count
-    assert result2.new_notifications == []
+    assert result2 == []
 
 
 def test_generate_notifications_appends_target_price_reached_when_target_is_reached():
@@ -1384,8 +1384,8 @@ def test_generate_notifications_removes_triggered_targets_from_stock():
 
     result = stock.generate_notifications()
 
-    assert isinstance(result, GenerateNotificationsResult)
-    assert len(result.new_notifications) > 0
+    assert isinstance(result, list)
+    assert len(result) > 0
     assert stock.targets == []
 
 
@@ -1529,11 +1529,11 @@ def test_generate_notifications_returns_new_notifications_only():
         market_state=MarketState.OPEN,
     )
     result1 = stock.generate_notifications()
-    assert len(result1.new_notifications) > 0
+    assert len(result1) > 0
 
     result2 = stock.generate_notifications()
 
-    assert result2.new_notifications == []
+    assert result2 == []
 
 
 def test_sync_targets_sets_entry_price():

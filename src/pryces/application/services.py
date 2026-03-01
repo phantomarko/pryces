@@ -37,7 +37,7 @@ class NotificationService:
         if self._is_in_delay_window(stock):
             return
 
-        result = stock.generate_notifications()
+        messages = stock.generate_notifications()
 
-        for notification in result.new_notifications:
-            self._message_sender.send_message(notification.message)
+        for message in messages:
+            self._message_sender.send_message(message)
