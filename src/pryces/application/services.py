@@ -7,18 +7,16 @@ from pryces.domain.stocks import Stock
 from .interfaces import MarketTransitionRepository, MessageSender, StockProvider, StockRepository
 
 
-class NotificationService:
+class DelayWindowChecker:
     def __init__(
         self,
-        message_sender: MessageSender,
         transition_repository: MarketTransitionRepository,
         clock: Callable[[], datetime] = datetime.now,
     ) -> None:
-        self._message_sender = message_sender
         self._transition_repository = transition_repository
         self._clock = clock
 
-    def _is_in_delay_window(self, stock: Stock) -> bool:
+    def is_in_delay_window(self, stock: Stock) -> bool:
         if not stock.price_delay_in_minutes:
             return False
         if stock.is_market_state_transition():
@@ -33,13 +31,21 @@ class NotificationService:
         self._transition_repository.delete(stock.symbol)
         return False
 
+
+class NotificationService:
+    def __init__(
+        self,
+        message_sender: MessageSender,
+        delay_window_checker: DelayWindowChecker,
+    ) -> None:
+        self._message_sender = message_sender
+        self._delay_window_checker = delay_window_checker
+
     def send_stock_notifications(self, stock: Stock) -> None:
-        if self._is_in_delay_window(stock):
+        if self._delay_window_checker.is_in_delay_window(stock):
             return
 
-        messages = stock.generate_notifications()
-
-        for message in messages:
+        for message in stock.generate_notifications():
             self._message_sender.send_message(message)
 
 

@@ -3,13 +3,10 @@ from unittest.mock import Mock
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.interfaces import MessageSender, StockProvider
-from pryces.application.services import NotificationService, StockSynchronizer
+from pryces.application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import MarketState, Stock
-from pryces.infrastructure.repositories import (
-    InMemoryMarketTransitionRepository,
-    InMemoryStockRepository,
-)
+from pryces.infrastructure.repositories import InMemoryStockRepository
 from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
@@ -27,10 +24,9 @@ class TestTriggerStocksNotifications:
     def setup_method(self):
         self.mock_provider = Mock(spec=StockProvider)
         self.mock_sender = Mock(spec=MessageSender)
-        self.notification_service = NotificationService(
-            self.mock_sender,
-            InMemoryMarketTransitionRepository(),
-        )
+        self.mock_checker = Mock(spec=DelayWindowChecker)
+        self.mock_checker.is_in_delay_window.return_value = False
+        self.notification_service = NotificationService(self.mock_sender, self.mock_checker)
         self.stock_repository = InMemoryStockRepository()
         self.stock_synchronizer = StockSynchronizer(
             provider=self.mock_provider,

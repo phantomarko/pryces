@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from ...application.services import NotificationService, StockSynchronizer
+from ...application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
@@ -77,7 +77,8 @@ def _create_script(path: Path) -> _ScriptContext:
     telegram_sender = TelegramMessageSender(settings=telegram_settings)
     message_sender = FireAndForgetMessageSender(inner=telegram_sender)
     transition_repository = InMemoryMarketTransitionRepository()
-    notification_service = NotificationService(message_sender, transition_repository)
+    delay_window_checker = DelayWindowChecker(transition_repository)
+    notification_service = NotificationService(message_sender, delay_window_checker)
     stock_repository = InMemoryStockRepository()
     stock_synchronizer = StockSynchronizer(provider=provider, stock_repository=stock_repository)
     trigger_notifications = TriggerStocksNotifications(

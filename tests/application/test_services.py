@@ -3,7 +3,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender, StockProvider
-from pryces.application.services import NotificationService, StockSynchronizer
+from pryces.application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import (
     InMemoryMarketTransitionRepository,
@@ -18,13 +18,181 @@ from tests.fixtures.factories import (
 )
 
 
+class TestDelayWindowChecker:
+
+    def setup_method(self):
+        self.transition_repo = InMemoryMarketTransitionRepository()
+        self.clock = Mock(return_value=datetime(2024, 1, 1, 9, 0, 0))
+        self.checker = DelayWindowChecker(self.transition_repo, self.clock)
+
+    def test_no_delay_when_price_delay_is_none(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=None,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=None,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source)
+
+        assert self.checker.is_in_delay_window(stock) is False
+
+    def test_no_delay_when_price_delay_is_zero(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=0,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=0,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source)
+
+        assert self.checker.is_in_delay_window(stock) is False
+
+    def test_suppresses_notifications_on_transition_cycle_when_delay_positive(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source)
+
+        assert self.checker.is_in_delay_window(stock) is True
+
+    def test_suppresses_notifications_during_delay_window(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        source_transition = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source_transition)
+        self.checker.is_in_delay_window(stock)
+
+        source_same = Stock(
+            symbol="AAPL",
+            current_price=Decimal("151.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source_same)
+        self.clock.return_value = datetime(2024, 1, 1, 9, 5, 0)
+
+        assert self.checker.is_in_delay_window(stock) is True
+
+    def test_fires_notifications_after_delay_elapsed(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        source_transition = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source_transition)
+        self.checker.is_in_delay_window(stock)
+
+        source_same = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source_same)
+        self.clock.return_value = datetime(2024, 1, 1, 9, 16, 0)
+
+        assert self.checker.is_in_delay_window(stock) is False
+
+    def test_no_delay_suppression_when_no_snapshot(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+
+        assert self.checker.is_in_delay_window(stock) is False
+
+    def test_non_open_post_transitions_not_treated_as_delay_triggers(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source)
+
+        self.checker.is_in_delay_window(stock)
+
+        assert self.transition_repo.get("AAPL") is None
+
+    def test_suppresses_target_notifications_during_delay_window(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        stock.sync_targets([Decimal("200.00")])
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source)
+
+        assert self.checker.is_in_delay_window(stock) is True
+
+
 class TestNotificationService:
 
     def setup_method(self):
         self.mock_sender = Mock(spec=MessageSender)
-        self.transition_repo = InMemoryMarketTransitionRepository()
-        self.clock = Mock(return_value=datetime(2024, 1, 1, 9, 0, 0))
-        self.service = NotificationService(self.mock_sender, self.transition_repo, self.clock)
+        self.mock_checker = Mock(spec=DelayWindowChecker)
+        self.mock_checker.is_in_delay_window.return_value = False
+        self.service = NotificationService(self.mock_sender, self.mock_checker)
 
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
@@ -93,158 +261,6 @@ class TestNotificationService:
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
         assert any("52-week low" in m for m in messages)
 
-    def test_no_delay_when_price_delay_is_none(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=None,
-        )
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=None,
-            previous_close_price=Decimal("148.00"),
-            open_price=Decimal("149.00"),
-        )
-        stock.update(source)
-
-        self.service.send_stock_notifications(stock)
-
-        self.mock_sender.send_message.assert_called()
-
-    def test_no_delay_when_price_delay_is_zero(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=0,
-        )
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=0,
-            previous_close_price=Decimal("148.00"),
-            open_price=Decimal("149.00"),
-        )
-        stock.update(source)
-
-        self.service.send_stock_notifications(stock)
-
-        self.mock_sender.send_message.assert_called()
-
-    def test_suppresses_notifications_on_transition_cycle_when_delay_positive(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=15,
-        )
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-        )
-        stock.update(source)
-
-        self.service.send_stock_notifications(stock)
-
-        self.mock_sender.send_message.assert_not_called()
-
-    def test_suppresses_notifications_during_delay_window(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=15,
-        )
-        source_transition = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-        )
-        stock.update(source_transition)
-        self.service.send_stock_notifications(stock)
-
-        source_same = Stock(
-            symbol="AAPL",
-            current_price=Decimal("151.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-        )
-        stock.update(source_same)
-        self.clock.return_value = datetime(2024, 1, 1, 9, 5, 0)
-        self.service.send_stock_notifications(stock)
-
-        self.mock_sender.send_message.assert_not_called()
-
-    def test_fires_notifications_after_delay_elapsed(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=15,
-        )
-        source_transition = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-        )
-        stock.update(source_transition)
-        self.service.send_stock_notifications(stock)
-
-        source_same = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-            previous_close_price=Decimal("148.00"),
-            open_price=Decimal("149.00"),
-        )
-        stock.update(source_same)
-        self.clock.return_value = datetime(2024, 1, 1, 9, 16, 0)
-        self.service.send_stock_notifications(stock)
-
-        self.mock_sender.send_message.assert_called()
-
-    def test_no_delay_suppression_when_no_snapshot(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-            previous_close_price=Decimal("148.00"),
-            open_price=Decimal("149.00"),
-        )
-
-        self.service.send_stock_notifications(stock)
-
-        self.mock_sender.send_message.assert_called()
-
-    def test_non_open_post_transitions_not_treated_as_delay_triggers(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-        )
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=15,
-        )
-        stock.update(source)
-
-        self.service.send_stock_notifications(stock)
-
-        assert self.transition_repo.get("AAPL") is None
-
     def test_sends_target_notification_when_target_reached(self):
         stock = Stock(
             symbol="AAPL",
@@ -284,26 +300,12 @@ class TestNotificationService:
 
         assert len(stock.targets) == 1
 
-    def test_suppresses_target_notifications_during_delay_window(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            market_state=MarketState.PRE,
-            price_delay_in_minutes=15,
-        )
-        stock.sync_targets([Decimal("200.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            market_state=MarketState.OPEN,
-            price_delay_in_minutes=15,
-        )
-        stock.update(source)
+    def test_suppresses_when_checker_returns_true(self):
+        self.mock_checker.is_in_delay_window.return_value = True
+        stock = create_stock_crossing_fifty_day("AAPL")
 
         self.service.send_stock_notifications(stock)
 
-        # Target should still be there since notifications were suppressed
-        assert len(stock.targets) == 1
         self.mock_sender.send_message.assert_not_called()
 
 

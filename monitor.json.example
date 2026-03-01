@@ -1,6 +1,6 @@
 {
   "duration": 1,
-  "interval": 10,
+  "interval": 20,
   "symbols": [
     {
       "symbol": "ASPI",
@@ -32,6 +32,11 @@
       "symbol": "ADUR",
       "prices": [
         10.0
+      ]
+    },
+    {
+      "symbol": "VYT.MC",
+      "prices": [
       ]
     }
   ]
