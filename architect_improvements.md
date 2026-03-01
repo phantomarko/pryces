@@ -49,13 +49,10 @@ return `CommandResult`; `menu.py` reads `result.message`. Error paths set `succe
 `_get_monitor_processes` moved to `utils.py` as `get_running_monitors()`. Both commands now
 import from the shared utility module. Tests relocated accordingly.
 
-### 4. `MonitorStocksScript` — SRP violation
-**File:** `presentation/scripts/monitor_stocks.py`
-**Violation:** SRP, OCP
-One class handles config loading/refresh/writing, target price sync, notification triggering,
-timing/scheduling loop, and logging. `_write_config()` removal strategy is also hardcoded (OCP).
-**Suggestion:** Extract config refresh into focused collaborators. Separate the run loop
-orchestration from config and target price management.
+### ~~4. `MonitorStocksScript` — SRP violation~~ ✓ Resolved
+Config lifecycle (hot-reload, write-back, logging) extracted into `ConfigRefresher` collaborator
+in `config.py`. `MonitorStocksScript` now has a single responsibility: orchestrating the
+monitoring cycle.
 
 ---
 
@@ -180,7 +177,7 @@ not structural ones.
 | ~~High~~ | ~~1~~ | ~~Break up `TriggerStocksNotifications`~~ ✓ |
 | ~~High~~ | ~~2~~ | ~~Fix `Command.execute() -> str` ISP issue~~ ✓ |
 | ~~High~~ | ~~3~~ | ~~Move `_get_monitor_processes` to `utils.py`~~ ✓ |
-| High | 4 | Break up `MonitorStocksScript` responsibilities |
+| ~~High~~ | ~~4~~ | ~~Break up `MonitorStocksScript` responsibilities~~ ✓ |
 | Medium | 5 | Extract `DelayWindowChecker` from `NotificationService` |
 | Medium | 6 | `CheckReadinessCommand` → Checker strategy pattern |
 | ~~Medium~~ | ~~7~~ | ~~Remove bidirectional conversion from `TargetPriceDTO`~~ ✓ |

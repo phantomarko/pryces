@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 from unittest.mock import Mock
 
@@ -5,7 +6,12 @@ import pytest
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
-from pryces.presentation.scripts.config import ConfigManager, MonitorStocksConfig, SymbolConfig
+from pryces.presentation.scripts.config import (
+    ConfigManager,
+    ConfigRefresher,
+    MonitorStocksConfig,
+    SymbolConfig,
+)
 from pryces.presentation.scripts.monitor_stocks import MonitorStocksScript
 
 
@@ -13,63 +19,76 @@ def make_symbol(symbol: str = "AAPL", prices: list = None) -> SymbolConfig:
     return SymbolConfig(symbol=symbol, prices=prices or [Decimal("5")])
 
 
-class TestMonitorStocksScriptWriteConfig:
+def make_config(**overrides) -> MonitorStocksConfig:
+    defaults = {
+        "duration": 1,
+        "interval": 5,
+        "symbols": [
+            SymbolConfig("AAPL", [Decimal("150"), Decimal("200")]),
+            SymbolConfig("GOOGL", [Decimal("100")]),
+        ],
+    }
+    defaults.update(overrides)
+    return MonitorStocksConfig(**defaults)
+
+
+def make_refresher(config=None, config_manager=None) -> ConfigRefresher:
+    if config is None:
+        config = make_config()
+    if config_manager is None:
+        config_manager = Mock(spec=ConfigManager)
+    return ConfigRefresher(config_manager=config_manager, config=config)
+
+
+class TestConfigRefresherRemoveFulfilledTargets:
 
     def setup_method(self):
-        self.mock_trigger = Mock(spec=TriggerStocksNotifications)
         self.mock_config_manager = Mock(spec=ConfigManager)
-        self.config = MonitorStocksConfig(
-            duration=1,
-            interval=5,
-            symbols=[
-                SymbolConfig("AAPL", [Decimal("150"), Decimal("200")]),
-                SymbolConfig("GOOGL", [Decimal("100")]),
-            ],
-        )
-        self.mock_config_manager.read_monitor_stocks_config.return_value = self.config
-        self.script = MonitorStocksScript(
-            trigger_notifications=self.mock_trigger,
-            config_manager=self.mock_config_manager,
+        self.config = make_config()
+        self.refresher = ConfigRefresher(
+            config_manager=self.mock_config_manager, config=self.config
         )
 
     def test_does_nothing_when_fulfilled_is_empty(self):
-        self.script._write_config([])
+        self.refresher.remove_fulfilled_targets([])
 
         self.mock_config_manager.write_monitor_stocks_config.assert_not_called()
 
     def test_does_nothing_when_no_prices_match(self):
-        self.script._write_config([TargetPriceDTO(symbol="AAPL", target=Decimal("999"))])
+        self.refresher.remove_fulfilled_targets(
+            [TargetPriceDTO(symbol="AAPL", target=Decimal("999"))]
+        )
 
         self.mock_config_manager.write_monitor_stocks_config.assert_not_called()
 
     def test_removes_fulfilled_price_from_symbol(self):
-        self.script._write_config([TargetPriceDTO(symbol="AAPL", target=Decimal("150"))])
+        self.refresher.remove_fulfilled_targets(
+            [TargetPriceDTO(symbol="AAPL", target=Decimal("150"))]
+        )
 
-        expected = MonitorStocksConfig(
-            duration=1,
-            interval=5,
+        expected = make_config(
             symbols=[
                 SymbolConfig("AAPL", [Decimal("200")]),
                 SymbolConfig("GOOGL", [Decimal("100")]),
-            ],
+            ]
         )
         self.mock_config_manager.write_monitor_stocks_config.assert_called_once_with(expected)
 
     def test_keeps_symbol_with_empty_prices_when_all_its_prices_are_fulfilled(self):
-        self.script._write_config([TargetPriceDTO(symbol="GOOGL", target=Decimal("100"))])
+        self.refresher.remove_fulfilled_targets(
+            [TargetPriceDTO(symbol="GOOGL", target=Decimal("100"))]
+        )
 
-        expected = MonitorStocksConfig(
-            duration=1,
-            interval=5,
+        expected = make_config(
             symbols=[
                 SymbolConfig("AAPL", [Decimal("150"), Decimal("200")]),
                 SymbolConfig("GOOGL", []),
-            ],
+            ]
         )
         self.mock_config_manager.write_monitor_stocks_config.assert_called_once_with(expected)
 
     def test_writes_config_with_all_symbols_emptied_when_all_prices_fulfilled(self):
-        self.script._write_config(
+        self.refresher.remove_fulfilled_targets(
             [
                 TargetPriceDTO(symbol="AAPL", target=Decimal("150")),
                 TargetPriceDTO(symbol="AAPL", target=Decimal("200")),
@@ -77,27 +96,73 @@ class TestMonitorStocksScriptWriteConfig:
             ]
         )
 
-        expected = MonitorStocksConfig(
-            duration=1,
-            interval=5,
+        expected = make_config(
             symbols=[
                 SymbolConfig("AAPL", []),
                 SymbolConfig("GOOGL", []),
-            ],
+            ]
         )
         self.mock_config_manager.write_monitor_stocks_config.assert_called_once_with(expected)
 
-    def test_updates_self_config_after_write(self):
-        self.script._write_config([TargetPriceDTO(symbol="AAPL", target=Decimal("150"))])
+    def test_updates_config_after_write(self):
+        self.refresher.remove_fulfilled_targets(
+            [TargetPriceDTO(symbol="AAPL", target=Decimal("150"))]
+        )
 
-        assert self.script._config == MonitorStocksConfig(
-            duration=1,
-            interval=5,
+        assert self.refresher.config == make_config(
             symbols=[
                 SymbolConfig("AAPL", [Decimal("200")]),
                 SymbolConfig("GOOGL", [Decimal("100")]),
-            ],
+            ]
         )
+
+
+class TestConfigRefresherRefresh:
+
+    def test_updates_config_when_disk_config_differs(self):
+        mock_manager = Mock(spec=ConfigManager)
+        original = make_config()
+        new_config = make_config(interval=10)
+        mock_manager.read_monitor_stocks_config.return_value = new_config
+        refresher = ConfigRefresher(config_manager=mock_manager, config=original)
+
+        refresher.refresh()
+
+        assert refresher.config == new_config
+
+    def test_does_nothing_when_config_unchanged(self):
+        mock_manager = Mock(spec=ConfigManager)
+        config = make_config()
+        mock_manager.read_monitor_stocks_config.return_value = config
+        refresher = ConfigRefresher(config_manager=mock_manager, config=config)
+
+        refresher.refresh()
+
+        assert refresher.config == config
+
+    def test_silently_ignores_read_errors(self):
+        mock_manager = Mock(spec=ConfigManager)
+        original = make_config()
+        mock_manager.read_monitor_stocks_config.side_effect = Exception("disk error")
+        refresher = ConfigRefresher(config_manager=mock_manager, config=original)
+
+        refresher.refresh()
+
+        assert refresher.config == original
+
+
+class TestConfigRefresherLogConfig:
+
+    def test_logs_monitoring_cadence_and_symbols(self, caplog):
+        config = make_config()
+        refresher = make_refresher(config=config)
+
+        with caplog.at_level(logging.INFO):
+            refresher.log_config()
+
+        assert "Monitoring every 5s for 1 minute." in caplog.text
+        assert "AAPL @ 150, 200" in caplog.text
+        assert "GOOGL @ 100" in caplog.text
 
 
 class TestSymbolConfig:

@@ -6,7 +6,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from ...application.dtos import TargetPriceDTO
 from ...application.services import NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
@@ -23,7 +22,7 @@ from ...infrastructure.senders import (
     TelegramMessageSender,
 )
 from pryces.infrastructure.logging import setup_monitor_logging
-from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
+from .config import ConfigManager, ConfigRefresher
 from .exceptions import ConfigLoadingFailed
 
 
@@ -31,85 +30,36 @@ class MonitorStocksScript:
     def __init__(
         self,
         trigger_notifications: TriggerStocksNotifications,
-        config_manager: ConfigManager,
+        config_refresher: ConfigRefresher,
     ) -> None:
         self._trigger_notifications = trigger_notifications
-        self._config_manager = config_manager
+        self._config_refresher = config_refresher
         self._logger = logging.getLogger(__name__)
-        self._config = self._config_manager.read_monitor_stocks_config()
-
-    def _read_config(self) -> None:
-        try:
-            new_config = self._config_manager.read_monitor_stocks_config()
-            if new_config != self._config:
-                self._config = new_config
-                self._logger.info("Config refreshed.")
-                self._log_config()
-        except Exception:
-            pass
-
-    def _write_config(self, fulfilled: list[TargetPriceDTO]) -> None:
-        if not fulfilled:
-            return
-
-        self._logger.info(
-            f"Fulfilled targets: {', '.join(f'{tp.symbol}@{tp.target}' for tp in fulfilled)}"
-        )
-        fulfilled_pairs = {(tp.symbol, tp.target) for tp in fulfilled}
-        updated_symbols = [
-            SymbolConfig(
-                symbol=sc.symbol,
-                prices=[p for p in sc.prices if (sc.symbol, p) not in fulfilled_pairs],
-            )
-            for sc in self._config.symbols
-        ]
-
-        if updated_symbols == self._config.symbols:
-            return
-
-        new_config = MonitorStocksConfig(
-            duration=self._config.duration,
-            interval=self._config.interval,
-            symbols=updated_symbols,
-        )
-        self._config = new_config
-        self._config_manager.write_monitor_stocks_config(new_config)
-        self._logger.info("Removing fulfilled targets from config.")
-        self._log_config()
-
-    def _log_config(self) -> None:
-        duration_label = (
-            f"{self._config.duration} minute{'s' if self._config.duration != 1 else ''}"
-        )
-        self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
-        stocks_info = [
-            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" if s.prices else s.symbol
-            for s in self._config.symbols
-        ]
-        self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
 
     def run(self) -> None:
         self._logger.info("Monitoring started.")
-        self._log_config()
-        duration_seconds = self._config.duration * 60
+        self._config_refresher.log_config()
+        config = self._config_refresher.config
+        duration_seconds = config.duration * 60
         start = time.monotonic()
 
         while True:
-            self._read_config()
+            self._config_refresher.refresh()
+            config = self._config_refresher.config
             request = TriggerStocksNotificationsRequest(
-                symbols=[s.symbol for s in self._config.symbols],
-                targets={s.symbol: s.prices for s in self._config.symbols},
+                symbols=[s.symbol for s in config.symbols],
+                targets={s.symbol: s.prices for s in config.symbols},
             )
             try:
                 fulfilled = self._trigger_notifications.handle(request)
-                self._write_config(fulfilled)
+                self._config_refresher.remove_fulfilled_targets(fulfilled)
             except Exception as e:
                 self._logger.warning(f"Exception caught: {e}")
 
             if time.monotonic() - start >= duration_seconds:
                 break
 
-            time.sleep(self._config.interval)
+            time.sleep(self._config_refresher.config.interval)
 
         self._logger.info("Monitoring finished.")
 
@@ -134,9 +84,12 @@ def _create_script(path: Path) -> _ScriptContext:
         stock_synchronizer=stock_synchronizer,
         notification_service=notification_service,
     )
+    config_manager = ConfigManager(path)
+    config = config_manager.read_monitor_stocks_config()
+    config_refresher = ConfigRefresher(config_manager, config)
     script = MonitorStocksScript(
         trigger_notifications=trigger_notifications,
-        config_manager=ConfigManager(path),
+        config_refresher=config_refresher,
     )
     return _ScriptContext(script=script, message_sender=message_sender)
 

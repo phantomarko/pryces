@@ -1,8 +1,10 @@
 import json
+import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
+from ...application.dtos import TargetPriceDTO
 from .exceptions import ConfigLoadingFailed
 
 
@@ -62,3 +64,64 @@ class ConfigManager:
             raise ConfigLoadingFailed(f"invalid config file: {e}")
         except Exception as e:
             raise ConfigLoadingFailed(f"unexpected error loading config: {e}")
+
+
+class ConfigRefresher:
+    def __init__(self, config_manager: ConfigManager, config: MonitorStocksConfig) -> None:
+        self._config_manager = config_manager
+        self._config = config
+        self._logger = logging.getLogger(__name__)
+
+    @property
+    def config(self) -> MonitorStocksConfig:
+        return self._config
+
+    def refresh(self) -> None:
+        try:
+            new_config = self._config_manager.read_monitor_stocks_config()
+            if new_config != self._config:
+                self._config = new_config
+                self._logger.info("Config refreshed.")
+                self.log_config()
+        except Exception:
+            pass
+
+    def remove_fulfilled_targets(self, fulfilled: list[TargetPriceDTO]) -> None:
+        if not fulfilled:
+            return
+
+        self._logger.info(
+            f"Fulfilled targets: {', '.join(f'{tp.symbol}@{tp.target}' for tp in fulfilled)}"
+        )
+        fulfilled_pairs = {(tp.symbol, tp.target) for tp in fulfilled}
+        updated_symbols = [
+            SymbolConfig(
+                symbol=sc.symbol,
+                prices=[p for p in sc.prices if (sc.symbol, p) not in fulfilled_pairs],
+            )
+            for sc in self._config.symbols
+        ]
+
+        if updated_symbols == self._config.symbols:
+            return
+
+        new_config = MonitorStocksConfig(
+            duration=self._config.duration,
+            interval=self._config.interval,
+            symbols=updated_symbols,
+        )
+        self._config = new_config
+        self._config_manager.write_monitor_stocks_config(new_config)
+        self._logger.info("Removing fulfilled targets from config.")
+        self.log_config()
+
+    def log_config(self) -> None:
+        duration_label = (
+            f"{self._config.duration} minute{'s' if self._config.duration != 1 else ''}"
+        )
+        self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
+        stocks_info = [
+            f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" if s.prices else s.symbol
+            for s in self._config.symbols
+        ]
+        self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
