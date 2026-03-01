@@ -4,16 +4,11 @@ from pryces.domain.stocks import Stock
 
 
 class TargetPrice:
-    __slots__ = ("_symbol", "_target", "_entry")
+    __slots__ = ("_target", "_entry")
 
-    def __init__(self, symbol: str, target: Decimal) -> None:
-        self._symbol = symbol
+    def __init__(self, target: Decimal) -> None:
         self._target = target
         self._entry: Decimal | None = None
-
-    @property
-    def symbol(self) -> str:
-        return self._symbol
 
     @property
     def target(self) -> Decimal:

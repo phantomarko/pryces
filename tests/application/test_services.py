@@ -5,7 +5,6 @@ from unittest.mock import Mock
 from pryces.application.senders import MessageSender
 from pryces.application.services import NotificationService
 from pryces.domain.stocks import MarketState, Stock
-from pryces.domain.target_prices import TargetPrice
 from pryces.infrastructure.repositories import InMemoryMarketTransitionRepository
 from tests.fixtures.factories import (
     create_stock,
@@ -249,8 +248,7 @@ class TestNotificationService:
             current_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        stock.sync_targets([target])
+        stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -270,8 +268,7 @@ class TestNotificationService:
             current_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        stock.sync_targets([target])
+        stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("150.00"),
@@ -291,8 +288,7 @@ class TestNotificationService:
             market_state=MarketState.PRE,
             price_delay_in_minutes=15,
         )
-        target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-        stock.sync_targets([target])
+        stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),

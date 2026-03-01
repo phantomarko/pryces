@@ -163,16 +163,18 @@ class Stock:
     def targets(self) -> list[TargetPrice]:
         return self._targets
 
-    def sync_targets(self, targets: list[TargetPrice]) -> None:
-        incoming_values = {t.target for t in targets}
+    def sync_targets(self, target_values: list[Decimal]) -> None:
+        from pryces.domain.target_prices import TargetPrice
+
         existing_by_value = {t.target: t for t in self._targets}
 
         synced: list[TargetPrice] = []
-        for target in targets:
-            existing = existing_by_value.get(target.target)
+        for value in target_values:
+            existing = existing_by_value.get(value)
             if existing is not None:
                 synced.append(existing)
             else:
+                target = TargetPrice(value)
                 target.set_entry_price(self)
                 synced.append(target)
 

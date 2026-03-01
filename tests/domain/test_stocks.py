@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from pryces.domain.notifications import NotificationType
 from pryces.domain.stocks import GenerateNotificationsResult, MarketState, Stock, StockSnapshot
-from pryces.domain.target_prices import TargetPrice
 
 
 def test_stock_creation_with_required_fields():
@@ -1352,8 +1351,7 @@ def test_generate_notifications_appends_target_price_reached_when_target_is_reac
         previous_close_price=Decimal("195.00"),
         market_state=MarketState.OPEN,
     )
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
     source = Stock(
         symbol="AAPL",
         current_price=Decimal("200.00"),
@@ -1375,8 +1373,7 @@ def test_generate_notifications_removes_triggered_targets_from_stock():
         previous_close_price=Decimal("195.00"),
         market_state=MarketState.OPEN,
     )
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
     source = Stock(
         symbol="AAPL",
         current_price=Decimal("200.00"),
@@ -1399,8 +1396,7 @@ def test_generate_notifications_does_not_include_unreached_target():
         previous_close_price=Decimal("148.00"),
         market_state=MarketState.OPEN,
     )
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
     source = Stock(
         symbol="AAPL",
         current_price=Decimal("150.00"),
@@ -1423,8 +1419,7 @@ def test_generate_notifications_target_notification_message_contains_symbol_and_
         previous_close_price=Decimal("195.00"),
         market_state=MarketState.OPEN,
     )
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
     source = Stock(
         symbol="AAPL",
         current_price=Decimal("200.00"),
@@ -1450,8 +1445,7 @@ def test_generate_notifications_ignores_targets_when_market_is_post():
         previous_close_price=Decimal("195.00"),
         market_state=MarketState.POST,
     )
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
     source = Stock(
         symbol="AAPL",
         current_price=Decimal("200.00"),
@@ -1474,9 +1468,7 @@ def test_generate_notifications_removes_multiple_triggered_targets():
         previous_close_price=Decimal("295.00"),
         market_state=MarketState.OPEN,
     )
-    target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    target2 = TargetPrice(symbol="AAPL", target=Decimal("250.00"))
-    stock.sync_targets([target1, target2])
+    stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
     source = Stock(
         symbol="AAPL",
         current_price=Decimal("300.00"),
@@ -1501,8 +1493,7 @@ def test_generate_notifications_target_price_reached_is_never_deduplicated():
         previous_close_price=Decimal("195.00"),
         market_state=MarketState.OPEN,
     )
-    target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target1])
+    stock.sync_targets([Decimal("200.00")])
     source1 = Stock(
         symbol="AAPL",
         current_price=Decimal("200.00"),
@@ -1512,8 +1503,7 @@ def test_generate_notifications_target_price_reached_is_never_deduplicated():
     stock.update(source1)
     stock.generate_notifications()
 
-    target2 = TargetPrice(symbol="AAPL", target=Decimal("250.00"))
-    stock.sync_targets([target2])
+    stock.sync_targets([Decimal("250.00")])
     source2 = Stock(
         symbol="AAPL",
         current_price=Decimal("250.00"),
@@ -1548,9 +1538,8 @@ def test_generate_notifications_returns_new_notifications_only():
 
 def test_sync_targets_sets_entry_price():
     stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
 
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
 
     assert len(stock.targets) == 1
     assert stock.targets[0].entry == Decimal("150.00")
@@ -1558,24 +1547,21 @@ def test_sync_targets_sets_entry_price():
 
 def test_sync_targets_preserves_existing_target():
     stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
+    original_target = stock.targets[0]
 
-    new_target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([new_target])
+    stock.sync_targets([Decimal("200.00")])
 
     assert len(stock.targets) == 1
     assert stock.targets[0].entry == Decimal("150.00")
-    assert stock.targets[0] is target
+    assert stock.targets[0] is original_target
 
 
 def test_sync_targets_removes_missing_targets():
     stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-    target1 = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    target2 = TargetPrice(symbol="AAPL", target=Decimal("250.00"))
-    stock.sync_targets([target1, target2])
+    stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
 
-    stock.sync_targets([target1])
+    stock.sync_targets([Decimal("200.00")])
 
     assert len(stock.targets) == 1
     assert stock.targets[0].target == Decimal("200.00")
@@ -1583,8 +1569,7 @@ def test_sync_targets_removes_missing_targets():
 
 def test_sync_targets_clears_all_on_empty_list():
     stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-    target = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([target])
+    stock.sync_targets([Decimal("200.00")])
 
     stock.sync_targets([])
 
@@ -1593,13 +1578,12 @@ def test_sync_targets_clears_all_on_empty_list():
 
 def test_sync_targets_adds_new_and_preserves_existing():
     stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-    existing = TargetPrice(symbol="AAPL", target=Decimal("200.00"))
-    stock.sync_targets([existing])
+    stock.sync_targets([Decimal("200.00")])
+    original_target = stock.targets[0]
 
-    new_target = TargetPrice(symbol="AAPL", target=Decimal("250.00"))
-    stock.sync_targets([existing, new_target])
+    stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
 
     assert len(stock.targets) == 2
-    assert stock.targets[0] is existing
+    assert stock.targets[0] is original_target
     assert stock.targets[1].target == Decimal("250.00")
     assert stock.targets[1].entry == Decimal("150.00")

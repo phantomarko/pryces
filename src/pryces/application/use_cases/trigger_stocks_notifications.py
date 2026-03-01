@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from pryces.domain.stocks import Stock
-from pryces.domain.target_prices import TargetPrice
 from ..dtos import TargetPriceDTO
 from ..providers import StockProvider
 from ..repositories import StockRepository
@@ -40,7 +39,7 @@ class TriggerStocksNotifications:
                 stock = fresh_stock
 
             target_values = request.targets.get(stock.symbol, [])
-            stock.sync_targets([TargetPrice(stock.symbol, v) for v in target_values])
+            stock.sync_targets(target_values)
 
             targets_before = [t.target for t in stock.targets]
             self._notification_service.send_stock_notifications(stock)
