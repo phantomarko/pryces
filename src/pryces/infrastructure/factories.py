@@ -6,12 +6,11 @@ from .senders import TelegramSettings
 
 class SettingsFactory:
     @staticmethod
-    def create_yahoo_finance_settings() -> YahooFinanceSettings:
+    def create_yahoo_finance_settings(extra_delay_in_minutes: int = 0) -> YahooFinanceSettings:
         try:
-            extra_delay = os.environ.get("EXTRA_DELAY_IN_MINUTES", "0") or "0"
             return YahooFinanceSettings(
                 max_workers=int(os.environ["MAX_FETCH_WORKERS"]),
-                extra_delay_in_minutes=int(extra_delay),
+                extra_delay_in_minutes=extra_delay_in_minutes,
             )
         except KeyError as e:
             raise EnvironmentError(f"Missing required environment variable: {e}") from e

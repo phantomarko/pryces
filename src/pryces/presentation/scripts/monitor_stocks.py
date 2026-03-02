@@ -70,8 +70,10 @@ class _ScriptContext:
         self.message_sender = message_sender
 
 
-def _create_script(path: Path) -> _ScriptContext:
-    yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings()
+def _create_script(path: Path, extra_delay_in_minutes: int = 0) -> _ScriptContext:
+    yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings(
+        extra_delay_in_minutes=extra_delay_in_minutes
+    )
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
     telegram_settings = SettingsFactory.create_telegram_settings()
     telegram_sender = TelegramMessageSender(settings=telegram_settings)
@@ -102,13 +104,19 @@ def main() -> int:
     parser.add_argument("config", type=Path, help="Path to the JSON configuration file")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging to stderr")
+    parser.add_argument(
+        "--extra-delay",
+        type=int,
+        default=0,
+        help="Extra delay in minutes added to the yfinance price delay (default: 0)",
+    )
     args = parser.parse_args()
 
     load_dotenv()
     setup_monitor_logging(verbose=args.verbose, debug=args.debug)
 
     try:
-        context = _create_script(args.config)
+        context = _create_script(args.config, extra_delay_in_minutes=args.extra_delay)
         try:
             context.script.run()
         finally:

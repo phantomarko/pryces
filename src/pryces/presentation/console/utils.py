@@ -46,6 +46,15 @@ def validate_positive_integer(value: str) -> bool:
         return False
 
 
+def validate_non_negative_integer(value: str) -> bool:
+    if not value or not value.strip():
+        return True  # empty string → caller defaults to 0
+    try:
+        return int(value.strip()) >= 0
+    except (ValueError, TypeError):
+        return False
+
+
 def validate_file_path(value: str) -> bool:
     return bool(value and value.strip() and Path(value.strip()).is_file())
 

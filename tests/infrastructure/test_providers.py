@@ -138,14 +138,23 @@ class TestYahooFinanceMapper:
         assert stock is not None
         assert stock.price_delay_in_minutes == 20
 
-    def test_does_not_add_extra_delay_when_delay_zero(self):
+    def test_uses_extra_delay_when_exchange_delay_zero(self):
         mapper = YahooFinanceMapper(extra_delay_in_minutes=5)
         info = _build_full_info(exchangeDataDelayedBy=0)
 
         stock = mapper.map("AAPL", info)
 
         assert stock is not None
-        assert stock.price_delay_in_minutes == 0
+        assert stock.price_delay_in_minutes == 5
+
+    def test_uses_extra_delay_when_exchange_delay_null(self):
+        mapper = YahooFinanceMapper(extra_delay_in_minutes=5)
+        info = _build_full_info(exchangeDataDelayedBy=None)
+
+        stock = mapper.map("AAPL", info)
+
+        assert stock is not None
+        assert stock.price_delay_in_minutes == 5
 
     def test_handles_missing_optional_fields(self):
         mapper = YahooFinanceMapper(extra_delay_in_minutes=0)
@@ -166,7 +175,7 @@ class TestYahooFinanceMapper:
         assert stock.fifty_two_week_high is None
         assert stock.fifty_two_week_low is None
         assert stock.market_state is None
-        assert stock.price_delay_in_minutes is None
+        assert stock.price_delay_in_minutes == 0
 
     def test_uppercases_symbol(self):
         mapper = YahooFinanceMapper(extra_delay_in_minutes=0)

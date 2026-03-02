@@ -79,7 +79,6 @@ Edit `.env` with your settings:
 | `TELEGRAM_GROUP_ID` | The Telegram group/chat ID where notifications are sent |
 | `MAX_FETCH_WORKERS` | Maximum number of concurrent workers for fetching stock data (values above 6 are not recommended on low-resource systems) |
 | `LOGS_DIRECTORY` | Directory path for log file output (use `/tmp` if you don't need persistent logs) |
-| `EXTRA_DELAY_IN_MINUTES` | Optional. Additional minutes added to the exchange-reported price delay. Only applied when the exchange already reports a non-zero delay. Defaults to 0 if unset. |
 
 The application loads these variables automatically from `.env` on startup via `python-dotenv`.
 
@@ -97,12 +96,15 @@ Monitors stocks and sends Telegram notifications, driven by a JSON configuration
 
 ```bash
 # using Makefile
-make monitor  # defaults to monitor.json.example
-make monitor CONFIG=monitor_alternative.json  # alternative with custom config
+make monitor                                      # defaults to monitor.json.example
+make monitor CONFIG=monitor_alternative.json      # alternative with custom config
+make monitor EXTRA_DELAY=5                        # add 5 minutes to the price delay
+make monitor CONFIG=monitor_alternative.json EXTRA_DELAY=5
 
 # or using Python
 source venv/bin/activate
 python -m pryces.presentation.scripts.monitor_stocks monitor.json.example
+python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --extra-delay 5
 ```
 
 Run in the background (detached from the terminal):
@@ -114,6 +116,13 @@ nohup make monitor CONFIG=monitor_alternative.json &
 source venv/bin/activate
 nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example &
 ```
+
+**Arguments:**
+
+| Python argument | Makefile variable | Description |
+|---|---|---|
+| `config` | `CONFIG` | Path to the JSON configuration file (required, defaults to `monitor.json.example` in Makefile) |
+| `--extra-delay N` | `EXTRA_DELAY=N` | Extra minutes added to the exchange-reported price delay. Only applied when the exchange already reports a non-zero delay. Defaults to `0`. |
 
 Log files are created with a timestamp. To check the log:
 ```bash
@@ -175,13 +184,14 @@ Launches the [Monitor Stocks](#monitor-stocks) as a detached background process.
 
 ```
 Enter the path to the JSON config file (e.g., monitor.json): monitor.json.example
+Extra price delay in minutes [0]: 5
 ```
 
 ```
 Monitor started in background (PID: 12345)
 ```
 
-The returned PID can be used to check or stop the process (e.g., `kill 12345`).
+The returned PID can be used to check or stop the process (e.g., `kill 12345`). Leave the delay field empty to use the default of `0`.
 
 #### List Monitor Processes
 

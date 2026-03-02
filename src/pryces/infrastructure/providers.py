@@ -50,9 +50,8 @@ class YahooFinanceMapper:
         company_name = info.get("longName") or info.get("shortName")
         currency = info.get("currency")
         market_state = self._map_market_state(info.get("marketState"))
-        price_delay_in_minutes = info.get("exchangeDataDelayedBy")
-        if price_delay_in_minutes and price_delay_in_minutes > 0:
-            price_delay_in_minutes += self._extra_delay_in_minutes
+        exchange_delay = info.get("exchangeDataDelayedBy") or 0
+        price_delay_in_minutes = exchange_delay + self._extra_delay_in_minutes
 
         return Stock(
             symbol=symbol.upper(),
