@@ -73,7 +73,9 @@ class CheckReadinessCommand(Command):
 
     def _check_telegram(self) -> str:
         try:
-            request = SendMessagesRequest(messages=["Hello!\nThis is a test message."])
+            request = SendMessagesRequest(
+                messages=["Pryces — Stock price monitor.\nhttps://github.com/phantomarko/pryces"]
+            )
             response = self._send_messages.handle(request)
 
             if response.successful > 0 and response.failed == 0:
