@@ -10,7 +10,6 @@ from pryces.presentation.scripts.exceptions import ConfigLoadingFailed
 
 def make_config_data(**overrides) -> dict:
     base = {
-        "duration": 10,
         "interval": 30,
         "symbols": [
             {"symbol": "AAPL", "prices": [5]},
@@ -39,7 +38,7 @@ class TestConfigManager:
 
     def test_raises_config_loading_failed_when_fields_are_invalid(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps(make_config_data(duration=0)))
+        config_file.write_text(json.dumps(make_config_data(interval=0)))
         manager = ConfigManager(config_file)
 
         with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
@@ -47,9 +46,7 @@ class TestConfigManager:
 
     def test_raises_config_loading_failed_when_symbol_missing_key(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(
-            json.dumps({"duration": 1, "interval": 5, "symbols": [{"prices": [5]}]})
-        )
+        config_file.write_text(json.dumps({"interval": 5, "symbols": [{"prices": [5]}]}))
         manager = ConfigManager(config_file)
 
         with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
@@ -74,7 +71,6 @@ class TestConfigManager:
 
         config = manager.read_monitor_stocks_config()
 
-        assert config.duration == 10
         assert config.interval == 30
         assert config.symbols == [
             SymbolConfig(symbol="AAPL", prices=[Decimal("5")]),
@@ -84,9 +80,7 @@ class TestConfigManager:
     def test_parses_multiple_prices_per_symbol(self, tmp_path):
         config_file = tmp_path / "config.json"
         config_file.write_text(
-            json.dumps(
-                {"duration": 1, "interval": 5, "symbols": [{"symbol": "HUMA", "prices": [1, 0.92]}]}
-            )
+            json.dumps({"interval": 5, "symbols": [{"symbol": "HUMA", "prices": [1, 0.92]}]})
         )
         manager = ConfigManager(config_file)
 
@@ -98,7 +92,6 @@ class TestConfigManager:
         config_file = tmp_path / "config.json"
         manager = ConfigManager(config_file)
         config = MonitorStocksConfig(
-            duration=10,
             interval=30,
             symbols=[
                 SymbolConfig(symbol="AAPL", prices=[Decimal("5")]),
@@ -109,7 +102,6 @@ class TestConfigManager:
         manager.write_monitor_stocks_config(config)
 
         saved = json.loads(config_file.read_text())
-        assert saved["duration"] == 10
         assert saved["interval"] == 30
         assert saved["symbols"] == [
             {"symbol": "AAPL", "prices": [5.0]},
@@ -122,7 +114,6 @@ class TestConfigManager:
         manager = ConfigManager(config_file)
         original = manager.read_monitor_stocks_config()
         trimmed = MonitorStocksConfig(
-            duration=original.duration,
             interval=original.interval,
             symbols=[
                 SymbolConfig(symbol="MSFT", prices=[Decimal("1")]),
@@ -139,7 +130,6 @@ class TestConfigManager:
         config_file = tmp_path / "config.json"
         manager = ConfigManager(config_file)
         config = MonitorStocksConfig(
-            duration=5,
             interval=60,
             symbols=[SymbolConfig(symbol="HUMA", prices=[Decimal("1"), Decimal("0.92")])],
         )
@@ -147,7 +137,6 @@ class TestConfigManager:
         manager.write_monitor_stocks_config(config)
         restored = manager.read_monitor_stocks_config()
 
-        assert restored.duration == config.duration
         assert restored.interval == config.interval
         assert restored.symbols[0].symbol == "HUMA"
         assert restored.symbols[0].prices == [Decimal("1"), Decimal("0.92")]

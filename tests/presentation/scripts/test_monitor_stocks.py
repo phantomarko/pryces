@@ -21,7 +21,6 @@ def make_symbol(symbol: str = "AAPL", prices: list = None) -> SymbolConfig:
 
 def make_config(**overrides) -> MonitorStocksConfig:
     defaults = {
-        "duration": 1,
         "interval": 5,
         "symbols": [
             SymbolConfig("AAPL", [Decimal("150"), Decimal("200")]),
@@ -160,7 +159,7 @@ class TestConfigRefresherLogConfig:
         with caplog.at_level(logging.INFO):
             refresher.log_config()
 
-        assert "Monitoring every 5s for 1 minute." in caplog.text
+        assert "Monitoring every 5s." in caplog.text
         assert "AAPL @ 150, 200" in caplog.text
         assert "GOOGL @ 100" in caplog.text
 
@@ -188,40 +187,27 @@ class TestMonitorStocksConfig:
 
     def test_valid_config(self):
         symbols = [make_symbol("AAPL"), make_symbol("GOOGL")]
-        config = MonitorStocksConfig(duration=2, interval=5, symbols=symbols)
+        config = MonitorStocksConfig(interval=5, symbols=symbols)
 
-        assert config.duration == 2
         assert config.interval == 5
         assert config.symbols == symbols
 
-    def test_zero_duration_raises_value_error(self):
-        with pytest.raises(ValueError, match="duration must be a positive integer"):
-            MonitorStocksConfig(duration=0, interval=5, symbols=[make_symbol()])
-
-    def test_negative_duration_raises_value_error(self):
-        with pytest.raises(ValueError, match="duration must be a positive integer"):
-            MonitorStocksConfig(duration=-1, interval=5, symbols=[make_symbol()])
-
     def test_zero_interval_raises_value_error(self):
         with pytest.raises(ValueError, match="interval must be a positive integer"):
-            MonitorStocksConfig(duration=1, interval=0, symbols=[make_symbol()])
+            MonitorStocksConfig(interval=0, symbols=[make_symbol()])
 
     def test_negative_interval_raises_value_error(self):
         with pytest.raises(ValueError, match="interval must be a positive integer"):
-            MonitorStocksConfig(duration=1, interval=-5, symbols=[make_symbol()])
+            MonitorStocksConfig(interval=-5, symbols=[make_symbol()])
 
     def test_empty_symbols_raises_value_error(self):
         with pytest.raises(ValueError, match="symbols must be a non-empty list"):
-            MonitorStocksConfig(duration=1, interval=5, symbols=[])
-
-    def test_non_integer_duration_raises_value_error(self):
-        with pytest.raises(ValueError, match="duration must be a positive integer"):
-            MonitorStocksConfig(duration="2", interval=5, symbols=[make_symbol()])
+            MonitorStocksConfig(interval=5, symbols=[])
 
     def test_non_integer_interval_raises_value_error(self):
         with pytest.raises(ValueError, match="interval must be a positive integer"):
-            MonitorStocksConfig(duration=1, interval="5", symbols=[make_symbol()])
+            MonitorStocksConfig(interval="5", symbols=[make_symbol()])
 
     def test_non_list_symbols_raises_value_error(self):
         with pytest.raises(ValueError, match="symbols must be a non-empty list"):
-            MonitorStocksConfig(duration=1, interval=5, symbols="AAPL")
+            MonitorStocksConfig(interval=5, symbols="AAPL")

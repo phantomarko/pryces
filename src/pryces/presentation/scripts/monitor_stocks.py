@@ -31,16 +31,16 @@ class MonitorStocksScript:
         self,
         trigger_notifications: TriggerStocksNotifications,
         config_refresher: ConfigRefresher,
+        duration: int,
     ) -> None:
         self._trigger_notifications = trigger_notifications
         self._config_refresher = config_refresher
+        self._duration_seconds = duration * 60
         self._logger = logging.getLogger(__name__)
 
     def run(self) -> None:
         self._logger.info("Monitoring started.")
         self._config_refresher.log_config()
-        config = self._config_refresher.config
-        duration_seconds = config.duration * 60
         start = time.monotonic()
 
         while True:
@@ -56,7 +56,7 @@ class MonitorStocksScript:
             except Exception as e:
                 self._logger.warning(f"Exception caught: {e}")
 
-            if time.monotonic() - start >= duration_seconds:
+            if time.monotonic() - start >= self._duration_seconds:
                 break
 
             time.sleep(self._config_refresher.config.interval)
@@ -70,7 +70,7 @@ class _ScriptContext:
         self.message_sender = message_sender
 
 
-def _create_script(path: Path, extra_delay_in_minutes: int = 0) -> _ScriptContext:
+def _create_script(path: Path, duration: int, extra_delay_in_minutes: int = 0) -> _ScriptContext:
     yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings(
         extra_delay_in_minutes=extra_delay_in_minutes
     )
@@ -93,6 +93,7 @@ def _create_script(path: Path, extra_delay_in_minutes: int = 0) -> _ScriptContex
     script = MonitorStocksScript(
         trigger_notifications=trigger_notifications,
         config_refresher=config_refresher,
+        duration=duration,
     )
     return _ScriptContext(script=script, message_sender=message_sender)
 
@@ -102,6 +103,12 @@ def main() -> int:
         description="Monitor stocks for relevant price notifications",
     )
     parser.add_argument("config", type=Path, help="Path to the JSON configuration file")
+    parser.add_argument(
+        "--duration",
+        type=int,
+        required=True,
+        help="Monitoring duration in minutes",
+    )
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging to stderr")
     parser.add_argument(
@@ -116,7 +123,11 @@ def main() -> int:
     setup_monitor_logging(verbose=args.verbose, debug=args.debug)
 
     try:
-        context = _create_script(args.config, extra_delay_in_minutes=args.extra_delay)
+        context = _create_script(
+            args.config,
+            duration=args.duration,
+            extra_delay_in_minutes=args.extra_delay,
+        )
         try:
             context.script.run()
         finally:

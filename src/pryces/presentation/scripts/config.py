@@ -16,13 +16,10 @@ class SymbolConfig:
 
 @dataclass(frozen=True, slots=True)
 class MonitorStocksConfig:
-    duration: int
     interval: int
     symbols: list[SymbolConfig]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.duration, int) or self.duration <= 0:
-            raise ValueError("duration must be a positive integer")
         if not isinstance(self.interval, int) or self.interval <= 0:
             raise ValueError("interval must be a positive integer")
         if not isinstance(self.symbols, list) or not self.symbols:
@@ -35,7 +32,6 @@ class ConfigManager:
 
     def write_monitor_stocks_config(self, config: MonitorStocksConfig) -> None:
         data = {
-            "duration": config.duration,
             "interval": config.interval,
             "symbols": [
                 {"symbol": s.symbol, "prices": [float(p) for p in s.prices]} for s in config.symbols
@@ -54,7 +50,6 @@ class ConfigManager:
                 for s in data["symbols"]
             ]
             return MonitorStocksConfig(
-                duration=data["duration"],
                 interval=data["interval"],
                 symbols=symbols,
             )
@@ -106,7 +101,6 @@ class ConfigRefresher:
             return
 
         new_config = MonitorStocksConfig(
-            duration=self._config.duration,
             interval=self._config.interval,
             symbols=updated_symbols,
         )
@@ -116,10 +110,7 @@ class ConfigRefresher:
         self.log_config()
 
     def log_config(self) -> None:
-        duration_label = (
-            f"{self._config.duration} minute{'s' if self._config.duration != 1 else ''}"
-        )
-        self._logger.info(f"Monitoring every {self._config.interval}s for {duration_label}.")
+        self._logger.info(f"Monitoring every {self._config.interval}s.")
         stocks_info = [
             f"{s.symbol} @ {', '.join(str(p) for p in s.prices)}" if s.prices else s.symbol
             for s in self._config.symbols

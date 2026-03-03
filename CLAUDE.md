@@ -135,7 +135,7 @@ Presentation → Application → Domain
 - `menu.py` — `InteractiveMenu` (main loop, I/O via injectable streams)
 - `commands/base.py` — `Command` ABC, `CommandMetadata`, `InputPrompt`, `CommandResult` (frozen dataclass: `message: str`, `success: bool = True`)
 - `commands/get_stocks_prices.py` — `GetStocksPricesCommand` (one or multiple symbols → formatted output)
-- `commands/monitor_stocks.py` — `MonitorStocksCommand` (launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
+- `commands/monitor_stocks.py` — `MonitorStocksCommand` (prompts for config path, duration in minutes, and extra delay; launches the standalone monitor script as a detached background process via `subprocess.Popen`, returns PID)
 - `commands/list_monitors.py` — `ListMonitorsCommand` (queries `ps aux` for running monitor script processes, extracts PID and config path; displays numbered entries)
 - `commands/stop_monitor.py` — `StopMonitorCommand` (lists monitor processes with numbers, prompts user to pick one, kills selected process; handles own I/O via injectable `input_stream`/`output_stream` defaulting to `sys.stdin`/`sys.stdout`)
 - `commands/check_readiness.py` — `CheckReadinessCommand` (verifies env vars and Telegram connectivity; tracks `_all_ready` state and appends warning on failures)
@@ -144,9 +144,9 @@ Presentation → Application → Domain
 - `utils.py` — Shared validators (`validate_symbol`, `validate_symbols`, `validate_positive_integer`, `validate_non_negative_integer`, `validate_file_path`), parsers (`parse_symbols_input`), formatters (`format_stock`, `format_stock_list`), and `get_running_monitors() -> list[tuple[str, str]]` (queries `ps aux` for monitor script processes)
 
 **Presentation — Scripts** (`src/pryces/presentation/scripts/`) — Standalone scripts for automated execution:
-- `config.py` — `SymbolConfig` frozen dataclass (symbol, prices as `list[Decimal]` — no validation), `MonitorStocksConfig` frozen dataclass (duration, interval, symbols as `list[SymbolConfig]` — with validation), `ConfigManager` (loads/writes JSON config file, raises `ConfigLoadingFailed` on any error), `ConfigRefresher` (owns config lifecycle: `refresh()` hot-reloads config from disk via `ConfigManager`, `remove_fulfilled_targets(fulfilled)` filters out fulfilled `TargetPriceDTO` prices from config symbols — keeping the symbol entry even when all its prices are removed — and persists via `ConfigManager.write_monitor_stocks_config`, `log_config()` logs monitoring cadence and symbols; holds mutable `config` property)
+- `config.py` — `SymbolConfig` frozen dataclass (symbol, prices as `list[Decimal]` — no validation), `MonitorStocksConfig` frozen dataclass (interval, symbols as `list[SymbolConfig]` — with validation), `ConfigManager` (loads/writes JSON config file, raises `ConfigLoadingFailed` on any error), `ConfigRefresher` (owns config lifecycle: `refresh()` hot-reloads config from disk via `ConfigManager`, `remove_fulfilled_targets(fulfilled)` filters out fulfilled `TargetPriceDTO` prices from config symbols — keeping the symbol entry even when all its prices are removed — and persists via `ConfigManager.write_monitor_stocks_config`, `log_config()` logs monitoring cadence and symbols; holds mutable `config` property)
 - `exceptions.py` — `ConfigLoadingFailed`
-- `monitor_stocks.py` — Standalone monitor script (`MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`. Args: `config` (required path), `--extra-delay` (int, default 0 — passed to `SettingsFactory.create_yahoo_finance_settings()`), `--debug`, `--verbose`. Single responsibility: orchestrating the monitoring cycle (loop, scheduling, delegation). Delegates config lifecycle to injected `ConfigRefresher`, passes target prices from config into `TriggerStocksNotificationsRequest.targets` on each iteration. Composition root creates `ConfigRefresher` from `ConfigManager` + initial config, wraps `TelegramMessageSender` in `FireAndForgetMessageSender` for non-blocking sends; `_ScriptContext` groups the script and sender so `main()` calls `shutdown()` in a `finally` block.
+- `monitor_stocks.py` — Standalone monitor script (`MonitorStocksScript` class, argparse CLI, logging). Entry point: `main()`. Args: `config` (required path), `--duration` (int, required — monitoring duration in minutes), `--extra-delay` (int, default 0 — passed to `SettingsFactory.create_yahoo_finance_settings()`), `--debug`, `--verbose`. Single responsibility: orchestrating the monitoring cycle (loop, scheduling, delegation). Delegates config lifecycle to injected `ConfigRefresher`, passes target prices from config into `TriggerStocksNotificationsRequest.targets` on each iteration. Composition root creates `ConfigRefresher` from `ConfigManager` + initial config, wraps `TelegramMessageSender` in `FireAndForgetMessageSender` for non-blocking sends; `_ScriptContext` groups the script and sender so `main()` calls `shutdown()` in a `finally` block.
 
 ### Key Patterns
 - **Ports & Adapters**: Application defines ABCs, infrastructure implements them
@@ -157,7 +157,7 @@ Presentation → Application → Domain
 ### Entry Points
 ```bash
 python -m pryces.presentation.console.cli                         # Interactive CLI
-python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH  # Monitor script
+python -m pryces.presentation.scripts.monitor_stocks CONFIG_PATH --duration N  # Monitor script
 ```
 
 ## Patterns and Conventions

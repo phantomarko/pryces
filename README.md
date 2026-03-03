@@ -96,25 +96,25 @@ Monitors stocks and sends Telegram notifications, driven by a JSON configuration
 
 ```bash
 # using Makefile
-make monitor                                      # defaults to monitor.json.example
-make monitor CONFIG=monitor_alternative.json      # alternative with custom config
-make monitor EXTRA_DELAY=5                        # add 5 minutes to the price delay
-make monitor CONFIG=monitor_alternative.json EXTRA_DELAY=5
+make monitor                                      # defaults to monitor.json.example, 1 minute
+make monitor DURATION=30                          # monitor for 30 minutes
+make monitor CONFIG=monitor_alternative.json DURATION=60
+make monitor DURATION=30 EXTRA_DELAY=5            # add 5 minutes to the price delay
 
 # or using Python
 source venv/bin/activate
-python -m pryces.presentation.scripts.monitor_stocks monitor.json.example
-python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --extra-delay 5
+python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --duration 30
+python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --duration 60 --extra-delay 5
 ```
 
 Run in the background (detached from the terminal):
 ```bash
 # using Makefile
-nohup make monitor CONFIG=monitor_alternative.json &
+nohup make monitor CONFIG=monitor_alternative.json DURATION=60 &
 
 # or using Python
 source venv/bin/activate
-nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example &
+nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --duration 60 &
 ```
 
 **Arguments:**
@@ -122,6 +122,7 @@ nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example 
 | Python argument | Makefile variable | Description |
 |---|---|---|
 | `config` | `CONFIG` | Path to the JSON configuration file (required, defaults to `monitor.json.example` in Makefile) |
+| `--duration N` | `DURATION=N` | Monitoring duration in minutes (required, defaults to `1` in Makefile) |
 | `--extra-delay N` | `EXTRA_DELAY=N` | Extra minutes added to the exchange-reported price delay. Only applied when the exchange already reports a non-zero delay. Defaults to `0`. |
 
 Log files are created with a timestamp. To check the log:
@@ -133,7 +134,6 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 
 ```json
 {
-    "duration": 2,
     "interval": 5,
     "symbols": [
         {"symbol": "AAPL", "prices": [150.0, 200.0]},
@@ -144,13 +144,12 @@ tail -f /tmp/pryces_monitor_20260212_143025.log
 
 | Field | Type | Description |
 |---|---|---|
-| `duration` | int | Monitoring duration in minutes |
 | `interval` | int | Seconds to wait between cycles |
 | `symbols` | list[object] | Symbols to monitor, each with a `symbol` string and a `prices` list of target price levels |
 
 The `prices` list under each symbol defines **target price levels**. When a target is reached, it is automatically removed from the config file — the symbol itself is kept even if all its prices are fulfilled, so it continues to be monitored for all other notification types.
 
-The **configuration file is re-read on every monitoring cycle**, so you can edit `interval` or `symbols` while the script is running and the changes will take effect on the next iteration — no restart required. The `duration` is fixed at startup and cannot be changed mid-run.
+The **configuration file is re-read on every monitoring cycle**, so you can edit `interval` or `symbols` while the script is running and the changes will take effect on the next iteration — no restart required.
 
 See [Tracked Notifications](#tracked-notifications) for the full list of events detected and sent during a run.
 
@@ -184,6 +183,7 @@ Launches the [Monitor Stocks](#monitor-stocks) as a detached background process.
 
 ```
 Enter the path to the JSON config file (e.g., monitor.json): monitor.json.example
+Monitoring duration in minutes: 60
 Extra price delay in minutes [0]: 5
 ```
 

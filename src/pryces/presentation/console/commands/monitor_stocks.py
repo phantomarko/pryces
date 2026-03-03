@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
-from ..utils import validate_file_path, validate_non_negative_integer
+from ..utils import validate_file_path, validate_non_negative_integer, validate_positive_integer
 
 
 class MonitorStocksCommand(Command):
@@ -21,19 +21,28 @@ class MonitorStocksCommand(Command):
                 validator=validate_file_path,
             ),
             InputPrompt(
+                key="duration",
+                prompt="Monitoring duration in minutes: ",
+                validator=validate_positive_integer,
+            ),
+            InputPrompt(
                 key="extra_delay",
                 prompt="Extra price delay in minutes [0]: ",
                 validator=validate_non_negative_integer,
             ),
         ]
 
-    def execute(self, config_path: str = None, extra_delay: str = "", **kwargs) -> CommandResult:
+    def execute(
+        self, config_path: str = None, duration: str = None, extra_delay: str = "", **kwargs
+    ) -> CommandResult:
         extra_delay_minutes = int(extra_delay.strip()) if extra_delay.strip() else 0
         cmd = [
             sys.executable,
             "-m",
             "pryces.presentation.scripts.monitor_stocks",
             config_path.strip(),
+            "--duration",
+            str(int(duration)),
             "--extra-delay",
             str(extra_delay_minutes),
         ]
