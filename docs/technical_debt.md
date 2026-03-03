@@ -133,14 +133,10 @@ contract, with the process selection as an `InputPrompt`.
 `float(p)` conversion when writing prices to JSON can introduce floating-point errors.
 On re-read via `Decimal(str(p))`, the imprecise float-stringified value is preserved.
 **Suggestion:** Use `str(p)` instead of `float(p)` when serializing to JSON.
+**Decision:** Won't fix. The fix changes JSON prices from numbers to strings, affecting the
+human-readable config format. In practice, stock prices entered manually never hit the
+precision boundary that would cause a lossy round-trip. Theoretical risk, not a practical one.
 
-### 16. `ConfigRefresher.refresh()` silently swallows all exceptions
-**File:** `presentation/scripts/config.py`
-**Violation:** Clean Code
-Bare `except Exception: pass` with zero logging. If the config file becomes invalid during
-monitoring, the operator gets no feedback.
-**Suggestion:** Log at WARNING level (e.g., `self._logger.warning(f"Config refresh failed: {e}")`)
-so issues are diagnosable while the monitor continues with the last valid config.
 
 ---
 
@@ -255,8 +251,7 @@ aggregate behavior.
 | Medium | 12 | `SettingsFactory` misleading exception + missing validation |
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
-| Medium | 15 | `ConfigManager` loses Decimal precision via `float()` |
-| Medium | 16 | `ConfigRefresher.refresh()` silently swallows exceptions |
+| Won't Fix | 15 | `ConfigManager` loses Decimal precision via `float()` — theoretical only |
 | Low | 5 | Fragile `ps aux` parsing |
 | Low | 6 | Test coverage gaps (SettingsFactory, MonitorStocksScript, logging, repositories) |
 | Low | 17 | Tests call private methods on `Stock` |

@@ -83,8 +83,8 @@ class ConfigRefresher:
                 self._config = new_config
                 self._logger.info("Config refreshed.")
                 self.log_config()
-        except Exception:
-            pass
+        except Exception as e:
+            self._logger.warning(f"Config refresh failed: {e}")
 
     def remove_fulfilled_targets(self, fulfilled: list[TargetPriceDTO]) -> None:
         if not fulfilled:
