@@ -145,19 +145,6 @@ there is no validation that `parts[1]` is a valid PID.
 - `infrastructure/logging.py` is completely untested (verbose/debug branching, file handler)
 - `InMemoryStockRepository` / `InMemoryMarketTransitionRepository` lack direct unit tests
 
-### 17. Tests call private methods on `Stock`
-**File:** `tests/domain/test_stocks.py`
-**Violation:** Test quality
-Many tests call `stock._has_crossed_sma()`, `stock._is_close_to_sma()`, etc. — coupled to
-implementation details rather than testing through the public API.
-**Suggestion:** Test these behaviors through `generate_notifications()` instead.
-
-### 18. `test_stocks.py` uses flat functions instead of test classes
-**File:** `tests/domain/test_stocks.py`
-**Violation:** Consistency
-80+ test functions at module level. All other test files use `class Test*` grouping.
-**Suggestion:** Group into classes by feature (e.g., `TestSMACrossing`, `TestGenerateNotifications`).
-
 ### 19. Duplicated percentage-change formula
 **Files:** `domain/notifications.py`, `domain/stocks.py`
 **Violation:** DRY
@@ -243,8 +230,6 @@ aggregate behavior.
 | Won't Fix | 15 | `ConfigManager` loses Decimal precision via `float()` — theoretical only |
 | Low | 5 | Fragile `ps aux` parsing |
 | Low | 6 | Test coverage gaps (SettingsFactory, MonitorStocksScript, logging, repositories) |
-| Low | 17 | Tests call private methods on `Stock` |
-| Low | 18 | `test_stocks.py` flat functions instead of test classes |
 | Low | 19 | Duplicated percentage-change formula |
 | Low | 20 | SMA-distance percentage computed twice |
 | Low | 21 | 8 near-identical percentage factory methods |
