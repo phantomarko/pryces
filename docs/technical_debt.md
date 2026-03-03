@@ -103,15 +103,6 @@ via `_fetch_stock` which catches all exceptions and returns `None`. The two port
 different failure semantics.
 **Suggestion:** Move exception handling into `get_stock` so both code paths behave consistently.
 
-### 12. `SettingsFactory` — misleading exception type + missing validation
-**File:** `infrastructure/factories.py`
-**Violation:** Robustness, Clean Code
-Raises `EnvironmentError` (a built-in alias for `OSError`) for missing env vars — semantically
-wrong. Also doesn't catch `ValueError` when `MAX_FETCH_WORKERS` or `EXTRA_DELAY_IN_MINUTES`
-contain non-numeric strings.
-**Suggestion:** Define a custom `ConfigurationError` exception. Catch `ValueError` alongside
-`KeyError` with a clear message including the variable name and value.
-
 ### 13. Duplicated process listing format in `StopMonitorCommand` and `ListMonitorsCommand`
 **Files:** `presentation/console/commands/stop_monitor.py`, `list_monitors.py`
 **Violation:** DRY
@@ -150,7 +141,6 @@ there is no validation that `parts[1]` is a valid PID.
 **Suggestion:** Use `ps` with explicit `-o` format specifier for reliable column extraction.
 
 ### 6. Test coverage gaps
-- `SettingsFactory` has no tests (env var parsing, defaults, missing vars, invalid integers)
 - `MonitorStocksScript.run()` has zero tests for the main orchestration loop
 - `infrastructure/logging.py` is completely untested (verbose/debug branching, file handler)
 - `InMemoryStockRepository` / `InMemoryMarketTransitionRepository` lack direct unit tests
@@ -248,7 +238,6 @@ aggregate behavior.
 | Medium | 9 | `FireAndForgetMessageSender` LSP violation |
 | Medium | 10 | `TelegramMessageSender` inconsistent error handling + leaking exceptions |
 | Medium | 11 | `YahooFinanceProvider` inconsistent exception handling |
-| Medium | 12 | `SettingsFactory` misleading exception + missing validation |
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
 | Won't Fix | 15 | `ConfigManager` loses Decimal precision via `float()` — theoretical only |

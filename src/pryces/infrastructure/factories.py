@@ -1,5 +1,6 @@
 import os
 
+from .exceptions import ConfigurationError
 from .providers import YahooFinanceSettings
 from .senders import TelegramSettings
 
@@ -13,7 +14,12 @@ class SettingsFactory:
                 extra_delay_in_minutes=extra_delay_in_minutes,
             )
         except KeyError as e:
-            raise EnvironmentError(f"Missing required environment variable: {e}") from e
+            raise ConfigurationError(f"Missing required environment variable: {e}") from e
+        except ValueError as e:
+            raise ConfigurationError(
+                f"Invalid value for MAX_FETCH_WORKERS: '{os.environ.get('MAX_FETCH_WORKERS')}'"
+                f" — expected an integer"
+            ) from e
 
     @staticmethod
     def create_telegram_settings() -> TelegramSettings:
@@ -23,4 +29,4 @@ class SettingsFactory:
                 group_id=os.environ["TELEGRAM_GROUP_ID"],
             )
         except KeyError as e:
-            raise EnvironmentError(f"Missing required environment variable: {e}") from e
+            raise ConfigurationError(f"Missing required environment variable: {e}") from e
