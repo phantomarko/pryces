@@ -101,7 +101,7 @@ class YahooFinanceProvider(StockProvider):
         self._mapper = YahooFinanceMapper(settings.extra_delay_in_minutes)
         self._logger = logging.getLogger(__name__)
 
-    def get_stock(self, symbol: str) -> Stock | None:
+    def _get_stock(self, symbol: str) -> Stock | None:
         self._logger.debug(f"Fetching stock data for {symbol}")
         ticker_obj = yf.Ticker(symbol)
         info = ticker_obj.info
@@ -111,7 +111,7 @@ class YahooFinanceProvider(StockProvider):
 
     def _fetch_stock(self, symbol: str) -> Stock | None:
         try:
-            return self.get_stock(symbol)
+            return self._get_stock(symbol)
         except Exception as e:
             self._logger.error(f"Error fetching data for {symbol}: {e}")
             return None

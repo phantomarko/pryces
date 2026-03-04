@@ -95,13 +95,12 @@ application layer.
 **Suggestion:** Raise `MessageSendingFailed` in all failure cases. Catch `URLError` and `OSError`
 too, wrapping with `from e` chaining. Keep `HTTPError` first (it's a subclass of `URLError`).
 
-### 11. `YahooFinanceProvider` — inconsistent exception handling between public methods
+### 11. `YahooFinanceProvider._get_stock` — no exception handling
 **File:** `infrastructure/providers.py`
-**Violation:** LSP, Consistency
-`get_stock` (public port method) propagates raw yfinance exceptions. `get_stocks` wraps them
-via `_fetch_stock` which catches all exceptions and returns `None`. The two port methods have
-different failure semantics.
-**Suggestion:** Move exception handling into `get_stock` so both code paths behave consistently.
+**Violation:** Clean Code
+`_get_stock` propagates raw yfinance exceptions. `_fetch_stock` catches them and returns `None`,
+but this means exception handling is split across two methods rather than handled at the source.
+**Suggestion:** Move exception handling into `_get_stock` and remove the `_fetch_stock` wrapper.
 
 ### 13. Duplicated process listing format in `StopMonitorCommand` and `ListMonitorsCommand`
 **Files:** `presentation/console/commands/stop_monitor.py`, `list_monitors.py`
@@ -166,18 +165,11 @@ differing only in `NotificationType` and verb.
 **Suggestion:** Replace with a single `create_price_change(notification_type, symbol,
 current_price, change_percentage)` that derives the verb from the sign of `change_percentage`.
 
-### 22. Unnecessary `del` in `YahooFinanceProvider.get_stock`
+### 22. Unnecessary `del` in `YahooFinanceProvider._get_stock`
 **File:** `infrastructure/providers.py`
 **Violation:** Clean Code
 `del info, ticker_obj` is unnecessary — locals are GC'd on return.
 **Suggestion:** Remove the line.
-
-### 23. `StockProvider.get_stock` appears unused
-**File:** `application/interfaces.py`
-**Violation:** ISP
-No use case or service calls `get_stock`. Implementors are forced to implement a method the
-application layer doesn't need.
-**Suggestion:** Verify usage; if unused, remove from the port interface.
 
 ### 24. `StockDTO.market_state` converts enum to raw string
 **File:** `application/dtos.py`
@@ -234,7 +226,6 @@ aggregate behavior.
 | Low | 20 | SMA-distance percentage computed twice |
 | Low | 21 | 8 near-identical percentage factory methods |
 | Low | 22 | Unnecessary `del` in `YahooFinanceProvider` |
-| Low | 23 | `StockProvider.get_stock` appears unused (ISP) |
 | Low | 24 | `StockDTO.market_state` converts enum to string unnecessarily |
 | Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
 | Low | 26 | `utils.py` line exceeds 100-char limit |
