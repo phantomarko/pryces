@@ -196,21 +196,24 @@ class TestNotificationService:
 
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
+        stock.generate_notifications()
 
         self.service.send_stock_notifications(stock)
 
-        assert self.mock_sender.send_message.call_count == 2
+        assert self.mock_sender.send_message.call_count == 1
         messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
         assert all("AAPL" in m for m in messages)
 
     def test_handles_multiple_stocks_independently(self):
         stock1 = create_stock_crossing_fifty_day("AAPL")
+        stock1.generate_notifications()
         stock2 = create_stock_crossing_fifty_day("GOOGL")
+        stock2.generate_notifications()
 
         self.service.send_stock_notifications(stock1)
         self.service.send_stock_notifications(stock2)
 
-        assert self.mock_sender.send_message.call_count == 4
+        assert self.mock_sender.send_message.call_count == 2
 
     def test_handles_stock_with_no_crossing_notifications(self):
         stock = create_stock_no_crossing("AAPL")
@@ -226,6 +229,7 @@ class TestNotificationService:
             fifty_two_week_high=Decimal("190.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -247,6 +251,7 @@ class TestNotificationService:
             fifty_two_week_low=Decimal("110.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("100.00"),
@@ -267,6 +272,7 @@ class TestNotificationService:
             current_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
@@ -354,6 +360,7 @@ class TestStockSynchronizer:
         result = self.synchronizer.fetch_and_sync(["AAPL"], {"AAPL": [Decimal("200.00")]})
 
         synced_stock = result[0]
+        synced_stock.generate_notifications()
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),

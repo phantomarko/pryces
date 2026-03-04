@@ -388,7 +388,10 @@ class Stock:
         self._targets = remaining
 
     def _generate_market_open_notifications(self) -> None:
+        had_market_open = self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN)
         self._generate_regular_market_open_notification()
+        if not had_market_open:
+            return
         self._generate_close_to_fifty_day_average_notification()
         self._generate_fifty_day_average_crossed_notification()
         self._generate_close_to_two_hundred_day_average_notification()

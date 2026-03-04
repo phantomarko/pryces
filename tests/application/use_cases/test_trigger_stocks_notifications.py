@@ -11,6 +11,7 @@ from pryces.application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotificationsRequest,
 )
 from tests.fixtures.factories import (
+    create_stock,
     create_stock_crossing_both_averages,
     create_stock_crossing_fifty_day,
     create_stock_crossing_two_hundred_day,
@@ -36,9 +37,14 @@ class TestTriggerStocksNotifications:
             notification_service=self.notification_service,
         )
 
+    def _prime_stock_in_repo(self, symbol: str) -> None:
+        stock = create_stock(symbol)
+        stock.generate_notifications()
+        self.stock_repository.save_batch([stock])
+
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):
-        stock = create_stock_crossing_fifty_day("AAPL")
-        self.mock_provider.get_stocks.return_value = [stock]
+        self._prime_stock_in_repo("AAPL")
+        self.mock_provider.get_stocks.return_value = [create_stock_crossing_fifty_day("AAPL")]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL"])
 
         self.use_case.handle(request)
@@ -46,8 +52,10 @@ class TestTriggerStocksNotifications:
         assert self.mock_sender.send_message.call_count == 2
 
     def test_handle_sends_milestone_notification_for_two_hundred_day_crossing(self):
-        stock = create_stock_crossing_two_hundred_day("GOOGL")
-        self.mock_provider.get_stocks.return_value = [stock]
+        self._prime_stock_in_repo("GOOGL")
+        self.mock_provider.get_stocks.return_value = [
+            create_stock_crossing_two_hundred_day("GOOGL")
+        ]
         request = TriggerStocksNotificationsRequest(symbols=["GOOGL"])
 
         self.use_case.handle(request)
@@ -55,8 +63,8 @@ class TestTriggerStocksNotifications:
         assert self.mock_sender.send_message.call_count == 3
 
     def test_handle_sends_both_notifications_when_both_averages_crossed(self):
-        stock = create_stock_crossing_both_averages("MSFT")
-        self.mock_provider.get_stocks.return_value = [stock]
+        self._prime_stock_in_repo("MSFT")
+        self.mock_provider.get_stocks.return_value = [create_stock_crossing_both_averages("MSFT")]
         request = TriggerStocksNotificationsRequest(symbols=["MSFT"])
 
         self.use_case.handle(request)
@@ -73,19 +81,25 @@ class TestTriggerStocksNotifications:
         self.mock_sender.send_message.assert_called_once()
 
     def test_handle_sends_notifications_for_all_stocks_with_market_open(self):
-        crossing_stock = create_stock_crossing_fifty_day("AAPL")
-        non_crossing_stock = create_stock_no_crossing("GOOGL")
-        self.mock_provider.get_stocks.return_value = [crossing_stock, non_crossing_stock]
+        self._prime_stock_in_repo("AAPL")
+        self._prime_stock_in_repo("GOOGL")
+        self.mock_provider.get_stocks.return_value = [
+            create_stock_crossing_fifty_day("AAPL"),
+            create_stock_no_crossing("GOOGL"),
+        ]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL"])
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 3
+        assert self.mock_sender.send_message.call_count == 2
 
     def test_handle_sends_notifications_for_multiple_stocks_with_crossings(self):
-        stock1 = create_stock_crossing_fifty_day("AAPL")
-        stock2 = create_stock_crossing_two_hundred_day("GOOGL")
-        self.mock_provider.get_stocks.return_value = [stock1, stock2]
+        self._prime_stock_in_repo("AAPL")
+        self._prime_stock_in_repo("GOOGL")
+        self.mock_provider.get_stocks.return_value = [
+            create_stock_crossing_fifty_day("AAPL"),
+            create_stock_crossing_two_hundred_day("GOOGL"),
+        ]
         request = TriggerStocksNotificationsRequest(symbols=["AAPL", "GOOGL"])
 
         self.use_case.handle(request)
@@ -111,8 +125,12 @@ class TestTriggerStocksNotifications:
 
     def test_handle_sends_new_52_week_high_notification_when_past_stock_exists(self):
         past_stock = Stock(
-            symbol="AAPL", current_price=Decimal("180.00"), fifty_two_week_high=Decimal("190.00")
+            symbol="AAPL",
+            current_price=Decimal("180.00"),
+            fifty_two_week_high=Decimal("190.00"),
+            market_state=MarketState.OPEN,
         )
+        past_stock.generate_notifications()
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
             symbol="AAPL",
@@ -139,39 +157,46 @@ class TestTriggerStocksNotifications:
         assert result == []
 
     def test_handle_returns_fulfilled_target_as_dto(self):
-        stock = create_stock_no_crossing("AAPL")
-        self.mock_provider.get_stocks.return_value = [stock]
+        self._prime_stock_in_repo("AAPL")
+        fresh = create_stock_no_crossing("AAPL")
+        self.mock_provider.get_stocks.return_value = [fresh]
         request = TriggerStocksNotificationsRequest(
             symbols=["AAPL"],
-            targets={"AAPL": [stock.current_price]},
+            targets={"AAPL": [fresh.current_price]},
         )
 
         result = self.use_case.handle(request)
 
-        assert result == [TargetPriceDTO(symbol="AAPL", target=stock.current_price)]
+        assert result == [TargetPriceDTO(symbol="AAPL", target=fresh.current_price)]
 
     def test_handle_returns_fulfilled_targets_from_multiple_stocks(self):
-        stock_aapl = create_stock_no_crossing("AAPL")
-        stock_googl = create_stock_no_crossing("GOOGL")
-        self.mock_provider.get_stocks.return_value = [stock_aapl, stock_googl]
+        self._prime_stock_in_repo("AAPL")
+        self._prime_stock_in_repo("GOOGL")
+        fresh_aapl = create_stock_no_crossing("AAPL")
+        fresh_googl = create_stock_no_crossing("GOOGL")
+        self.mock_provider.get_stocks.return_value = [fresh_aapl, fresh_googl]
         request = TriggerStocksNotificationsRequest(
             symbols=["AAPL", "GOOGL"],
             targets={
-                "AAPL": [stock_aapl.current_price],
-                "GOOGL": [stock_googl.current_price],
+                "AAPL": [fresh_aapl.current_price],
+                "GOOGL": [fresh_googl.current_price],
             },
         )
 
         result = self.use_case.handle(request)
 
         assert len(result) == 2
-        assert TargetPriceDTO(symbol="AAPL", target=stock_aapl.current_price) in result
-        assert TargetPriceDTO(symbol="GOOGL", target=stock_googl.current_price) in result
+        assert TargetPriceDTO(symbol="AAPL", target=fresh_aapl.current_price) in result
+        assert TargetPriceDTO(symbol="GOOGL", target=fresh_googl.current_price) in result
 
     def test_handle_sends_new_52_week_low_notification_when_past_stock_exists(self):
         past_stock = Stock(
-            symbol="AAPL", current_price=Decimal("120.00"), fifty_two_week_low=Decimal("110.00")
+            symbol="AAPL",
+            current_price=Decimal("120.00"),
+            fifty_two_week_low=Decimal("110.00"),
+            market_state=MarketState.OPEN,
         )
+        past_stock.generate_notifications()
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
             symbol="AAPL",

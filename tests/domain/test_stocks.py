@@ -95,6 +95,7 @@ class TestHasCrossedSMA:
             fifty_day_average=Decimal("145.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -108,6 +109,7 @@ class TestHasCrossedSMA:
             fifty_day_average=Decimal("145.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -142,6 +144,7 @@ class TestHasCrossedSMA:
             fifty_day_average=Decimal("145.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -155,6 +158,7 @@ class TestHasCrossedSMA:
             fifty_day_average=Decimal("145.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -214,6 +218,7 @@ class TestIsCloseToSMA:
             fifty_day_average=Decimal("105.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -227,6 +232,7 @@ class TestIsCloseToSMA:
             fifty_day_average=Decimal("95.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -266,6 +272,7 @@ class TestIsCloseToSMA:
             fifty_day_average=Decimal("105.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -279,6 +286,7 @@ class TestIsCloseToSMA:
             fifty_day_average=Decimal("95.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -336,6 +344,7 @@ class TestCloseToSMA50Notifications:
             fifty_day_average=Decimal("103.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -349,6 +358,7 @@ class TestCloseToSMA50Notifications:
             fifty_day_average=Decimal("97.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -392,6 +402,7 @@ class TestCloseToSMA200Notifications:
             two_hundred_day_average=Decimal("103.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -405,6 +416,7 @@ class TestCloseToSMA200Notifications:
             two_hundred_day_average=Decimal("97.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -447,6 +459,7 @@ class TestPercentageFromPreviousClose:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -459,6 +472,7 @@ class TestPercentageFromPreviousClose:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
@@ -487,11 +501,11 @@ class TestSMACrossingNotifications:
             fifty_day_average=Decimal("145.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 3
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 2
         assert any("crossed SMA50" in m for m in messages)
         assert any("rose to" in m for m in messages)
 
@@ -503,11 +517,11 @@ class TestSMACrossingNotifications:
             two_hundred_day_average=Decimal("140.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 3
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 2
         assert any("crossed SMA200" in m for m in messages)
         assert any("rose to" in m for m in messages)
 
@@ -520,11 +534,11 @@ class TestSMACrossingNotifications:
             two_hundred_day_average=Decimal("140.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 4
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 3
         assert any("crossed SMA50" in m for m in messages)
         assert any("crossed SMA200" in m for m in messages)
         assert any("rose to" in m for m in messages)
@@ -596,6 +610,60 @@ class TestRegularMarketOpenNotifications:
         assert messages == []
 
 
+class TestMarketOpenDeferral:
+    def test_first_call_returns_only_market_open_notification(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("106.00"),
+            previous_close_price=Decimal("100.00"),
+            fifty_day_average=Decimal("103.00"),
+            market_state=MarketState.OPEN,
+        )
+
+        messages = stock.generate_notifications()
+
+        assert len(messages) == 1
+        assert "opened at" in messages[0]
+
+    def test_second_call_returns_deferred_notifications(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("140.00"),
+            fifty_day_average=Decimal("145.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+
+        messages = stock.generate_notifications()
+
+        assert len(messages) == 2
+        assert any("crossed SMA50" in m for m in messages)
+        assert any("rose to" in m for m in messages)
+
+    def test_non_first_open_generates_all_notifications_together(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("148.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("140.00"),
+            fifty_day_average=Decimal("145.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        messages = stock.generate_notifications()
+
+        assert any("crossed SMA50" in m for m in messages)
+        assert any("rose to" in m for m in messages)
+
+
 class TestMarketStatePost:
     def test_generate_notifications_does_not_add_market_closed_for_non_post_states(self):
         for state in [MarketState.OPEN, MarketState.PRE, MarketState.CLOSED]:
@@ -637,11 +705,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_fifteen_percent_increase(self):
@@ -651,11 +719,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_ten_percent_increase(self):
@@ -665,11 +733,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_five_percent_increase(self):
@@ -679,11 +747,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_twenty_percent_decrease(self):
@@ -693,11 +761,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_adds_fifteen_percent_decrease(self):
@@ -707,11 +775,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_adds_ten_percent_decrease(self):
@@ -721,11 +789,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_adds_five_percent_decrease(self):
@@ -735,11 +803,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_no_percentage_below_threshold(self):
@@ -762,11 +830,11 @@ class TestPercentageChangeNotifications:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
 
         messages = stock.generate_notifications()
 
-        assert len(messages) == 2
-        assert any("opened at" in m for m in messages)
+        assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_no_percentage_when_previous_close_none(self):
@@ -848,6 +916,7 @@ class Test52WeekHighNotifications:
             fifty_two_week_high=Decimal("180.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         source = Stock(
             symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN
         )
@@ -924,6 +993,7 @@ class Test52WeekLowNotifications:
             fifty_two_week_low=Decimal("120.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         source = Stock(
             symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN
         )
@@ -1127,10 +1197,12 @@ class TestDeduplication:
         )
         result1 = stock.generate_notifications()
         assert len(result1) > 0
-
         result2 = stock.generate_notifications()
+        assert len(result2) > 0
 
-        assert result2 == []
+        result3 = stock.generate_notifications()
+
+        assert result3 == []
 
 
 class TestTargetPriceNotifications:
@@ -1141,6 +1213,7 @@ class TestTargetPriceNotifications:
             previous_close_price=Decimal("195.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
@@ -1161,6 +1234,7 @@ class TestTargetPriceNotifications:
             previous_close_price=Decimal("195.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
@@ -1202,6 +1276,7 @@ class TestTargetPriceNotifications:
             previous_close_price=Decimal("195.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
@@ -1246,6 +1321,7 @@ class TestTargetPriceNotifications:
             previous_close_price=Decimal("295.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
         source = Stock(
             symbol="AAPL",
@@ -1268,6 +1344,7 @@ class TestTargetPriceNotifications:
             previous_close_price=Decimal("195.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00")])
         source1 = Stock(
             symbol="AAPL",
@@ -1317,6 +1394,7 @@ class TestSyncTargets:
 
     def test_sync_targets_removes_missing_targets(self):
         stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
         stock.sync_targets([Decimal("200.00")])
 
@@ -1349,6 +1427,7 @@ class TestSyncTargets:
 
     def test_sync_targets_adds_new_and_preserves_existing(self):
         stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+        stock.generate_notifications()
         stock.sync_targets([Decimal("200.00")])
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
 
@@ -1372,6 +1451,7 @@ class TestDrainFulfilledTargets:
             previous_close_price=Decimal("145.00"),
             market_state=MarketState.OPEN,
         )
+        stock.generate_notifications()
         stock.sync_targets([Decimal("150.00")])
         stock.generate_notifications()
 
