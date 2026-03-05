@@ -23,7 +23,7 @@ def test_create_fifty_day_average_crossed_sets_message():
         "AAPL", Decimal("150.00"), Decimal("1.25"), Decimal("145.00")
     )
 
-    assert "AAPL at 150.00 (+1.25%)" in notification.message
+    assert "AAPL rose to 150.00 (+1.25%)" in notification.message
     assert "crossed SMA50 at 145.00" in notification.message
 
 
@@ -40,7 +40,7 @@ def test_create_two_hundred_day_average_crossed_sets_message():
         "AAPL", Decimal("138.00"), Decimal("-1.50"), Decimal("140.00")
     )
 
-    assert "AAPL at 138.00 (-1.50%)" in notification.message
+    assert "AAPL dropped to 138.00 (-1.50%)" in notification.message
     assert "crossed SMA200 at 140.00" in notification.message
 
 

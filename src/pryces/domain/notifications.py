@@ -47,10 +47,8 @@ class Notification:
         change_percentage: Decimal,
         average_price: Decimal,
     ) -> "Notification":
-        message = (
-            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
-            f"crossed SMA50 at {average_price}"
-        )
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        message = f"{prefix}, crossed SMA50 at {average_price}"
         return Notification(Notification._CREATION_KEY, NotificationType.SMA50_CROSSED, message)
 
     @staticmethod
@@ -60,10 +58,8 @@ class Notification:
         change_percentage: Decimal,
         average_price: Decimal,
     ) -> "Notification":
-        message = (
-            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
-            f"crossed SMA200 at {average_price}"
-        )
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        message = f"{prefix}, crossed SMA200 at {average_price}"
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
 
     @staticmethod
@@ -73,11 +69,9 @@ class Notification:
         change_percentage: Decimal,
         average_price: Decimal,
     ) -> "Notification":
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
         direction = "above" if current_price >= average_price else "below"
-        message = (
-            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
-            f"{direction} SMA50 at {average_price}"
-        )
+        message = f"{prefix}, {direction} SMA50 at {average_price}"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
 
     @staticmethod
@@ -87,11 +81,9 @@ class Notification:
         change_percentage: Decimal,
         average_price: Decimal,
     ) -> "Notification":
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
         direction = "above" if current_price >= average_price else "below"
-        message = (
-            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
-            f"{direction} SMA200 at {average_price}"
-        )
+        message = f"{prefix}, {direction} SMA200 at {average_price}"
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
 
     @staticmethod
@@ -124,7 +116,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.FIVE_PERCENT_INCREASE,
-            "rose to",
             symbol,
             current_price,
             change_percentage,
@@ -136,7 +127,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.TEN_PERCENT_INCREASE,
-            "rose to",
             symbol,
             current_price,
             change_percentage,
@@ -148,7 +138,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.FIFTEEN_PERCENT_INCREASE,
-            "rose to",
             symbol,
             current_price,
             change_percentage,
@@ -160,7 +149,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.TWENTY_PERCENT_INCREASE,
-            "rose to",
             symbol,
             current_price,
             change_percentage,
@@ -172,7 +160,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.FIVE_PERCENT_DECREASE,
-            "dropped to",
             symbol,
             current_price,
             change_percentage,
@@ -184,7 +171,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.TEN_PERCENT_DECREASE,
-            "dropped to",
             symbol,
             current_price,
             change_percentage,
@@ -196,7 +182,6 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.FIFTEEN_PERCENT_DECREASE,
-            "dropped to",
             symbol,
             current_price,
             change_percentage,
@@ -208,21 +193,26 @@ class Notification:
     ) -> "Notification":
         return Notification._create_price_change(
             NotificationType.TWENTY_PERCENT_DECREASE,
-            "dropped to",
             symbol,
             current_price,
             change_percentage,
         )
 
     @staticmethod
+    def _format_price_change_prefix(
+        symbol: str, current_price: Decimal, change_percentage: Decimal
+    ) -> str:
+        verb = "rose to" if change_percentage >= 0 else "dropped to"
+        return f"{symbol} {verb} {current_price} ({change_percentage:+.2f}%)"
+
+    @staticmethod
     def _create_price_change(
         notification_type: NotificationType,
-        verb: str,
         symbol: str,
         current_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        message = f"{symbol} {verb} {current_price} ({change_percentage:+.2f}%)"
+        message = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
         return Notification(Notification._CREATION_KEY, notification_type, message)
 
     @staticmethod
