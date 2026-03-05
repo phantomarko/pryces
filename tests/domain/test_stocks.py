@@ -1312,6 +1312,98 @@ class TestDeduplication:
         assert result3 == []
 
 
+class TestCloseToSMASuppressedByCrossing:
+    def test_close_to_sma50_suppressed_when_sma50_was_crossed(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("101.00"),
+            previous_close_price=Decimal("99.00"),
+            fifty_day_average=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        first_messages = stock.drain_notifications()
+        assert any("crossed SMA50" in m for m in first_messages)
+
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("102.00"),
+            previous_close_price=Decimal("101.00"),
+            fifty_day_average=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("SMA50 at" in m for m in messages)
+
+    def test_close_to_sma200_suppressed_when_sma200_was_crossed(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("101.00"),
+            previous_close_price=Decimal("99.00"),
+            two_hundred_day_average=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        first_messages = stock.drain_notifications()
+        assert any("crossed SMA200" in m for m in first_messages)
+
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("102.00"),
+            previous_close_price=Decimal("101.00"),
+            two_hundred_day_average=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("SMA200 at" in m for m in messages)
+
+    def test_close_to_sma50_not_suppressed_when_no_crossing(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("96.00"),
+            previous_close_price=Decimal("95.00"),
+            fifty_day_average=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("below SMA50 at" in m for m in messages)
+
+    def test_close_to_sma200_not_suppressed_when_no_crossing(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("96.00"),
+            previous_close_price=Decimal("95.00"),
+            two_hundred_day_average=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("below SMA200 at" in m for m in messages)
+
+
 class TestTargetPriceNotifications:
     def test_generate_notifications_appends_target_price_reached_when_target_is_reached(self):
         stock = Stock(
