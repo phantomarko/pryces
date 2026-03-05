@@ -556,9 +556,8 @@ class TestSMACrossingNotifications:
         stock.generate_notifications()
         messages = stock.drain_notifications()
 
-        assert len(messages) == 2
+        assert len(messages) == 1
         assert any("crossed SMA50" in m for m in messages)
-        assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_two_hundred_day_notification(self):
         stock = Stock(
@@ -574,9 +573,8 @@ class TestSMACrossingNotifications:
         stock.generate_notifications()
         messages = stock.drain_notifications()
 
-        assert len(messages) == 2
+        assert len(messages) == 1
         assert any("crossed SMA200" in m for m in messages)
-        assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_both_notifications(self):
         stock = Stock(
@@ -593,10 +591,9 @@ class TestSMACrossingNotifications:
         stock.generate_notifications()
         messages = stock.drain_notifications()
 
-        assert len(messages) == 3
+        assert len(messages) == 2
         assert any("crossed SMA50" in m for m in messages)
         assert any("crossed SMA200" in m for m in messages)
-        assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_no_notifications_when_no_crossing(self):
         stock = Stock(
@@ -700,9 +697,8 @@ class TestMarketOpenDeferral:
         stock.generate_notifications()
         messages = stock.drain_notifications()
 
-        assert len(messages) == 2
+        assert len(messages) == 1
         assert any("crossed SMA50" in m for m in messages)
-        assert any("rose to" in m for m in messages)
 
     def test_non_first_open_generates_all_notifications_together(self):
         stock = Stock(
@@ -1402,6 +1398,113 @@ class TestCloseToSMASuppressedByCrossing:
         messages = stock.drain_notifications()
 
         assert any("below SMA200 at" in m for m in messages)
+
+
+class TestPercentageSuppressedBySMA:
+    def test_percentage_suppressed_when_sma50_crossed(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("140.00"),
+            fifty_day_average=Decimal("145.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("crossed SMA50" in m for m in messages)
+        assert not any("rose to 150" in m and "crossed" not in m for m in messages)
+
+    def test_percentage_suppressed_when_sma200_crossed(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("130.00"),
+            two_hundred_day_average=Decimal("140.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("crossed SMA200" in m for m in messages)
+        assert not any("rose to 150" in m and "crossed" not in m for m in messages)
+
+    def test_percentage_suppressed_when_close_to_sma50(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            previous_close_price=Decimal("95.00"),
+            fifty_day_average=Decimal("103.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("SMA50 at" in m for m in messages)
+        assert not any("rose to 100" in m and "SMA" not in m for m in messages)
+
+    def test_percentage_suppressed_when_close_to_sma200(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            previous_close_price=Decimal("95.00"),
+            two_hundred_day_average=Decimal("103.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("SMA200 at" in m for m in messages)
+        assert not any("rose to 100" in m and "SMA" not in m for m in messages)
+
+    def test_percentage_not_suppressed_without_sma(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("106.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert len(messages) == 1
+        assert any("rose to" in m for m in messages)
+
+    def test_dedup_preserved_after_suppression(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            previous_close_price=Decimal("140.00"),
+            fifty_day_average=Decimal("145.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        # Next cycle: percentage notification should not reappear (it's in historical)
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        percentage_messages = [m for m in messages if "rose to" in m and "crossed" not in m]
+        assert len(percentage_messages) == 0
 
 
 class TestTargetPriceNotifications:

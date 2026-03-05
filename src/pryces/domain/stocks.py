@@ -395,7 +395,19 @@ class Stock:
             return
         notification = self._generate_percentage_change_notification(change_percentage)
         if notification is not None and not self._has_notification_type(notification.type):
-            self._pending_notifications.append(notification)
+            if self._has_pending_sma_notification():
+                self._notifications.append(notification)
+            else:
+                self._pending_notifications.append(notification)
+
+    def _has_pending_sma_notification(self) -> bool:
+        sma_types = {
+            NotificationType.SMA50_CROSSED,
+            NotificationType.SMA200_CROSSED,
+            NotificationType.CLOSE_TO_SMA50,
+            NotificationType.CLOSE_TO_SMA200,
+        }
+        return any(n.type in sma_types for n in self._pending_notifications)
 
     def _generate_target_price_notifications(self) -> None:
         remaining: list[TargetPrice] = []
