@@ -190,7 +190,7 @@ class TestIsCloseToSMA:
     def test_is_close_to_sma_returns_false_when_fields_are_missing(self):
         stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
         messages = stock.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
         stock_with_previous = Stock(
             symbol="AAPL",
@@ -199,7 +199,7 @@ class TestIsCloseToSMA:
             market_state=MarketState.OPEN,
         )
         messages = stock_with_previous.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
         stock_with_average = Stock(
             symbol="AAPL",
@@ -208,7 +208,7 @@ class TestIsCloseToSMA:
             market_state=MarketState.OPEN,
         )
         messages = stock_with_average.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_true_when_approaching_from_below_within_threshold(self):
         stock = Stock(
@@ -222,7 +222,7 @@ class TestIsCloseToSMA:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA50" in m for m in messages)
+        assert any("below SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_true_when_approaching_from_above_within_threshold(self):
         stock = Stock(
@@ -236,7 +236,7 @@ class TestIsCloseToSMA:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA50" in m for m in messages)
+        assert any("above SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_approaching_from_below_beyond_threshold(self):
         stock = Stock(
@@ -249,7 +249,7 @@ class TestIsCloseToSMA:
 
         messages = stock.generate_notifications()
 
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_approaching_from_above_beyond_threshold(self):
         stock = Stock(
@@ -262,7 +262,7 @@ class TestIsCloseToSMA:
 
         messages = stock.generate_notifications()
 
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_true_at_exact_threshold_from_below(self):
         stock = Stock(
@@ -276,7 +276,7 @@ class TestIsCloseToSMA:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA50" in m for m in messages)
+        assert any("below SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_true_at_exact_threshold_from_above(self):
         stock = Stock(
@@ -290,7 +290,7 @@ class TestIsCloseToSMA:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA50" in m for m in messages)
+        assert any("above SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_previous_close_on_same_side_as_price(self):
         stock_both_above = Stock(
@@ -301,7 +301,7 @@ class TestIsCloseToSMA:
             market_state=MarketState.OPEN,
         )
         messages = stock_both_above.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
         stock_both_below = Stock(
             symbol="AAPL",
@@ -311,7 +311,7 @@ class TestIsCloseToSMA:
             market_state=MarketState.OPEN,
         )
         messages = stock_both_below.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_previous_equals_average(self):
         stock_current_above = Stock(
@@ -322,7 +322,7 @@ class TestIsCloseToSMA:
             market_state=MarketState.OPEN,
         )
         messages = stock_current_above.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
         stock_current_below = Stock(
             symbol="AAPL",
@@ -332,7 +332,7 @@ class TestIsCloseToSMA:
             market_state=MarketState.OPEN,
         )
         messages = stock_current_below.generate_notifications()
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
 
 class TestCloseToSMA50Notifications:
@@ -348,7 +348,7 @@ class TestCloseToSMA50Notifications:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA50" in m for m in messages)
+        assert any("below SMA50 at" in m for m in messages)
 
     def test_generate_notifications_adds_close_to_sma50_when_approaching_from_above(self):
         stock = Stock(
@@ -362,7 +362,7 @@ class TestCloseToSMA50Notifications:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA50" in m for m in messages)
+        assert any("above SMA50 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma50_when_beyond_threshold(self):
         stock = Stock(
@@ -375,7 +375,7 @@ class TestCloseToSMA50Notifications:
 
         messages = stock.generate_notifications()
 
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma50_when_previous_close_on_same_side(
         self,
@@ -390,7 +390,7 @@ class TestCloseToSMA50Notifications:
 
         messages = stock.generate_notifications()
 
-        assert not any("to cross SMA50" in m for m in messages)
+        assert not any("SMA50 at" in m for m in messages)
 
 
 class TestCloseToSMA200Notifications:
@@ -406,7 +406,7 @@ class TestCloseToSMA200Notifications:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA200" in m for m in messages)
+        assert any("below SMA200 at" in m for m in messages)
 
     def test_generate_notifications_adds_close_to_sma200_when_approaching_from_above(self):
         stock = Stock(
@@ -420,7 +420,7 @@ class TestCloseToSMA200Notifications:
 
         messages = stock.generate_notifications()
 
-        assert any("to cross SMA200" in m for m in messages)
+        assert any("above SMA200 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma200_when_beyond_threshold(self):
         stock = Stock(
@@ -433,7 +433,7 @@ class TestCloseToSMA200Notifications:
 
         messages = stock.generate_notifications()
 
-        assert not any("to cross SMA200" in m for m in messages)
+        assert not any("SMA200 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma200_when_previous_close_on_same_side(
         self,
@@ -448,7 +448,7 @@ class TestCloseToSMA200Notifications:
 
         messages = stock.generate_notifications()
 
-        assert not any("to cross SMA200" in m for m in messages)
+        assert not any("SMA200 at" in m for m in messages)
 
 
 class TestPercentageFromPreviousClose:

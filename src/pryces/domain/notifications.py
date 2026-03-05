@@ -41,15 +41,29 @@ class Notification:
         return self._message
 
     @staticmethod
-    def create_fifty_day_average_crossed(symbol: str, average_price: Decimal) -> "Notification":
-        message = f"{symbol} crossed SMA50 at {average_price}"
+    def create_fifty_day_average_crossed(
+        symbol: str,
+        current_price: Decimal,
+        change_percentage: Decimal,
+        average_price: Decimal,
+    ) -> "Notification":
+        message = (
+            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
+            f"crossed SMA50 at {average_price}"
+        )
         return Notification(Notification._CREATION_KEY, NotificationType.SMA50_CROSSED, message)
 
     @staticmethod
     def create_two_hundred_day_average_crossed(
-        symbol: str, average_price: Decimal
+        symbol: str,
+        current_price: Decimal,
+        change_percentage: Decimal,
+        average_price: Decimal,
     ) -> "Notification":
-        message = f"{symbol} crossed SMA200 at {average_price}"
+        message = (
+            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
+            f"crossed SMA200 at {average_price}"
+        )
         return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
 
     @staticmethod
@@ -57,8 +71,13 @@ class Notification:
         symbol: str,
         current_price: Decimal,
         change_percentage: Decimal,
+        average_price: Decimal,
     ) -> "Notification":
-        message = f"{symbol} at {current_price}, {change_percentage:+.2f}% to cross SMA50"
+        direction = "above" if current_price >= average_price else "below"
+        message = (
+            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
+            f"{direction} SMA50 at {average_price}"
+        )
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
 
     @staticmethod
@@ -66,8 +85,13 @@ class Notification:
         symbol: str,
         current_price: Decimal,
         change_percentage: Decimal,
+        average_price: Decimal,
     ) -> "Notification":
-        message = f"{symbol} at {current_price}, {change_percentage:+.2f}% to cross SMA200"
+        direction = "above" if current_price >= average_price else "below"
+        message = (
+            f"{symbol} at {current_price} ({change_percentage:+.2f}%), "
+            f"{direction} SMA200 at {average_price}"
+        )
         return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
 
     @staticmethod

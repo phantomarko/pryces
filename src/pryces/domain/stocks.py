@@ -329,10 +329,12 @@ class Stock:
         if self._is_close_to_sma(self.fifty_day_average) and not self._has_notification_type(
             NotificationType.CLOSE_TO_SMA50
         ):
-            change_pct = (self.fifty_day_average - self.current_price) / self.current_price * 100
+            change_pct = self._change_percentage_from_previous_close()
+            if change_pct is None:
+                return
             self._notifications.append(
                 Notification.create_close_to_fifty_day_average(
-                    self.symbol, self.current_price, change_pct
+                    self.symbol, self.current_price, change_pct, self.fifty_day_average
                 )
             )
 
@@ -340,20 +342,25 @@ class Stock:
         if self._has_crossed_sma(self.fifty_day_average) and not self._has_notification_type(
             NotificationType.SMA50_CROSSED
         ):
+            change_pct = self._change_percentage_from_previous_close()
+            if change_pct is None:
+                return
             self._notifications.append(
-                Notification.create_fifty_day_average_crossed(self.symbol, self.fifty_day_average)
+                Notification.create_fifty_day_average_crossed(
+                    self.symbol, self.current_price, change_pct, self.fifty_day_average
+                )
             )
 
     def _generate_close_to_two_hundred_day_average_notification(self) -> None:
         if self._is_close_to_sma(self.two_hundred_day_average) and not self._has_notification_type(
             NotificationType.CLOSE_TO_SMA200
         ):
-            change_pct = (
-                (self.two_hundred_day_average - self.current_price) / self.current_price * 100
-            )
+            change_pct = self._change_percentage_from_previous_close()
+            if change_pct is None:
+                return
             self._notifications.append(
                 Notification.create_close_to_two_hundred_day_average(
-                    self.symbol, self.current_price, change_pct
+                    self.symbol, self.current_price, change_pct, self.two_hundred_day_average
                 )
             )
 
@@ -361,9 +368,12 @@ class Stock:
         if self._has_crossed_sma(self.two_hundred_day_average) and not self._has_notification_type(
             NotificationType.SMA200_CROSSED
         ):
+            change_pct = self._change_percentage_from_previous_close()
+            if change_pct is None:
+                return
             self._notifications.append(
                 Notification.create_two_hundred_day_average_crossed(
-                    self.symbol, self.two_hundred_day_average
+                    self.symbol, self.current_price, change_pct, self.two_hundred_day_average
                 )
             )
 

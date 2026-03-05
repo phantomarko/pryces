@@ -11,63 +11,85 @@ def test_cannot_create_notification_directly():
 
 
 def test_create_fifty_day_average_crossed_sets_type():
-    notification = Notification.create_fifty_day_average_crossed("AAPL", Decimal("145.00"))
+    notification = Notification.create_fifty_day_average_crossed(
+        "AAPL", Decimal("150.00"), Decimal("1.25"), Decimal("145.00")
+    )
 
     assert notification.type == NotificationType.SMA50_CROSSED
 
 
 def test_create_fifty_day_average_crossed_sets_message():
-    notification = Notification.create_fifty_day_average_crossed("AAPL", Decimal("145.00"))
+    notification = Notification.create_fifty_day_average_crossed(
+        "AAPL", Decimal("150.00"), Decimal("1.25"), Decimal("145.00")
+    )
 
-    assert isinstance(notification.message, str)
-    assert len(notification.message) > 0
+    assert "AAPL at 150.00 (+1.25%)" in notification.message
+    assert "crossed SMA50 at 145.00" in notification.message
 
 
 def test_create_two_hundred_day_average_crossed_sets_type():
-    notification = Notification.create_two_hundred_day_average_crossed("AAPL", Decimal("140.00"))
+    notification = Notification.create_two_hundred_day_average_crossed(
+        "AAPL", Decimal("138.00"), Decimal("-1.50"), Decimal("140.00")
+    )
 
     assert notification.type == NotificationType.SMA200_CROSSED
 
 
 def test_create_two_hundred_day_average_crossed_sets_message():
-    notification = Notification.create_two_hundred_day_average_crossed("AAPL", Decimal("140.00"))
+    notification = Notification.create_two_hundred_day_average_crossed(
+        "AAPL", Decimal("138.00"), Decimal("-1.50"), Decimal("140.00")
+    )
 
-    assert isinstance(notification.message, str)
-    assert len(notification.message) > 0
+    assert "AAPL at 138.00 (-1.50%)" in notification.message
+    assert "crossed SMA200 at 140.00" in notification.message
 
 
 def test_create_close_to_fifty_day_average_sets_type():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("100.00"), Decimal("10.00")
+        "AAPL", Decimal("100.00"), Decimal("10.00"), Decimal("103.00")
     )
 
     assert notification.type == NotificationType.CLOSE_TO_SMA50
 
 
-def test_create_close_to_fifty_day_average_sets_message():
+def test_create_close_to_fifty_day_average_sets_below_direction():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("100.00"), Decimal("10.00")
+        "AAPL", Decimal("100.00"), Decimal("10.00"), Decimal("103.00")
     )
 
-    assert isinstance(notification.message, str)
-    assert len(notification.message) > 0
+    assert "below SMA50 at" in notification.message
+
+
+def test_create_close_to_fifty_day_average_sets_above_direction():
+    notification = Notification.create_close_to_fifty_day_average(
+        "AAPL", Decimal("105.00"), Decimal("10.00"), Decimal("103.00")
+    )
+
+    assert "above SMA50 at" in notification.message
 
 
 def test_create_close_to_two_hundred_day_average_sets_type():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("100.00"), Decimal("-10.00")
+        "AAPL", Decimal("100.00"), Decimal("-10.00"), Decimal("103.00")
     )
 
     assert notification.type == NotificationType.CLOSE_TO_SMA200
 
 
-def test_create_close_to_two_hundred_day_average_sets_message():
+def test_create_close_to_two_hundred_day_average_sets_below_direction():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("100.00"), Decimal("-10.00")
+        "AAPL", Decimal("100.00"), Decimal("-10.00"), Decimal("103.00")
     )
 
-    assert isinstance(notification.message, str)
-    assert len(notification.message) > 0
+    assert "below SMA200 at" in notification.message
+
+
+def test_create_close_to_two_hundred_day_average_sets_above_direction():
+    notification = Notification.create_close_to_two_hundred_day_average(
+        "AAPL", Decimal("105.00"), Decimal("-10.00"), Decimal("103.00")
+    )
+
+    assert "above SMA200 at" in notification.message
 
 
 def test_create_regular_market_open_sets_type():
