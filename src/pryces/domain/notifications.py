@@ -227,7 +227,7 @@ class Notification:
 
     @staticmethod
     def create_target_price_reached(symbol: str, target_price: Decimal) -> "Notification":
-        message = f"{symbol} hit target {target_price}"
+        message = f"{symbol} hit target of {target_price}"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TARGET_PRICE_REACHED, message
         )

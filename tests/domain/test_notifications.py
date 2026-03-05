@@ -324,6 +324,7 @@ def test_create_target_price_reached_sets_message():
     notification = Notification.create_target_price_reached("AAPL", Decimal("200.00"))
 
     assert "AAPL" in notification.message
+    assert "target of" in notification.message
     assert "200.00" in notification.message
 
 
