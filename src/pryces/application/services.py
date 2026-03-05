@@ -45,7 +45,8 @@ class NotificationService:
         if self._delay_window_checker.is_in_delay_window(stock):
             return
 
-        for message in stock.generate_notifications():
+        stock.generate_notifications()
+        for message in stock.drain_notifications():
             self._message_sender.send_message(message)
 
 
