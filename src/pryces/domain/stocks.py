@@ -426,10 +426,10 @@ class Stock:
         self._generate_regular_market_open_notification()
         if not had_market_open:
             return
-        self._generate_close_to_fifty_day_average_notification()
         self._generate_fifty_day_average_crossed_notification()
-        self._generate_close_to_two_hundred_day_average_notification()
+        self._generate_close_to_fifty_day_average_notification()
         self._generate_two_hundred_day_average_crossed_notification()
+        self._generate_close_to_two_hundred_day_average_notification()
         self._generate_percentage_change_from_previous_close_notification()
         self._generate_new_52_week_high_notification()
         self._generate_new_52_week_low_notification()
