@@ -52,6 +52,14 @@ def test_create_close_to_fifty_day_average_sets_type():
     assert notification.type == NotificationType.CLOSE_TO_SMA50
 
 
+def test_create_fifty_day_average_crossed_sets_message_with_zero_change():
+    notification = Notification.create_fifty_day_average_crossed(
+        "AAPL", Decimal("150.00"), Decimal("0"), Decimal("150.00")
+    )
+
+    assert "AAPL at 150.00 (+0.00%)" in notification.message
+
+
 def test_create_close_to_fifty_day_average_sets_below_direction():
     notification = Notification.create_close_to_fifty_day_average(
         "AAPL", Decimal("100.00"), Decimal("10.00"), Decimal("103.00")

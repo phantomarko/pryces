@@ -202,8 +202,13 @@ class Notification:
     def _format_price_change_prefix(
         symbol: str, current_price: Decimal, change_percentage: Decimal
     ) -> str:
-        verb = "rose to" if change_percentage >= 0 else "dropped to"
-        return f"{symbol} {verb} {current_price} ({change_percentage:+.2f}%)"
+        if change_percentage > 0:
+            union = "rose to"
+        elif change_percentage < 0:
+            union = "dropped to"
+        else:
+            union = "at"
+        return f"{symbol} {union} {current_price} ({change_percentage:+.2f}%)"
 
     @staticmethod
     def _create_price_change(
