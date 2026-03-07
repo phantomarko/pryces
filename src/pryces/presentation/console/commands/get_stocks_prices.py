@@ -1,14 +1,15 @@
-import logging
-
+from ....application.interfaces import LoggerFactory
 from ....application.use_cases.get_stocks_prices import GetStocksPrices, GetStocksPricesRequest
 from ..utils import format_stock_list, parse_symbols_input, validate_symbols
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 
 
 class GetStocksPricesCommand(Command):
-    def __init__(self, get_stocks_prices_use_case: GetStocksPrices) -> None:
+    def __init__(
+        self, get_stocks_prices_use_case: GetStocksPrices, logger_factory: LoggerFactory
+    ) -> None:
         self._get_stocks_prices = get_stocks_prices_use_case
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
 
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(

@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 
+
 from pryces.application.interfaces import MessageSender
 from pryces.application.use_cases.send_messages import SendMessages
 from pryces.presentation.console.commands.check_readiness import CheckReadinessCommand
@@ -11,7 +12,7 @@ class TestCheckReadinessCommand:
     def setup_method(self):
         self.mock_sender = Mock(spec=MessageSender)
         use_case = SendMessages(sender=self.mock_sender)
-        self.command = CheckReadinessCommand(use_case)
+        self.command = CheckReadinessCommand(use_case, logger_factory=Mock())
 
     def test_get_metadata_returns_correct_metadata(self):
         metadata = self.command.get_metadata()
@@ -37,7 +38,7 @@ class TestCheckReadinessEnv:
     def setup_method(self):
         self.mock_sender = Mock(spec=MessageSender)
         use_case = SendMessages(sender=self.mock_sender)
-        self.command = CheckReadinessCommand(use_case)
+        self.command = CheckReadinessCommand(use_case, logger_factory=Mock())
 
     @patch.dict(
         "os.environ",
@@ -254,7 +255,7 @@ class TestCheckReadinessTelegram:
     def setup_method(self):
         self.mock_sender = Mock(spec=MessageSender)
         use_case = SendMessages(sender=self.mock_sender)
-        self.command = CheckReadinessCommand(use_case)
+        self.command = CheckReadinessCommand(use_case, logger_factory=Mock())
 
     def test_telegram_ready_when_notification_sent(self):
         self.mock_sender.send_message.return_value = True
@@ -296,7 +297,7 @@ class TestCheckReadinessExecute:
         mock_sender = Mock(spec=MessageSender)
         mock_sender.send_message.return_value = True
         use_case = SendMessages(sender=mock_sender)
-        command = CheckReadinessCommand(use_case)
+        command = CheckReadinessCommand(use_case, logger_factory=Mock())
 
         result = command.execute()
 
@@ -317,7 +318,7 @@ class TestCheckReadinessExecute:
         mock_sender = Mock(spec=MessageSender)
         mock_sender.send_message.return_value = False
         use_case = SendMessages(sender=mock_sender)
-        command = CheckReadinessCommand(use_case)
+        command = CheckReadinessCommand(use_case, logger_factory=Mock())
 
         result = command.execute()
 

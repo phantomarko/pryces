@@ -39,3 +39,27 @@ class MessageSender(ABC):
     def send_message(self, message: str) -> bool:
         # Returns True when accepted for delivery — not necessarily delivered yet.
         pass
+
+
+class Logger(ABC):
+    @abstractmethod
+    def debug(self, message: str) -> None:
+        pass
+
+    @abstractmethod
+    def info(self, message: str) -> None:
+        pass
+
+    @abstractmethod
+    def warning(self, message: str) -> None:
+        pass
+
+    @abstractmethod
+    def error(self, message: str) -> None:
+        pass
+
+
+class LoggerFactory(ABC):
+    @abstractmethod
+    def get_logger(self, name: str) -> Logger:
+        pass

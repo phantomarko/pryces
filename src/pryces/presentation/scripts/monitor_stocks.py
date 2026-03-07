@@ -1,11 +1,11 @@
 import argparse
-import logging
 import sys
 import time
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+from ...application.interfaces import LoggerFactory
 from ...application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
@@ -23,7 +23,7 @@ from ...infrastructure.senders import (
     RetrySettings,
     TelegramMessageSender,
 )
-from pryces.infrastructure.logging import setup_monitor_logging
+from pryces.infrastructure.logging import PythonLoggerFactory, setup_monitor_logging
 from .config import ConfigManager, ConfigRefresher
 from .exceptions import ConfigLoadingFailed
 
@@ -34,11 +34,12 @@ class MonitorStocksScript:
         trigger_notifications: TriggerStocksNotifications,
         config_refresher: ConfigRefresher,
         duration: int,
+        logger_factory: LoggerFactory,
     ) -> None:
         self._trigger_notifications = trigger_notifications
         self._config_refresher = config_refresher
         self._duration_seconds = duration * 60
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
 
     def run(self) -> None:
         self._logger.info("Monitoring started.")
@@ -72,18 +73,26 @@ class _ScriptContext:
         self.message_sender = message_sender
 
 
-def _create_script(path: Path, duration: int, extra_delay_in_minutes: int = 0) -> _ScriptContext:
+def _create_script(
+    path: Path,
+    duration: int,
+    logger_factory: LoggerFactory,
+    extra_delay_in_minutes: int = 0,
+) -> _ScriptContext:
     yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings(
         extra_delay_in_minutes=extra_delay_in_minutes
     )
-    provider = YahooFinanceProvider(settings=yahoo_finance_settings)
+    provider = YahooFinanceProvider(settings=yahoo_finance_settings, logger_factory=logger_factory)
     telegram_settings = SettingsFactory.create_telegram_settings()
-    telegram_sender = TelegramMessageSender(settings=telegram_settings)
+    telegram_sender = TelegramMessageSender(
+        settings=telegram_settings, logger_factory=logger_factory
+    )
     retry_sender = RetryMessageSender(
         inner=telegram_sender,
         settings=RetrySettings(max_retries=3, base_delay=1.0, backoff_factor=2.0),
+        logger_factory=logger_factory,
     )
-    message_sender = FireAndForgetMessageSender(inner=retry_sender)
+    message_sender = FireAndForgetMessageSender(inner=retry_sender, logger_factory=logger_factory)
     transition_repository = InMemoryMarketTransitionRepository()
     delay_window_checker = DelayWindowChecker(transition_repository)
     notification_service = NotificationService(message_sender, delay_window_checker)
@@ -95,11 +104,12 @@ def _create_script(path: Path, duration: int, extra_delay_in_minutes: int = 0) -
     )
     config_manager = ConfigManager(path)
     config = config_manager.read_monitor_stocks_config()
-    config_refresher = ConfigRefresher(config_manager, config)
+    config_refresher = ConfigRefresher(config_manager, config, logger_factory)
     script = MonitorStocksScript(
         trigger_notifications=trigger_notifications,
         config_refresher=config_refresher,
         duration=duration,
+        logger_factory=logger_factory,
     )
     return _ScriptContext(script=script, message_sender=message_sender)
 
@@ -127,11 +137,13 @@ def main() -> int:
 
     load_dotenv()
     setup_monitor_logging(verbose=args.verbose, debug=args.debug)
+    logger_factory = PythonLoggerFactory()
 
     try:
         context = _create_script(
             args.config,
             duration=args.duration,
+            logger_factory=logger_factory,
             extra_delay_in_minutes=args.extra_delay,
         )
         try:
@@ -144,7 +156,7 @@ def main() -> int:
     except Exception as e:
         message = f"Monitor error: {e}"
         print(message)
-        logging.getLogger(__name__).error(message)
+        logger_factory.get_logger(__name__).error(message)
         return 1
 
     return 0

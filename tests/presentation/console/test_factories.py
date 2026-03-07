@@ -14,7 +14,9 @@ class TestCommandFactory:
         custom_provider = Mock(spec=StockProvider)
         custom_sender = Mock(spec=MessageSender)
 
-        factory = CommandFactory(stock_provider=custom_provider, message_sender=custom_sender)
+        factory = CommandFactory(
+            stock_provider=custom_provider, message_sender=custom_sender, logger_factory=Mock()
+        )
 
         assert factory._stock_provider is custom_provider
         assert factory._message_sender is custom_sender
@@ -22,7 +24,9 @@ class TestCommandFactory:
     def test_create_command_registry_returns_registry_instance(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider,
+            message_sender=Mock(spec=MessageSender),
+            logger_factory=Mock(),
         )
 
         registry = factory.create_command_registry()
@@ -32,7 +36,9 @@ class TestCommandFactory:
     def test__create_get_stocks_prices_command_returns_command_instance(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider,
+            message_sender=Mock(spec=MessageSender),
+            logger_factory=Mock(),
         )
 
         command = factory._create_get_stocks_prices_command()
@@ -42,7 +48,9 @@ class TestCommandFactory:
     def test_registry_contains_get_stocks_prices_command(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider,
+            message_sender=Mock(spec=MessageSender),
+            logger_factory=Mock(),
         )
 
         registry = factory.create_command_registry()
@@ -53,7 +61,9 @@ class TestCommandFactory:
     def test_registry_contains_check_readiness_command(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider,
+            message_sender=Mock(spec=MessageSender),
+            logger_factory=Mock(),
         )
 
         registry = factory.create_command_registry()
@@ -64,7 +74,9 @@ class TestCommandFactory:
     def test_registry_contains_monitor_stocks_command(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider,
+            message_sender=Mock(spec=MessageSender),
+            logger_factory=Mock(),
         )
 
         registry = factory.create_command_registry()
@@ -75,7 +87,9 @@ class TestCommandFactory:
     def test_monitor_stocks_is_first_command_in_registry(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
-            stock_provider=mock_provider, message_sender=Mock(spec=MessageSender)
+            stock_provider=mock_provider,
+            message_sender=Mock(spec=MessageSender),
+            logger_factory=Mock(),
         )
 
         registry = factory.create_command_registry()

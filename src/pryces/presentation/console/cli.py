@@ -1,30 +1,32 @@
 import argparse
-import logging
 import sys
 
 from dotenv import load_dotenv
 
+from ...application.interfaces import LoggerFactory
 from ...infrastructure.factories import SettingsFactory
+from ...infrastructure.logging import PythonLoggerFactory, setup_cli_logging
 from ...infrastructure.providers import YahooFinanceProvider
 from ...infrastructure.senders import RetryMessageSender, RetrySettings, TelegramMessageSender
-from ...infrastructure.logging import setup_cli_logging
 from .factories import CommandFactory
 from .menu import InteractiveMenu
 
 
-def _create_menu() -> InteractiveMenu:
+def _create_menu(logger_factory: LoggerFactory) -> InteractiveMenu:
     yahoo_finance_settings = SettingsFactory.create_yahoo_finance_settings()
-    provider = YahooFinanceProvider(settings=yahoo_finance_settings)
+    provider = YahooFinanceProvider(settings=yahoo_finance_settings, logger_factory=logger_factory)
 
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = RetryMessageSender(
-        inner=TelegramMessageSender(settings=telegram_settings),
+        inner=TelegramMessageSender(settings=telegram_settings, logger_factory=logger_factory),
         settings=RetrySettings(max_retries=3, base_delay=1.0, backoff_factor=2.0),
+        logger_factory=logger_factory,
     )
 
     factory = CommandFactory(
         stock_provider=provider,
         message_sender=message_sender,
+        logger_factory=logger_factory,
     )
 
     registry = factory.create_command_registry()
@@ -39,10 +41,11 @@ def main() -> int:
     load_dotenv()
 
     setup_cli_logging(debug=args.debug)
-    logger = logging.getLogger(__name__)
+    logger_factory = PythonLoggerFactory()
+    logger = logger_factory.get_logger(__name__)
 
     try:
-        menu = _create_menu()
+        menu = _create_menu(logger_factory)
         menu.run()
         return 0
 

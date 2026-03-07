@@ -1,7 +1,7 @@
-import logging
 import os
 from pathlib import Path
 
+from ....application.interfaces import LoggerFactory
 from ....application.use_cases.send_messages import SendMessages, SendMessagesRequest
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 
@@ -11,9 +11,9 @@ _WARNING = "Fix the errors above and restart the app for changes to take effect.
 
 
 class CheckReadinessCommand(Command):
-    def __init__(self, send_messages_use_case: SendMessages) -> None:
+    def __init__(self, send_messages_use_case: SendMessages, logger_factory: LoggerFactory) -> None:
         self._send_messages = send_messages_use_case
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
         self._all_ready = True
 
     def get_metadata(self) -> CommandMetadata:

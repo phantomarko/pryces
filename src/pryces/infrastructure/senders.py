@@ -1,5 +1,4 @@
 import json
-import logging
 import time
 import urllib.error
 import urllib.request
@@ -7,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from ..application.exceptions import MessageSendingFailed
-from ..application.interfaces import MessageSender
+from ..application.interfaces import LoggerFactory, MessageSender
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,9 +18,9 @@ class TelegramSettings:
 class TelegramMessageSender(MessageSender):
     _HEADERS = {"Content-Type": "application/json"}
 
-    def __init__(self, settings: TelegramSettings) -> None:
+    def __init__(self, settings: TelegramSettings, logger_factory: LoggerFactory) -> None:
         self._settings = settings
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
         self._url = f"https://api.telegram.org/bot{settings.bot_token}/sendMessage"
 
     def send_message(self, message: str) -> bool:
@@ -60,10 +59,12 @@ class RetrySettings:
 
 
 class RetryMessageSender(MessageSender):
-    def __init__(self, inner: MessageSender, settings: RetrySettings) -> None:
+    def __init__(
+        self, inner: MessageSender, settings: RetrySettings, logger_factory: LoggerFactory
+    ) -> None:
         self._inner = inner
         self._settings = settings
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
 
     def send_message(self, message: str) -> bool:
         attempt = 0
@@ -83,10 +84,10 @@ class RetryMessageSender(MessageSender):
 
 
 class FireAndForgetMessageSender(MessageSender):
-    def __init__(self, inner: MessageSender) -> None:
+    def __init__(self, inner: MessageSender, logger_factory: LoggerFactory) -> None:
         self._inner = inner
         self._executor = ThreadPoolExecutor(max_workers=1)
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
 
     def _send(self, message: str) -> None:
         try:

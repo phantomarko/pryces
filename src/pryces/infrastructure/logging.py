@@ -5,6 +5,8 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+from pryces.application.interfaces import Logger, LoggerFactory
+
 CLI_ENTRY_POINT = "cli"
 MONITOR_ENTRY_POINT = "monitor"
 
@@ -47,3 +49,25 @@ def setup_cli_logging(verbose: bool = False, debug: bool = False) -> None:
 
 def setup_monitor_logging(verbose: bool = False, debug: bool = False) -> None:
     _setup_logger(MONITOR_ENTRY_POINT, verbose=verbose, debug=debug)
+
+
+class PythonLogger(Logger):
+    def __init__(self, logger: logging.Logger) -> None:
+        self._logger = logger
+
+    def debug(self, message: str) -> None:
+        self._logger.debug(message)
+
+    def info(self, message: str) -> None:
+        self._logger.info(message)
+
+    def warning(self, message: str) -> None:
+        self._logger.warning(message)
+
+    def error(self, message: str) -> None:
+        self._logger.error(message)
+
+
+class PythonLoggerFactory(LoggerFactory):
+    def get_logger(self, name: str) -> Logger:
+        return PythonLogger(logging.getLogger(name))

@@ -6,6 +6,7 @@ import pytest
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
+from pryces.infrastructure.logging import PythonLoggerFactory
 from pryces.presentation.scripts.config import (
     ConfigManager,
     ConfigRefresher,
@@ -31,12 +32,16 @@ def make_config(**overrides) -> MonitorStocksConfig:
     return MonitorStocksConfig(**defaults)
 
 
-def make_refresher(config=None, config_manager=None) -> ConfigRefresher:
+def make_refresher(config=None, config_manager=None, logger_factory=None) -> ConfigRefresher:
     if config is None:
         config = make_config()
     if config_manager is None:
         config_manager = Mock(spec=ConfigManager)
-    return ConfigRefresher(config_manager=config_manager, config=config)
+    return ConfigRefresher(
+        config_manager=config_manager,
+        config=config,
+        logger_factory=logger_factory or Mock(),
+    )
 
 
 class TestConfigRefresherRemoveFulfilledTargets:
@@ -45,7 +50,7 @@ class TestConfigRefresherRemoveFulfilledTargets:
         self.mock_config_manager = Mock(spec=ConfigManager)
         self.config = make_config()
         self.refresher = ConfigRefresher(
-            config_manager=self.mock_config_manager, config=self.config
+            config_manager=self.mock_config_manager, config=self.config, logger_factory=Mock()
         )
 
     def test_does_nothing_when_fulfilled_is_empty(self):
@@ -123,7 +128,9 @@ class TestConfigRefresherRefresh:
         original = make_config()
         new_config = make_config(interval=10)
         mock_manager.read_monitor_stocks_config.return_value = new_config
-        refresher = ConfigRefresher(config_manager=mock_manager, config=original)
+        refresher = ConfigRefresher(
+            config_manager=mock_manager, config=original, logger_factory=Mock()
+        )
 
         refresher.refresh()
 
@@ -133,7 +140,9 @@ class TestConfigRefresherRefresh:
         mock_manager = Mock(spec=ConfigManager)
         config = make_config()
         mock_manager.read_monitor_stocks_config.return_value = config
-        refresher = ConfigRefresher(config_manager=mock_manager, config=config)
+        refresher = ConfigRefresher(
+            config_manager=mock_manager, config=config, logger_factory=Mock()
+        )
 
         refresher.refresh()
 
@@ -143,7 +152,9 @@ class TestConfigRefresherRefresh:
         mock_manager = Mock(spec=ConfigManager)
         original = make_config()
         mock_manager.read_monitor_stocks_config.side_effect = Exception("disk error")
-        refresher = ConfigRefresher(config_manager=mock_manager, config=original)
+        refresher = ConfigRefresher(
+            config_manager=mock_manager, config=original, logger_factory=Mock()
+        )
 
         refresher.refresh()
 
@@ -154,7 +165,7 @@ class TestConfigRefresherLogConfig:
 
     def test_logs_monitoring_cadence_and_symbols(self, caplog):
         config = make_config()
-        refresher = make_refresher(config=config)
+        refresher = make_refresher(config=config, logger_factory=PythonLoggerFactory())
 
         with caplog.at_level(logging.INFO):
             refresher.log_config()

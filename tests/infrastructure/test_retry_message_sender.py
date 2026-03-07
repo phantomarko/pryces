@@ -1,18 +1,24 @@
 import logging
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
 from pryces.application.exceptions import MessageSendingFailed
+from pryces.infrastructure.logging import PythonLoggerFactory
 from pryces.infrastructure.senders import RetryMessageSender, RetrySettings
 
 
-def _make_sender(max_retries=3, base_delay=1.0, backoff_factor=2.0) -> RetryMessageSender:
+def _make_sender(
+    max_retries=3, base_delay=1.0, backoff_factor=2.0, logger_factory=None
+) -> RetryMessageSender:
     inner = MagicMock()
     settings = RetrySettings(
         max_retries=max_retries, base_delay=base_delay, backoff_factor=backoff_factor
     )
-    return RetryMessageSender(inner=inner, settings=settings), inner
+    return (
+        RetryMessageSender(inner=inner, settings=settings, logger_factory=logger_factory or Mock()),
+        inner,
+    )
 
 
 class TestRetryMessageSender:
@@ -69,7 +75,7 @@ class TestRetryMessageSender:
         assert mock_sleep.call_args_list == [call(1.0), call(2.0), call(4.0)]
 
     def test_warning_logged_on_each_retry(self, caplog):
-        sender, inner = _make_sender(max_retries=2)
+        sender, inner = _make_sender(max_retries=2, logger_factory=PythonLoggerFactory())
         inner.send_message.side_effect = MessageSendingFailed("timeout", retryable=True)
 
         with patch("pryces.infrastructure.senders.time.sleep"):

@@ -1,4 +1,4 @@
-from ...application.interfaces import MessageSender, StockProvider
+from ...application.interfaces import LoggerFactory, MessageSender, StockProvider
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
 from .commands.get_stocks_prices import GetStocksPricesCommand
@@ -10,20 +10,30 @@ from .commands.stop_monitor import StopMonitorCommand
 
 
 class CommandFactory:
-    def __init__(self, stock_provider: StockProvider, message_sender: MessageSender) -> None:
+    def __init__(
+        self,
+        stock_provider: StockProvider,
+        message_sender: MessageSender,
+        logger_factory: LoggerFactory,
+    ) -> None:
         self._stock_provider = stock_provider
         self._message_sender = message_sender
+        self._logger_factory = logger_factory
 
     def _create_monitor_stocks_command(self) -> MonitorStocksCommand:
         return MonitorStocksCommand()
 
     def _create_get_stocks_prices_command(self) -> GetStocksPricesCommand:
         use_case = GetStocksPrices(provider=self._stock_provider)
-        return GetStocksPricesCommand(get_stocks_prices_use_case=use_case)
+        return GetStocksPricesCommand(
+            get_stocks_prices_use_case=use_case, logger_factory=self._logger_factory
+        )
 
     def _create_check_readiness_command(self) -> CheckReadinessCommand:
         use_case = SendMessages(sender=self._message_sender)
-        return CheckReadinessCommand(send_messages_use_case=use_case)
+        return CheckReadinessCommand(
+            send_messages_use_case=use_case, logger_factory=self._logger_factory
+        )
 
     def _create_list_monitors_command(self) -> ListMonitorsCommand:
         return ListMonitorsCommand()

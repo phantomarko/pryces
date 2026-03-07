@@ -1,13 +1,14 @@
 import logging
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from pryces.application.exceptions import MessageSendingFailed
+from pryces.infrastructure.logging import PythonLoggerFactory
 from pryces.infrastructure.senders import FireAndForgetMessageSender
 
 
 class TestFireAndForgetMessageSender:
-    def _create_sender(self, inner: MagicMock) -> FireAndForgetMessageSender:
-        sender = FireAndForgetMessageSender(inner=inner)
+    def _create_sender(self, inner: MagicMock, logger_factory=None) -> FireAndForgetMessageSender:
+        sender = FireAndForgetMessageSender(inner=inner, logger_factory=logger_factory or Mock())
         return sender
 
     def test_send_message_returns_true(self):
@@ -45,7 +46,7 @@ class TestFireAndForgetMessageSender:
     def test_inner_exception_is_caught_and_logged(self, caplog):
         inner = MagicMock()
         inner.send_message.side_effect = MessageSendingFailed("connection failed")
-        sender = self._create_sender(inner)
+        sender = self._create_sender(inner, logger_factory=PythonLoggerFactory())
 
         result = sender.send_message("hello")
         sender.shutdown()

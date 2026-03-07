@@ -1,11 +1,10 @@
-import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from decimal import Decimal
 
 import yfinance as yf
 
-from ..application.interfaces import StockProvider
+from ..application.interfaces import LoggerFactory, StockProvider
 from ..domain.stocks import MarketState, Stock
 
 
@@ -16,9 +15,9 @@ class YahooFinanceSettings:
 
 
 class YahooFinanceMapper:
-    def __init__(self, extra_delay_in_minutes: int) -> None:
+    def __init__(self, extra_delay_in_minutes: int, logger_factory: LoggerFactory) -> None:
         self._extra_delay_in_minutes = extra_delay_in_minutes
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
 
     def map(self, symbol: str, info: dict) -> Stock | None:
         # yfinance returns a small metadata-only dict (≤3 keys) for invalid/delisted symbols
@@ -96,10 +95,10 @@ class YahooFinanceMapper:
 
 
 class YahooFinanceProvider(StockProvider):
-    def __init__(self, settings: YahooFinanceSettings) -> None:
+    def __init__(self, settings: YahooFinanceSettings, logger_factory: LoggerFactory) -> None:
         self._max_workers = settings.max_workers
-        self._mapper = YahooFinanceMapper(settings.extra_delay_in_minutes)
-        self._logger = logging.getLogger(__name__)
+        self._mapper = YahooFinanceMapper(settings.extra_delay_in_minutes, logger_factory)
+        self._logger = logger_factory.get_logger(__name__)
 
     def _get_stock(self, symbol: str) -> Stock | None:
         try:

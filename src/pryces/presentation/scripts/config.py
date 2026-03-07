@@ -1,10 +1,10 @@
 import json
-import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 
 from ...application.dtos import TargetPriceDTO
+from ...application.interfaces import LoggerFactory
 from .exceptions import ConfigLoadingFailed
 
 
@@ -62,10 +62,15 @@ class ConfigManager:
 
 
 class ConfigRefresher:
-    def __init__(self, config_manager: ConfigManager, config: MonitorStocksConfig) -> None:
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        config: MonitorStocksConfig,
+        logger_factory: LoggerFactory,
+    ) -> None:
         self._config_manager = config_manager
         self._config = config
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger_factory.get_logger(__name__)
 
     @property
     def config(self) -> MonitorStocksConfig:

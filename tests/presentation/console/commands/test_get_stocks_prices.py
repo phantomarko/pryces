@@ -16,7 +16,7 @@ class TestGetStocksPricesCommand:
     def setup_method(self):
         self.mock_provider = Mock(spec=StockProvider)
         use_case = GetStocksPrices(provider=self.mock_provider)
-        self.command = GetStocksPricesCommand(use_case)
+        self.command = GetStocksPricesCommand(use_case, logger_factory=Mock())
 
     def test_execute_returns_formatted_multiple_stocks(self):
         symbols = "AAPL,GOOGL,MSFT"
