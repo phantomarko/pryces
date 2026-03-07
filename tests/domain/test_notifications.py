@@ -336,6 +336,32 @@ def test_create_target_price_reached_sets_message():
     assert "200.00" in notification.message
 
 
+def test_create_session_gains_erased_sets_type():
+    notification = Notification.create_session_gains_erased("AAPL", Decimal("10"), Decimal("-1.54"))
+
+    assert notification.type == NotificationType.SESSION_GAINS_ERASED
+
+
+def test_create_session_gains_erased_sets_message():
+    notification = Notification.create_session_gains_erased("AAPL", Decimal("10"), Decimal("-1.54"))
+
+    assert "AAPL dropped to 10 (-1.54%)" in notification.message
+    assert "erased the session gains" in notification.message
+
+
+def test_create_session_losses_erased_sets_type():
+    notification = Notification.create_session_losses_erased("AAPL", Decimal("10"), Decimal("0.54"))
+
+    assert notification.type == NotificationType.SESSION_LOSSES_ERASED
+
+
+def test_create_session_losses_erased_sets_message():
+    notification = Notification.create_session_losses_erased("AAPL", Decimal("10"), Decimal("0.54"))
+
+    assert "AAPL rose to 10 (+0.54%)" in notification.message
+    assert "erased the session losses" in notification.message
+
+
 def test_notification_type_enum_has_expected_values():
     assert NotificationType.SMA50_CROSSED.value == "SMA50_CROSSED"
     assert NotificationType.SMA200_CROSSED.value == "SMA200_CROSSED"
@@ -351,6 +377,8 @@ def test_notification_type_enum_has_expected_values():
     assert NotificationType.TEN_PERCENT_DECREASE.value == "TEN_PERCENT_DECREASE"
     assert NotificationType.FIFTEEN_PERCENT_DECREASE.value == "FIFTEEN_PERCENT_DECREASE"
     assert NotificationType.TWENTY_PERCENT_DECREASE.value == "TWENTY_PERCENT_DECREASE"
+    assert NotificationType.SESSION_GAINS_ERASED.value == "SESSION_GAINS_ERASED"
+    assert NotificationType.SESSION_LOSSES_ERASED.value == "SESSION_LOSSES_ERASED"
     assert NotificationType.NEW_52_WEEK_HIGH.value == "NEW_52_WEEK_HIGH"
     assert NotificationType.NEW_52_WEEK_LOW.value == "NEW_52_WEEK_LOW"
     assert NotificationType.TARGET_PRICE_REACHED.value == "TARGET_PRICE_REACHED"

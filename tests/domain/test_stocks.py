@@ -1507,6 +1507,175 @@ class TestPercentageSuppressedBySMA:
         assert len(percentage_messages) == 0
 
 
+class TestSessionGainsLossesErased:
+    def _create_stock_with_percentage_history(self, initial_price, previous_close, final_price):
+        """Creates a stock that has gone through: market open → percentage threshold → price change."""
+        stock = Stock(
+            symbol="AAPL",
+            current_price=initial_price,
+            previous_close_price=previous_close,
+            market_state=MarketState.OPEN,
+        )
+        # Cycle 1: market open
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Cycle 2: percentage threshold fires
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Update to final price
+        source = Stock(
+            symbol="AAPL",
+            current_price=final_price,
+            previous_close_price=previous_close,
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        return stock
+
+    def test_gains_erased_fires_when_positive_threshold_recorded_and_price_below_zero(self):
+        # +21% triggers threshold, then drops to -1%
+        stock = self._create_stock_with_percentage_history(
+            Decimal("121.00"), Decimal("100.00"), Decimal("99.00")
+        )
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("erased the session gains" in m for m in messages)
+
+    def test_losses_erased_fires_when_negative_threshold_recorded_and_price_above_zero(self):
+        # -10% triggers threshold, then rises to +1%
+        stock = self._create_stock_with_percentage_history(
+            Decimal("90.00"), Decimal("100.00"), Decimal("101.00")
+        )
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("erased the session losses" in m for m in messages)
+
+    def test_gains_erased_does_not_fire_without_prior_percentage_threshold(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("103.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Price drops below 0% but no percentage threshold was ever recorded
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("99.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("erased the session" in m for m in messages)
+
+    def test_losses_erased_does_not_fire_without_prior_percentage_threshold(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("97.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Price rises above 0% but no percentage threshold was ever recorded
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("101.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("erased the session" in m for m in messages)
+
+    def test_gains_erased_does_not_fire_when_still_positive(self):
+        # +21% triggers threshold, drops to +2% (still positive, no crossing)
+        stock = self._create_stock_with_percentage_history(
+            Decimal("121.00"), Decimal("100.00"), Decimal("102.00")
+        )
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("erased the session gains" in m for m in messages)
+
+    def test_losses_erased_does_not_fire_when_still_negative(self):
+        # -10% triggers threshold, rises to -2% (still negative, no crossing)
+        stock = self._create_stock_with_percentage_history(
+            Decimal("90.00"), Decimal("100.00"), Decimal("98.00")
+        )
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("erased the session losses" in m for m in messages)
+
+    def test_gains_erased_dedup_does_not_fire_twice(self):
+        stock = self._create_stock_with_percentage_history(
+            Decimal("121.00"), Decimal("100.00"), Decimal("99.00")
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        # Next cycle: should not fire again
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("erased the session gains" in m for m in messages)
+
+    def test_losses_erased_dedup_does_not_fire_twice(self):
+        stock = self._create_stock_with_percentage_history(
+            Decimal("90.00"), Decimal("100.00"), Decimal("101.00")
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("erased the session losses" in m for m in messages)
+
+    def test_gains_erased_not_suppressed_by_sma(self):
+        # Stock with SMA crossing + percentage threshold + price drops below 0%
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("121.00"),
+            previous_close_price=Decimal("100.00"),
+            fifty_day_average=Decimal("110.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Price drops below 0% with SMA close-to still relevant
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("99.00"),
+            previous_close_price=Decimal("100.00"),
+            fifty_day_average=Decimal("100.50"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("erased the session gains" in m for m in messages)
+
+
 class TestTargetPriceNotifications:
     def test_generate_notifications_appends_target_price_reached_when_target_is_reached(self):
         stock = Stock(

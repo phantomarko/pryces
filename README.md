@@ -37,6 +37,8 @@ The following events are detected and sent as Telegram messages during a monitor
 - Price is close to crossing the 50-day or 200-day moving average (within 5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
+- Session gains erased (price crossed back below 0% after a positive percentage threshold)
+- Session losses erased (price crossed back above 0% after a negative percentage threshold)
 - Price set a new 52-week high or low (compared to the previous monitoring run)
 - Price reached a configured target level
 

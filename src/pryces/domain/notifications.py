@@ -19,6 +19,8 @@ class NotificationType(Enum):
     TEN_PERCENT_DECREASE = "TEN_PERCENT_DECREASE"
     FIFTEEN_PERCENT_DECREASE = "FIFTEEN_PERCENT_DECREASE"
     TWENTY_PERCENT_DECREASE = "TWENTY_PERCENT_DECREASE"
+    SESSION_GAINS_ERASED = "SESSION_GAINS_ERASED"
+    SESSION_LOSSES_ERASED = "SESSION_LOSSES_ERASED"
     NEW_52_WEEK_HIGH = "NEW_52_WEEK_HIGH"
     NEW_52_WEEK_LOW = "NEW_52_WEEK_LOW"
     TARGET_PRICE_REACHED = "TARGET_PRICE_REACHED"
@@ -198,6 +200,26 @@ class Notification:
             symbol,
             current_price,
             change_percentage,
+        )
+
+    @staticmethod
+    def create_session_gains_erased(
+        symbol: str, current_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        message = f"{prefix}, erased the session gains"
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.SESSION_GAINS_ERASED, message
+        )
+
+    @staticmethod
+    def create_session_losses_erased(
+        symbol: str, current_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        message = f"{prefix}, erased the session losses"
+        return Notification(
+            Notification._CREATION_KEY, NotificationType.SESSION_LOSSES_ERASED, message
         )
 
     @staticmethod

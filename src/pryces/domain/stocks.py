@@ -401,6 +401,52 @@ class Stock:
             else:
                 self._pending_notifications.append(notification)
 
+    def _has_any_increase_percentage_notification(self) -> bool:
+        increase_types = {
+            NotificationType.FIVE_PERCENT_INCREASE,
+            NotificationType.TEN_PERCENT_INCREASE,
+            NotificationType.FIFTEEN_PERCENT_INCREASE,
+            NotificationType.TWENTY_PERCENT_INCREASE,
+        }
+        return any(n.type in increase_types for n in self._notifications)
+
+    def _has_any_decrease_percentage_notification(self) -> bool:
+        decrease_types = {
+            NotificationType.FIVE_PERCENT_DECREASE,
+            NotificationType.TEN_PERCENT_DECREASE,
+            NotificationType.FIFTEEN_PERCENT_DECREASE,
+            NotificationType.TWENTY_PERCENT_DECREASE,
+        }
+        return any(n.type in decrease_types for n in self._notifications)
+
+    def _generate_session_gains_erased_notification(self) -> None:
+        change_percentage = self._change_percentage_from_previous_close()
+        if (
+            change_percentage is not None
+            and change_percentage < 0
+            and self._has_any_increase_percentage_notification()
+            and not self._has_notification_type(NotificationType.SESSION_GAINS_ERASED)
+        ):
+            self._pending_notifications.append(
+                Notification.create_session_gains_erased(
+                    self.symbol, self.current_price, change_percentage
+                )
+            )
+
+    def _generate_session_losses_erased_notification(self) -> None:
+        change_percentage = self._change_percentage_from_previous_close()
+        if (
+            change_percentage is not None
+            and change_percentage > 0
+            and self._has_any_decrease_percentage_notification()
+            and not self._has_notification_type(NotificationType.SESSION_LOSSES_ERASED)
+        ):
+            self._pending_notifications.append(
+                Notification.create_session_losses_erased(
+                    self.symbol, self.current_price, change_percentage
+                )
+            )
+
     def _has_pending_sma_notification(self) -> bool:
         sma_types = {
             NotificationType.SMA50_CROSSED,
@@ -432,6 +478,8 @@ class Stock:
         self._generate_two_hundred_day_average_crossed_notification()
         self._generate_close_to_two_hundred_day_average_notification()
         self._generate_percentage_change_from_previous_close_notification()
+        self._generate_session_gains_erased_notification()
+        self._generate_session_losses_erased_notification()
         self._generate_new_52_week_high_notification()
         self._generate_new_52_week_low_notification()
         self._generate_target_price_notifications()
