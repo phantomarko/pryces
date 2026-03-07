@@ -19,6 +19,8 @@ from ...infrastructure.repositories import (
 )
 from ...infrastructure.senders import (
     FireAndForgetMessageSender,
+    RetryMessageSender,
+    RetrySettings,
     TelegramMessageSender,
 )
 from pryces.infrastructure.logging import setup_monitor_logging
@@ -77,7 +79,11 @@ def _create_script(path: Path, duration: int, extra_delay_in_minutes: int = 0) -
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
     telegram_settings = SettingsFactory.create_telegram_settings()
     telegram_sender = TelegramMessageSender(settings=telegram_settings)
-    message_sender = FireAndForgetMessageSender(inner=telegram_sender)
+    retry_sender = RetryMessageSender(
+        inner=telegram_sender,
+        settings=RetrySettings(max_retries=3, base_delay=1.0, backoff_factor=2.0),
+    )
+    message_sender = FireAndForgetMessageSender(inner=retry_sender)
     transition_repository = InMemoryMarketTransitionRepository()
     delay_window_checker = DelayWindowChecker(transition_repository)
     notification_service = NotificationService(message_sender, delay_window_checker)

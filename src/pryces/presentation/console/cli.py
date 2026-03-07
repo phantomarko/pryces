@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.providers import YahooFinanceProvider
-from ...infrastructure.senders import TelegramMessageSender
+from ...infrastructure.senders import RetryMessageSender, RetrySettings, TelegramMessageSender
 from ...infrastructure.logging import setup_cli_logging
 from .factories import CommandFactory
 from .menu import InteractiveMenu
@@ -17,7 +17,10 @@ def _create_menu() -> InteractiveMenu:
     provider = YahooFinanceProvider(settings=yahoo_finance_settings)
 
     telegram_settings = SettingsFactory.create_telegram_settings()
-    message_sender = TelegramMessageSender(settings=telegram_settings)
+    message_sender = RetryMessageSender(
+        inner=TelegramMessageSender(settings=telegram_settings),
+        settings=RetrySettings(max_retries=3, base_delay=1.0, backoff_factor=2.0),
+    )
 
     factory = CommandFactory(
         stock_provider=provider,

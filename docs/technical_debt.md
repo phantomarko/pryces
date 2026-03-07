@@ -76,25 +76,6 @@ Ports use `None`-returns and `bool`-returns instead. This is inconsistent — th
 for a purpose but the interfaces use a different error signaling mechanism.
 **Suggestion:** Either wire the exceptions into the ports/use cases (preferred) or remove them.
 
-### 9. `FireAndForgetMessageSender` violates LSP
-**File:** `infrastructure/senders.py`
-**Violation:** LSP
-Always returns `True` regardless of whether the message will actually be sent. Callers relying
-on the return value (e.g., `SendMessages` use case) get incorrect results. The two
-`MessageSender` implementations are not interchangeable.
-**Suggestion:** Document in the port interface that `True` means "accepted for delivery" (not
-"delivered"), so both implementations share the same postcondition.
-
-### 10. `TelegramMessageSender` — inconsistent error handling + leaking infra exceptions
-**File:** `infrastructure/senders.py`
-**Violation:** DIP, Consistency
-Two different failure modes: raises `MessageSendingFailed` on HTTP errors but returns `False`
-on API logical failures (`ok=false`). Also only catches `HTTPError` — `URLError` (DNS, timeout,
-connection refused) propagates as raw urllib exceptions, leaking infrastructure details to the
-application layer.
-**Suggestion:** Raise `MessageSendingFailed` in all failure cases. Catch `URLError` and `OSError`
-too, wrapping with `from e` chaining. Keep `HTTPError` first (it's a subclass of `URLError`).
-
 ### 11. `YahooFinanceProvider._get_stock` — no exception handling
 **File:** `infrastructure/providers.py`
 **Violation:** Clean Code
@@ -169,8 +150,6 @@ aggregate behavior.
 | Medium | 4 | Fix `logging.py` env access + magic constants |
 | Medium | 7 | `NotificationService` ignores send failures |
 | Medium | 8 | Dead exception classes — wire or remove |
-| Medium | 9 | `FireAndForgetMessageSender` LSP violation |
-| Medium | 10 | `TelegramMessageSender` inconsistent error handling + leaking exceptions |
 | Medium | 11 | `YahooFinanceProvider` inconsistent exception handling |
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |

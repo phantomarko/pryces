@@ -1,6 +1,7 @@
 import logging
 from unittest.mock import MagicMock
 
+from pryces.application.exceptions import MessageSendingFailed
 from pryces.infrastructure.senders import FireAndForgetMessageSender
 
 
@@ -43,18 +44,18 @@ class TestFireAndForgetMessageSender:
 
     def test_inner_exception_is_caught_and_logged(self, caplog):
         inner = MagicMock()
-        inner.send_message.side_effect = RuntimeError("connection failed")
+        inner.send_message.side_effect = MessageSendingFailed("connection failed")
         sender = self._create_sender(inner)
 
         result = sender.send_message("hello")
         sender.shutdown()
 
         assert result is True
-        assert "Failed to send message: connection failed" in caplog.text
+        assert "Failed to send message" in caplog.text
 
     def test_inner_exception_does_not_prevent_subsequent_messages(self):
         inner = MagicMock()
-        inner.send_message.side_effect = [RuntimeError("fail"), None]
+        inner.send_message.side_effect = [MessageSendingFailed("fail"), None]
         sender = self._create_sender(inner)
 
         sender.send_message("first")

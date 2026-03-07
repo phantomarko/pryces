@@ -5,5 +5,6 @@ class StockNotFound(Exception):
 
 
 class MessageSendingFailed(Exception):
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, retryable: bool = False) -> None:
+        self.retryable = retryable
         super().__init__(f"Message sending failed: {reason}")

@@ -37,4 +37,5 @@ class MarketTransitionRepository(ABC):
 class MessageSender(ABC):
     @abstractmethod
     def send_message(self, message: str) -> bool:
+        # Returns True when accepted for delivery — not necessarily delivered yet.
         pass
