@@ -60,22 +60,6 @@ Inconsistent with the `SettingsFactory` pattern used elsewhere. Also has unexpla
 magic constants (`5 * 1024 * 1024`, `backupCount=3`).
 **Suggestion:** Either use `SettingsFactory` or extract constants with explanatory names.
 
-### 7. `NotificationService` ignores send failures
-**File:** `application/services.py`
-**Violation:** Clean Code
-`send_stock_notifications` calls `self._message_sender.send_message(message)` but ignores the
-`bool` return value. Failed sends are completely silent — no logging, no error propagation.
-Compare with `SendMessages` use case which properly tracks success/failure counts.
-**Suggestion:** At minimum, log failed sends so operational issues are observable.
-
-### 8. Dead exception classes — incomplete error-handling strategy
-**File:** `application/exceptions.py`
-**Violation:** Clean Code (dead code)
-`StockNotFound` and `MessageSendingFailed` are defined but never raised or caught anywhere.
-Ports use `None`-returns and `bool`-returns instead. This is inconsistent — the exceptions exist
-for a purpose but the interfaces use a different error signaling mechanism.
-**Suggestion:** Either wire the exceptions into the ports/use cases (preferred) or remove them.
-
 ### 11. `YahooFinanceProvider._get_stock` — no exception handling
 **File:** `infrastructure/providers.py`
 **Violation:** Clean Code
@@ -148,8 +132,6 @@ aggregate behavior.
 | Medium | 2 | `tuple` instead of `list` in `SymbolConfig` |
 | Medium | 3 | Add `from e` in `ConfigManager` exception re-raise (all 3 branches) |
 | Medium | 4 | Fix `logging.py` env access + magic constants |
-| Medium | 7 | `NotificationService` ignores send failures |
-| Medium | 8 | Dead exception classes — wire or remove |
 | Medium | 11 | `YahooFinanceProvider` inconsistent exception handling |
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
