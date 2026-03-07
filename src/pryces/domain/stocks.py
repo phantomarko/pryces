@@ -308,8 +308,11 @@ class Stock:
             and self.current_price > self._snapshot.fifty_two_week_high
             and not self._has_notification_type(NotificationType.NEW_52_WEEK_HIGH)
         ):
+            change_pct = self._change_percentage_from_previous_close()
+            if change_pct is None:
+                return
             self._pending_notifications.append(
-                Notification.create_new_52_week_high(self.symbol, self.current_price)
+                Notification.create_new_52_week_high(self.symbol, self.current_price, change_pct)
             )
 
     def _generate_new_52_week_low_notification(self) -> None:
@@ -319,8 +322,11 @@ class Stock:
             and self.current_price < self._snapshot.fifty_two_week_low
             and not self._has_notification_type(NotificationType.NEW_52_WEEK_LOW)
         ):
+            change_pct = self._change_percentage_from_previous_close()
+            if change_pct is None:
+                return
             self._pending_notifications.append(
-                Notification.create_new_52_week_low(self.symbol, self.current_price)
+                Notification.create_new_52_week_low(self.symbol, self.current_price, change_pct)
             )
 
     def _generate_regular_market_open_notification(self) -> None:
@@ -396,7 +402,7 @@ class Stock:
             return
         notification = self._generate_percentage_change_notification(change_percentage)
         if notification is not None and not self._has_notification_type(notification.type):
-            if self._has_pending_sma_notification():
+            if self._has_pending_sma_notification() or self._has_pending_52_week_notification():
                 self._notifications.append(notification)
             else:
                 self._pending_notifications.append(notification)
@@ -456,6 +462,13 @@ class Stock:
         }
         return any(n.type in sma_types for n in self._pending_notifications)
 
+    def _has_pending_52_week_notification(self) -> bool:
+        week_types = {
+            NotificationType.NEW_52_WEEK_HIGH,
+            NotificationType.NEW_52_WEEK_LOW,
+        }
+        return any(n.type in week_types for n in self._pending_notifications)
+
     def _generate_target_price_notifications(self) -> None:
         remaining: list[TargetPrice] = []
         for target in self._targets:
@@ -477,11 +490,11 @@ class Stock:
         self._generate_close_to_fifty_day_average_notification()
         self._generate_two_hundred_day_average_crossed_notification()
         self._generate_close_to_two_hundred_day_average_notification()
+        self._generate_new_52_week_high_notification()
+        self._generate_new_52_week_low_notification()
         self._generate_percentage_change_from_previous_close_notification()
         self._generate_session_gains_erased_notification()
         self._generate_session_losses_erased_notification()
-        self._generate_new_52_week_high_notification()
-        self._generate_new_52_week_low_notification()
         self._generate_target_price_notifications()
 
     def _generate_regular_market_closed_notification(self) -> None:

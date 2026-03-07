@@ -995,7 +995,7 @@ class Test52WeekHighNotifications:
 
         assert not any("52-week high" in m for m in messages)
 
-    def test_generate_new_52_week_high_notification_adds_when_current_price_exceeds_snapshot_52_week_high(
+    def test_generate_new_52_week_high_notification_does_not_add_when_no_previous_close(
         self,
     ):
         stock = Stock(
@@ -1008,6 +1008,31 @@ class Test52WeekHighNotifications:
         stock.drain_notifications()
         source = Stock(
             symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("52-week high" in m for m in messages)
+
+    def test_generate_new_52_week_high_notification_adds_when_current_price_exceeds_snapshot_52_week_high(
+        self,
+    ):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("170.00"),
+            previous_close_price=Decimal("160.00"),
+            fifty_two_week_high=Decimal("180.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            previous_close_price=Decimal("160.00"),
+            market_state=MarketState.OPEN,
         )
         stock.update(source)
 
@@ -1078,7 +1103,7 @@ class Test52WeekLowNotifications:
 
         assert not any("52-week low" in m for m in messages)
 
-    def test_generate_new_52_week_low_notification_adds_when_current_price_falls_below_snapshot_52_week_low(
+    def test_generate_new_52_week_low_notification_does_not_add_when_no_previous_close(
         self,
     ):
         stock = Stock(
@@ -1091,6 +1116,31 @@ class Test52WeekLowNotifications:
         stock.drain_notifications()
         source = Stock(
             symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert not any("52-week low" in m for m in messages)
+
+    def test_generate_new_52_week_low_notification_adds_when_current_price_falls_below_snapshot_52_week_low(
+        self,
+    ):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("130.00"),
+            previous_close_price=Decimal("125.00"),
+            fifty_two_week_low=Decimal("120.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            previous_close_price=Decimal("125.00"),
+            market_state=MarketState.OPEN,
         )
         stock.update(source)
 
@@ -1504,6 +1554,83 @@ class TestPercentageSuppressedBySMA:
         messages = stock.drain_notifications()
 
         percentage_messages = [m for m in messages if "rose to" in m and "crossed" not in m]
+        assert len(percentage_messages) == 0
+
+
+class TestPercentageSuppressedBy52Week:
+    def test_percentage_suppressed_when_new_52_week_high(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("170.00"),
+            previous_close_price=Decimal("160.00"),
+            fifty_two_week_high=Decimal("180.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            previous_close_price=Decimal("160.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("52-week high" in m for m in messages)
+        assert not any("rose to" in m and "52-week" not in m for m in messages)
+
+    def test_percentage_suppressed_when_new_52_week_low(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("130.00"),
+            previous_close_price=Decimal("125.00"),
+            fifty_two_week_low=Decimal("120.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            previous_close_price=Decimal("125.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("52-week low" in m for m in messages)
+        assert not any("dropped to" in m and "52-week" not in m for m in messages)
+
+    def test_dedup_preserved_after_52_week_suppression(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("170.00"),
+            previous_close_price=Decimal("160.00"),
+            fifty_two_week_high=Decimal("180.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            previous_close_price=Decimal("160.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        stock.generate_notifications()
+        stock.drain_notifications()
+
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        percentage_messages = [m for m in messages if "rose to" in m and "52-week" not in m]
         assert len(percentage_messages) == 0
 
 

@@ -245,13 +245,19 @@ class Notification:
         return Notification(Notification._CREATION_KEY, notification_type, message)
 
     @staticmethod
-    def create_new_52_week_high(symbol: str, current_price: Decimal) -> "Notification":
-        message = f"{symbol} hit a new 52-week high at {current_price}"
+    def create_new_52_week_high(
+        symbol: str, current_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        message = f"{prefix}, hit a new 52-week high"
         return Notification(Notification._CREATION_KEY, NotificationType.NEW_52_WEEK_HIGH, message)
 
     @staticmethod
-    def create_new_52_week_low(symbol: str, current_price: Decimal) -> "Notification":
-        message = f"{symbol} hit a new 52-week low at {current_price}"
+    def create_new_52_week_low(
+        symbol: str, current_price: Decimal, change_percentage: Decimal
+    ) -> "Notification":
+        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        message = f"{prefix}, hit a new 52-week low"
         return Notification(Notification._CREATION_KEY, NotificationType.NEW_52_WEEK_LOW, message)
 
     @staticmethod

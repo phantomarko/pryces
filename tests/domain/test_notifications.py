@@ -297,29 +297,27 @@ def test_create_twenty_percent_decrease_sets_message():
 
 
 def test_create_new_52_week_high_sets_type():
-    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"))
+    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"), Decimal("5.00"))
 
     assert notification.type == NotificationType.NEW_52_WEEK_HIGH
 
 
 def test_create_new_52_week_high_sets_message():
-    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"))
+    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"), Decimal("5.00"))
 
-    assert isinstance(notification.message, str)
-    assert len(notification.message) > 0
+    assert notification.message == "AAPL rose to 225.50 (+5.00%), hit a new 52-week high"
 
 
 def test_create_new_52_week_low_sets_type():
-    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"))
+    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"), Decimal("-3.50"))
 
     assert notification.type == NotificationType.NEW_52_WEEK_LOW
 
 
 def test_create_new_52_week_low_sets_message():
-    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"))
+    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"), Decimal("-3.50"))
 
-    assert isinstance(notification.message, str)
-    assert len(notification.message) > 0
+    assert notification.message == "AAPL dropped to 142.30 (-3.50%), hit a new 52-week low"
 
 
 def test_create_target_price_reached_sets_type():
