@@ -102,16 +102,13 @@ class YahooFinanceProvider(StockProvider):
         self._logger = logging.getLogger(__name__)
 
     def _get_stock(self, symbol: str) -> Stock | None:
-        self._logger.debug(f"Fetching stock data for {symbol}")
-        ticker_obj = yf.Ticker(symbol)
-        info = ticker_obj.info
-        stock = self._mapper.map(symbol, info)
-        del info, ticker_obj
-        return stock
-
-    def _fetch_stock(self, symbol: str) -> Stock | None:
         try:
-            return self._get_stock(symbol)
+            self._logger.debug(f"Fetching stock data for {symbol}")
+            ticker_obj = yf.Ticker(symbol)
+            info = ticker_obj.info
+            stock = self._mapper.map(symbol, info)
+            del info, ticker_obj
+            return stock
         except Exception as e:
             self._logger.error(f"Error fetching data for {symbol}: {e}")
             return None
@@ -121,6 +118,6 @@ class YahooFinanceProvider(StockProvider):
             return []
 
         with ThreadPoolExecutor(max_workers=min(len(symbols), self._max_workers)) as executor:
-            results = list(executor.map(self._fetch_stock, symbols))
+            results = list(executor.map(self._get_stock, symbols))
 
         return [stock for stock in results if stock is not None]

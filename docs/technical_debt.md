@@ -60,13 +60,6 @@ Inconsistent with the `SettingsFactory` pattern used elsewhere. Also has unexpla
 magic constants (`5 * 1024 * 1024`, `backupCount=3`).
 **Suggestion:** Either use `SettingsFactory` or extract constants with explanatory names.
 
-### 11. `YahooFinanceProvider._get_stock` — no exception handling
-**File:** `infrastructure/providers.py`
-**Violation:** Clean Code
-`_get_stock` propagates raw yfinance exceptions. `_fetch_stock` catches them and returns `None`,
-but this means exception handling is split across two methods rather than handled at the source.
-**Suggestion:** Move exception handling into `_get_stock` and remove the `_fetch_stock` wrapper.
-
 ### 13. Duplicated process listing format in `StopMonitorCommand` and `ListMonitorsCommand`
 **Files:** `presentation/console/commands/stop_monitor.py`, `list_monitors.py`
 **Violation:** DRY
@@ -132,7 +125,6 @@ aggregate behavior.
 | Medium | 2 | `tuple` instead of `list` in `SymbolConfig` |
 | Medium | 3 | Add `from e` in `ConfigManager` exception re-raise (all 3 branches) |
 | Medium | 4 | Fix `logging.py` env access + magic constants |
-| Medium | 11 | `YahooFinanceProvider` inconsistent exception handling |
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
 | Low | 5 | Fragile `ps aux` parsing |
