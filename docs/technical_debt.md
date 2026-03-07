@@ -86,11 +86,6 @@ brittle across Unix variants. While a bounds check (`if module_index < len(parts
 there is no validation that `parts[1]` is a valid PID.
 **Suggestion:** Use `ps` with explicit `-o` format specifier for reliable column extraction.
 
-### 6. Test coverage gaps
-- `MonitorStocksScript.run()` has zero tests for the main orchestration loop
-- `infrastructure/logging.py` is completely untested (verbose/debug branching, file handler)
-- `InMemoryStockRepository` / `InMemoryMarketTransitionRepository` lack direct unit tests
-
 ### 25. `StopMonitorCommand` uses `TextIOBase` while `InteractiveMenu` uses `TextIO`
 **Files:** `presentation/console/commands/stop_monitor.py`, `menu.py`
 **Violation:** Consistency
@@ -128,6 +123,5 @@ aggregate behavior.
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
 | Low | 5 | Fragile `ps aux` parsing |
-| Low | 6 | Test coverage gaps (SettingsFactory, MonitorStocksScript, logging, repositories) |
 | Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
 | Low | 26 | `utils.py` line exceeds 100-char limit |
