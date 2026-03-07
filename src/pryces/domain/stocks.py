@@ -438,6 +438,7 @@ class Stock:
                     self.symbol, self.current_price, change_percentage
                 )
             )
+            self._reset_increase_percentage_notifications()
 
     def _generate_session_losses_erased_notification(self) -> None:
         change_percentage = self._change_percentage_from_previous_close()
@@ -452,6 +453,7 @@ class Stock:
                     self.symbol, self.current_price, change_percentage
                 )
             )
+            self._reset_decrease_percentage_notifications()
 
     def _has_pending_sma_notification(self) -> bool:
         sma_types = {
@@ -505,6 +507,24 @@ class Stock:
                 self.symbol, self.current_price, self.previous_close_price
             )
         )
+
+    def _reset_increase_percentage_notifications(self) -> None:
+        increase_types = {
+            NotificationType.FIVE_PERCENT_INCREASE,
+            NotificationType.TEN_PERCENT_INCREASE,
+            NotificationType.FIFTEEN_PERCENT_INCREASE,
+            NotificationType.TWENTY_PERCENT_INCREASE,
+        }
+        self._notifications = [n for n in self._notifications if n.type not in increase_types]
+
+    def _reset_decrease_percentage_notifications(self) -> None:
+        decrease_types = {
+            NotificationType.FIVE_PERCENT_DECREASE,
+            NotificationType.TEN_PERCENT_DECREASE,
+            NotificationType.FIFTEEN_PERCENT_DECREASE,
+            NotificationType.TWENTY_PERCENT_DECREASE,
+        }
+        self._notifications = [n for n in self._notifications if n.type not in decrease_types]
 
     def _generate_market_closed_notifications(self) -> None:
         self._generate_regular_market_closed_notification()

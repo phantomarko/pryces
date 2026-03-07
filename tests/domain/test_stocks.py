@@ -1802,6 +1802,94 @@ class TestSessionGainsLossesErased:
 
         assert any("erased the session gains" in m for m in messages)
 
+    def test_gains_erased_resets_positive_percentage_notifications(self):
+        # Cycle 1: market open
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Cycle 2: +10% threshold fires
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("110.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Cycle 3: drops to -1% → gains erased fires
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("99.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+        assert any("erased the session gains" in m for m in messages)
+        # Cycle 4: recovers to +5% → should fire again
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("105.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("+5.00%" in m for m in messages)
+
+    def test_losses_erased_resets_negative_percentage_notifications(self):
+        # Cycle 1: market open
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Cycle 2: -10% threshold fires
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("90.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        stock.generate_notifications()
+        stock.drain_notifications()
+        # Cycle 3: rises to +1% → losses erased fires
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("101.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+        assert any("erased the session losses" in m for m in messages)
+        # Cycle 4: drops to -5% → should fire again
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("95.00"),
+            previous_close_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+        stock.generate_notifications()
+        messages = stock.drain_notifications()
+
+        assert any("-5.00%" in m for m in messages)
+
 
 class TestTargetPriceNotifications:
     def test_generate_notifications_appends_target_price_reached_when_target_is_reached(self):
