@@ -133,27 +133,6 @@ there is no validation that `parts[1]` is a valid PID.
 - `infrastructure/logging.py` is completely untested (verbose/debug branching, file handler)
 - `InMemoryStockRepository` / `InMemoryMarketTransitionRepository` lack direct unit tests
 
-### 19. Duplicated percentage-change formula
-**Files:** `domain/notifications.py`, `domain/stocks.py`
-**Violation:** DRY
-`((a - b) / b) * 100` appears in 3 places across two files.
-**Suggestion:** Extract a `calculate_percentage_change(current, reference)` domain utility.
-
-### 20. SMA-distance percentage computed twice
-**File:** `domain/stocks.py`
-**Violation:** DRY
-`_is_close_to_sma` computes the percentage, then `_generate_close_to_*_notification` recomputes
-the same value from scratch.
-**Suggestion:** Have `_is_close_to_sma` return the percentage (or `None`) so callers reuse it.
-
-### 21. 8 near-identical percentage notification factory methods
-**File:** `domain/notifications.py`
-**Violation:** OCP, DRY
-Each `create_*_percent_increase/decrease` method is a trivial delegation to `_create_price_change`
-differing only in `NotificationType` and verb.
-**Suggestion:** Replace with a single `create_price_change(notification_type, symbol,
-current_price, change_percentage)` that derives the verb from the sign of `change_percentage`.
-
 ### 25. `StopMonitorCommand` uses `TextIOBase` while `InteractiveMenu` uses `TextIO`
 **Files:** `presentation/console/commands/stop_monitor.py`, `menu.py`
 **Violation:** Consistency
@@ -197,8 +176,5 @@ aggregate behavior.
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
 | Low | 5 | Fragile `ps aux` parsing |
 | Low | 6 | Test coverage gaps (SettingsFactory, MonitorStocksScript, logging, repositories) |
-| Low | 19 | Duplicated percentage-change formula |
-| Low | 20 | SMA-distance percentage computed twice |
-| Low | 21 | 8 near-identical percentage factory methods |
 | Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
 | Low | 26 | `utils.py` line exceeds 100-char limit |

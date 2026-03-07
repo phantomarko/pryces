@@ -1,6 +1,8 @@
 from decimal import Decimal
 from enum import Enum
 
+from pryces.domain.utils import _calculate_percentage_change
+
 
 class NotificationType(Enum):
     SMA50_CROSSED = "SMA50_CROSSED"
@@ -92,7 +94,7 @@ class Notification:
     ) -> "Notification":
         message = f"{symbol} opened at {open_price}"
         if last_close_price is not None:
-            change_percentage = ((open_price - last_close_price) / last_close_price) * 100
+            change_percentage = _calculate_percentage_change(open_price, last_close_price)
             message += f" ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_OPEN, message
@@ -104,7 +106,7 @@ class Notification:
     ) -> "Notification":
         message = f"{symbol} closed at {current_price}"
         if last_close_price is not None:
-            change_percentage = ((current_price - last_close_price) / last_close_price) * 100
+            change_percentage = _calculate_percentage_change(current_price, last_close_price)
             message += f" ({change_percentage:+.2f}%)"
         return Notification(
             Notification._CREATION_KEY, NotificationType.REGULAR_MARKET_CLOSED, message
