@@ -117,17 +117,6 @@ in contexts that rely on the standard input-collection contract.
 **Suggestion:** Refactor the two-phase interaction (list + select) into the standard `Command`
 contract, with the process selection as an `InputPrompt`.
 
-### 15. `ConfigManager.write_monitor_stocks_config` loses Decimal precision
-**File:** `presentation/scripts/config.py`
-**Violation:** Correctness risk
-`float(p)` conversion when writing prices to JSON can introduce floating-point errors.
-On re-read via `Decimal(str(p))`, the imprecise float-stringified value is preserved.
-**Suggestion:** Use `str(p)` instead of `float(p)` when serializing to JSON.
-**Decision:** Won't fix. The fix changes JSON prices from numbers to strings, affecting the
-human-readable config format. In practice, stock prices entered manually never hit the
-precision boundary that would cause a lossy round-trip. Theoretical risk, not a practical one.
-
-
 ---
 
 ## Minor
@@ -164,19 +153,6 @@ Each `create_*_percent_increase/decrease` method is a trivial delegation to `_cr
 differing only in `NotificationType` and verb.
 **Suggestion:** Replace with a single `create_price_change(notification_type, symbol,
 current_price, change_percentage)` that derives the verb from the sign of `change_percentage`.
-
-### 22. Unnecessary `del` in `YahooFinanceProvider._get_stock`
-**File:** `infrastructure/providers.py`
-**Violation:** Clean Code
-`del info, ticker_obj` is unnecessary — locals are GC'd on return.
-**Suggestion:** Remove the line.
-
-### 24. `StockDTO.market_state` converts enum to raw string
-**File:** `application/dtos.py`
-**Violation:** Clean Code
-`MarketState` enum is converted to `str` at the DTO boundary. The DTO is in the application
-layer, which can reference domain types. Presentation loses type safety.
-**Suggestion:** Use `MarketState | None` in the DTO; convert to string at the presentation layer.
 
 ### 25. `StopMonitorCommand` uses `TextIOBase` while `InteractiveMenu` uses `TextIO`
 **Files:** `presentation/console/commands/stop_monitor.py`, `menu.py`
@@ -219,13 +195,10 @@ aggregate behavior.
 | Medium | 11 | `YahooFinanceProvider` inconsistent exception handling |
 | Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
-| Won't Fix | 15 | `ConfigManager` loses Decimal precision via `float()` — theoretical only |
 | Low | 5 | Fragile `ps aux` parsing |
 | Low | 6 | Test coverage gaps (SettingsFactory, MonitorStocksScript, logging, repositories) |
 | Low | 19 | Duplicated percentage-change formula |
 | Low | 20 | SMA-distance percentage computed twice |
 | Low | 21 | 8 near-identical percentage factory methods |
-| Low | 22 | Unnecessary `del` in `YahooFinanceProvider` |
-| Low | 24 | `StockDTO.market_state` converts enum to string unnecessarily |
 | Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
 | Low | 26 | `utils.py` line exceeds 100-char limit |
