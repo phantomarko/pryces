@@ -36,6 +36,8 @@ All code must follow **SOLID principles**, **hexagonal architecture**, and **cle
 
 Both must stay synchronized with the actual code behavior.
 
+**Documentation changes must be committed in the same commit as the code they describe** — never in a separate follow-up commit. A commit that changes behavior without updating its documentation is incomplete.
+
 ### Prefer Using Subagents for Context Optimization
 **IMPORTANT**: Always use specialized subagents (via the Task tool) whenever possible to optimize context usage, unless explicitly instructed not to use subagents.
 
@@ -50,6 +52,8 @@ Only work directly (without subagents) when:
 - User explicitly requests direct execution
 - Task is trivial (single file read/write)
 - Already in a subagent context
+
+**Before editing any file you have not already read in this session, use the Explore agent to navigate to it** — do not guess at file paths or class locations from memory alone.
 
 This helps maintain clean context and allows better task delegation.
 
@@ -78,6 +82,12 @@ Plan mode ensures alignment on approach before implementation, preventing wasted
 2. **Fix any failing tests** caused by your changes before considering the task done
 3. **Add new tests** to cover new behavior — new commands, use cases, services, or non-trivial logic must have corresponding tests
 4. **Delete obsolete tests** when removing the code they cover
+
+**Test structure rules:**
+- Mirror the `src/` layout under `tests/` — `src/pryces/domain/stocks.py` → `tests/domain/test_stocks.py`
+- Use `@pytest.fixture` for shared setup; avoid repeating setup logic across test functions
+- Test the public API of each unit, not its internal implementation — if a test breaks on a private rename, the test is wrong
+- Prefer many small focused test functions over large tests that check multiple behaviors
 
 Never consider an implementation task complete without a passing test suite.
 
@@ -205,3 +215,9 @@ Within every class, members must appear in this order:
 Use [Conventional Commits](https://www.conventionalcommits.org/) format: `<type>: <description>`
 
 Common types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+
+**Commit rules (non-negotiable):**
+- **Tests must pass before every commit** — never commit with a failing test suite
+- **Never skip pre-commit hooks** (`--no-verify` is forbidden unless the user explicitly instructs it; if a hook fails, fix the root cause)
+- **Atomic commits** — one logical change per commit; do not mix unrelated changes
+- **Documentation in the same commit** — if the commit changes behavior, CLAUDE.md and/or README.md must be updated in that same commit, not a follow-up
