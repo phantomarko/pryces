@@ -25,32 +25,40 @@ class TestConfigManager:
     def test_raises_config_loading_failed_when_file_not_found(self, tmp_path):
         manager = ConfigManager(tmp_path / "nonexistent.json")
 
-        with pytest.raises(ConfigLoadingFailed, match="config file not found"):
+        with pytest.raises(ConfigLoadingFailed, match="config file not found") as exc_info:
             manager.read_monitor_stocks_config()
+
+        assert isinstance(exc_info.value.__cause__, FileNotFoundError)
 
     def test_raises_config_loading_failed_when_invalid_json(self, tmp_path):
         config_file = tmp_path / "config.json"
         config_file.write_text("not valid json")
         manager = ConfigManager(config_file)
 
-        with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
+        with pytest.raises(ConfigLoadingFailed, match="invalid config file") as exc_info:
             manager.read_monitor_stocks_config()
+
+        assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)
 
     def test_raises_config_loading_failed_when_fields_are_invalid(self, tmp_path):
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps(make_config_data(interval=0)))
         manager = ConfigManager(config_file)
 
-        with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
+        with pytest.raises(ConfigLoadingFailed, match="invalid config file") as exc_info:
             manager.read_monitor_stocks_config()
+
+        assert isinstance(exc_info.value.__cause__, ValueError)
 
     def test_raises_config_loading_failed_when_symbol_missing_key(self, tmp_path):
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps({"interval": 5, "symbols": [{"prices": [5]}]}))
         manager = ConfigManager(config_file)
 
-        with pytest.raises(ConfigLoadingFailed, match="invalid config file"):
+        with pytest.raises(ConfigLoadingFailed, match="invalid config file") as exc_info:
             manager.read_monitor_stocks_config()
+
+        assert isinstance(exc_info.value.__cause__, KeyError)
 
     def test_raises_config_loading_failed_on_unexpected_error(self, tmp_path, monkeypatch):
         config_file = tmp_path / "config.json"
@@ -61,8 +69,12 @@ class TestConfigManager:
             lambda _: (_ for _ in ()).throw(RuntimeError("boom")),
         )
 
-        with pytest.raises(ConfigLoadingFailed, match="unexpected error loading config"):
+        with pytest.raises(
+            ConfigLoadingFailed, match="unexpected error loading config"
+        ) as exc_info:
             manager.read_monitor_stocks_config()
+
+        assert isinstance(exc_info.value.__cause__, RuntimeError)
 
     def test_returns_valid_config_on_well_formed_file(self, tmp_path):
         config_file = tmp_path / "config.json"

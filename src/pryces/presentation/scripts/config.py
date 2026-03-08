@@ -53,12 +53,12 @@ class ConfigManager:
                 interval=data["interval"],
                 symbols=symbols,
             )
-        except FileNotFoundError:
-            raise ConfigLoadingFailed(f"config file not found: {self._path}")
+        except FileNotFoundError as e:
+            raise ConfigLoadingFailed(f"config file not found: {self._path}") from e
         except (json.JSONDecodeError, TypeError, ValueError, KeyError) as e:
-            raise ConfigLoadingFailed(f"invalid config file: {e}")
+            raise ConfigLoadingFailed(f"invalid config file: {e}") from e
         except Exception as e:
-            raise ConfigLoadingFailed(f"unexpected error loading config: {e}")
+            raise ConfigLoadingFailed(f"unexpected error loading config: {e}") from e
 
 
 class ConfigRefresher:

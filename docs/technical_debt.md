@@ -47,13 +47,6 @@ open for extension.
 of the list itself.
 **Suggestion:** Use `tuple[Decimal, ...]` instead.
 
-### 3. Missing exception chaining in `ConfigManager`
-**File:** `presentation/scripts/config.py`
-All three `raise ConfigLoadingFailed(...)` branches lack `from e`, losing the original traceback
-for `FileNotFoundError`, `json.JSONDecodeError`/`TypeError`/`ValueError`/`KeyError`, and the
-catch-all `Exception`.
-**Suggestion:** Use `raise ConfigLoadingFailed(...) from e` in every branch.
-
 ### 4. `logging.py` accesses `os.environ` directly
 **File:** `infrastructure/logging.py`
 Inconsistent with the `SettingsFactory` pattern used elsewhere. Also has unexplained
@@ -105,7 +98,6 @@ aggregate behavior.
 |---|---|---|
 | Medium | 1 | `CheckReadinessCommand` → Checker strategy pattern |
 | Medium | 2 | `tuple` instead of `list` in `SymbolConfig` |
-| Medium | 3 | Add `from e` in `ConfigManager` exception re-raise (all 3 branches) |
 | Medium | 4 | Fix `logging.py` env access + magic constants |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
 | Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
