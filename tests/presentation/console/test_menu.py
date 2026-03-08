@@ -125,6 +125,42 @@ class TestInteractiveMenu:
 
         assert inputs is None
 
+    def test_collect_inputs_displays_preamble_before_prompt(self):
+        prompts = [
+            InputPrompt(
+                key="choice",
+                prompt="Pick one: ",
+                validator=None,
+                preamble="Here are your options:\n  1. Option A\n  2. Option B",
+            )
+        ]
+
+        self.input_stream.write("1\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs == {"choice": "1"}
+        output = self.output_stream.getvalue()
+        assert "Here are your options:" in output
+        assert "Option A" in output
+        assert "Option B" in output
+        preamble_pos = output.index("Here are your options:")
+        prompt_pos = output.index("Pick one: ")
+        assert preamble_pos < prompt_pos
+
+    def test_collect_inputs_skips_preamble_when_none(self):
+        prompts = [InputPrompt(key="value", prompt="Enter: ", validator=None)]
+
+        self.input_stream.write("test\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs == {"value": "test"}
+        output = self.output_stream.getvalue()
+        assert output.startswith("Enter: ")
+
     def test_execute_command_collects_inputs_and_executes(self):
         mock_command = Mock(spec=Command)
         mock_command.get_metadata.return_value = CommandMetadata(

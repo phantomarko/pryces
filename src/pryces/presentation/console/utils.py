@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 from pryces.application.dtos import StockDTO
@@ -35,6 +36,16 @@ def format_running_monitors(processes: list[tuple[str, str]]) -> str:
         for i, (pid, config_path) in enumerate(processes)
     ]
     return "\n".join([header] + entries)
+
+
+def create_monitor_selection_validator(process_count: int) -> Callable[[str], bool]:
+    def validator(value: str) -> bool:
+        try:
+            return 0 <= int(value) <= process_count
+        except (ValueError, TypeError):
+            return False
+
+    return validator
 
 
 def validate_symbol(value: str) -> bool:

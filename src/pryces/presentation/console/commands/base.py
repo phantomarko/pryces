@@ -15,6 +15,7 @@ class InputPrompt:
     key: str
     prompt: str
     validator: Callable[[str], bool] | None = None
+    preamble: str | None = None
 
 
 @dataclass(frozen=True)

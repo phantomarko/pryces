@@ -53,24 +53,9 @@ Inconsistent with the `SettingsFactory` pattern used elsewhere. Also has unexpla
 magic constants (`5 * 1024 * 1024`, `backupCount=3`).
 **Suggestion:** Either use `SettingsFactory` or extract constants with explanatory names.
 
-### 14. `StopMonitorCommand` bypasses the Command I/O contract
-**File:** `presentation/console/commands/stop_monitor.py`
-**Violation:** LSP
-Returns an empty `get_input_prompts()` and does its own interactive I/O inside `execute()` via
-injected streams. Every other `Command` delegates I/O to `InteractiveMenu`. Not substitutable
-in contexts that rely on the standard input-collection contract.
-**Suggestion:** Refactor the two-phase interaction (list + select) into the standard `Command`
-contract, with the process selection as an `InputPrompt`.
-
 ---
 
 ## Minor
-
-### 25. `StopMonitorCommand` uses `TextIOBase` while `InteractiveMenu` uses `TextIO`
-**Files:** `presentation/console/commands/stop_monitor.py`, `menu.py`
-**Violation:** Consistency
-Different type annotations for the same stream concept.
-**Suggestion:** Standardize on `TextIO` from `typing` across both files.
 
 ### 26. `utils.py` line exceeds 100-character limit
 **File:** `presentation/console/utils.py`
@@ -99,6 +84,4 @@ aggregate behavior.
 | Medium | 1 | `CheckReadinessCommand` → Checker strategy pattern |
 | Medium | 2 | `tuple` instead of `list` in `SymbolConfig` |
 | Medium | 4 | Fix `logging.py` env access + magic constants |
-| Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
-| Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
 | Low | 26 | `utils.py` line exceeds 100-char limit |

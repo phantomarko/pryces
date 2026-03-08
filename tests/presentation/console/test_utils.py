@@ -2,6 +2,7 @@ from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from pryces.presentation.console.utils import (
+    create_monitor_selection_validator,
     format_running_monitors,
     format_stock,
     format_stock_list,
@@ -93,6 +94,33 @@ class TestFormatRunningMonitors:
             "  1. PID 11111 — config: /config/a.json\n"
             "  2. PID 22222 — config: /config/b.json"
         )
+
+
+class TestCreateMonitorSelectionValidator:
+
+    def test_accepts_zero(self):
+        validator = create_monitor_selection_validator(3)
+        assert validator("0") is True
+
+    def test_accepts_valid_range(self):
+        validator = create_monitor_selection_validator(3)
+        assert validator("1") is True
+        assert validator("2") is True
+        assert validator("3") is True
+
+    def test_rejects_out_of_range(self):
+        validator = create_monitor_selection_validator(2)
+        assert validator("3") is False
+        assert validator("10") is False
+
+    def test_rejects_negative(self):
+        validator = create_monitor_selection_validator(3)
+        assert validator("-1") is False
+
+    def test_rejects_non_numeric(self):
+        validator = create_monitor_selection_validator(3)
+        assert validator("abc") is False
+        assert validator("") is False
 
 
 class TestValidateSymbol:

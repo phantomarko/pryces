@@ -104,6 +104,9 @@ class InteractiveMenu:
         inputs = {}
 
         for prompt in prompts:
+            if prompt.preamble is not None:
+                self._output.write(prompt.preamble + "\n")
+
             while True:
                 self._output.write(prompt.prompt)
                 self._output.flush()
