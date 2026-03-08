@@ -23,7 +23,7 @@ from ...infrastructure.senders import (
     RetrySettings,
     TelegramMessageSender,
 )
-from pryces.infrastructure.logging import PythonLoggerFactory, setup_monitor_logging
+from pryces.infrastructure.logging import PythonLoggerFactory, setup_logging
 from .config import ConfigManager, ConfigRefresher
 from .exceptions import ConfigLoadingFailed
 
@@ -136,7 +136,9 @@ def main() -> int:
     args = parser.parse_args()
 
     load_dotenv()
-    setup_monitor_logging(verbose=args.verbose, debug=args.debug)
+    setup_logging(
+        SettingsFactory.create_monitor_logging_settings(verbose=args.verbose, debug=args.debug)
+    )
     logger_factory = PythonLoggerFactory()
 
     try:

@@ -1,6 +1,7 @@
 import os
 
 from .exceptions import ConfigurationError
+from .logging import CLI_ENTRY_POINT, MONITOR_ENTRY_POINT, LoggingSettings
 from .providers import YahooFinanceSettings
 from .senders import TelegramSettings
 
@@ -20,6 +21,26 @@ class SettingsFactory:
                 f"Invalid value for MAX_FETCH_WORKERS: '{os.environ.get('MAX_FETCH_WORKERS')}'"
                 f" — expected an integer"
             ) from e
+
+    @staticmethod
+    def create_cli_logging_settings(verbose: bool = False, debug: bool = False) -> LoggingSettings:
+        return LoggingSettings(
+            entry_point=CLI_ENTRY_POINT,
+            verbose=verbose,
+            debug=debug,
+            logs_directory=os.environ.get("LOGS_DIRECTORY"),
+        )
+
+    @staticmethod
+    def create_monitor_logging_settings(
+        verbose: bool = False, debug: bool = False
+    ) -> LoggingSettings:
+        return LoggingSettings(
+            entry_point=MONITOR_ENTRY_POINT,
+            verbose=verbose,
+            debug=debug,
+            logs_directory=os.environ.get("LOGS_DIRECTORY"),
+        )
 
     @staticmethod
     def create_telegram_settings() -> TelegramSettings:

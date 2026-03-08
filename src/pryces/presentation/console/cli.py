@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
 from ...infrastructure.factories import SettingsFactory
-from ...infrastructure.logging import PythonLoggerFactory, setup_cli_logging
+from ...infrastructure.logging import PythonLoggerFactory, setup_logging
 from ...infrastructure.providers import YahooFinanceProvider
 from ...infrastructure.senders import RetryMessageSender, RetrySettings, TelegramMessageSender
 from .factories import CommandFactory
@@ -40,7 +40,7 @@ def main() -> int:
 
     load_dotenv()
 
-    setup_cli_logging(debug=args.debug)
+    setup_logging(SettingsFactory.create_cli_logging_settings(debug=args.debug))
     logger_factory = PythonLoggerFactory()
     logger = logger_factory.get_logger(__name__)
 
