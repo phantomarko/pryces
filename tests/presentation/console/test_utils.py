@@ -2,6 +2,7 @@ from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from pryces.presentation.console.utils import (
+    format_running_monitors,
     format_stock,
     format_stock_list,
     get_running_monitors,
@@ -18,9 +19,7 @@ class TestGetRunningMonitors:
 
     @patch("pryces.presentation.console.utils.subprocess.run")
     def test_returns_empty_list_when_no_monitor_processes(self, mock_run):
-        mock_run.return_value = Mock(
-            stdout="USER       PID  %CPU %MEM COMMAND\nroot         1  0.0  0.0 /sbin/init\n"
-        )
+        mock_run.return_value = Mock(stdout="    1 /sbin/init\n")
 
         result = get_running_monitors()
 
@@ -30,8 +29,7 @@ class TestGetRunningMonitors:
     def test_returns_single_process(self, mock_run):
         mock_run.return_value = Mock(
             stdout=(
-                "USER       PID  %CPU %MEM COMMAND\n"
-                "user     12345  0.5  1.0 /usr/bin/python -m"
+                "12345 /usr/bin/python -m"
                 " pryces.presentation.scripts.monitor_stocks /path/to/config.json\n"
             )
         )
@@ -44,10 +42,9 @@ class TestGetRunningMonitors:
     def test_returns_multiple_processes(self, mock_run):
         mock_run.return_value = Mock(
             stdout=(
-                "USER       PID  %CPU %MEM COMMAND\n"
-                "user     11111  0.5  1.0 /usr/bin/python -m"
+                "11111 /usr/bin/python -m"
                 " pryces.presentation.scripts.monitor_stocks /config/a.json\n"
-                "user     22222  0.3  0.8 /usr/bin/python -m"
+                "22222 /usr/bin/python -m"
                 " pryces.presentation.scripts.monitor_stocks /config/b.json\n"
             )
         )
@@ -57,29 +54,9 @@ class TestGetRunningMonitors:
         assert result == [("11111", "/config/a.json"), ("22222", "/config/b.json")]
 
     @patch("pryces.presentation.console.utils.subprocess.run")
-    def test_excludes_ps_aux_own_line(self, mock_run):
-        mock_run.return_value = Mock(
-            stdout=(
-                "USER       PID  %CPU %MEM COMMAND\n"
-                "user     12345  0.5  1.0 /usr/bin/python -m"
-                " pryces.presentation.scripts.monitor_stocks /path/to/config.json\n"
-                "user     99999  0.0  0.0 ps aux\n"
-            )
-        )
-
-        result = get_running_monitors()
-
-        assert len(result) == 1
-        assert result[0][0] == "12345"
-
-    @patch("pryces.presentation.console.utils.subprocess.run")
     def test_shows_unknown_config_when_no_args_after_module(self, mock_run):
         mock_run.return_value = Mock(
-            stdout=(
-                "USER       PID  %CPU %MEM COMMAND\n"
-                "user     12345  0.5  1.0 /usr/bin/python -m"
-                " pryces.presentation.scripts.monitor_stocks\n"
-            )
+            stdout=("12345 /usr/bin/python -m" " pryces.presentation.scripts.monitor_stocks\n")
         )
 
         result = get_running_monitors()
@@ -87,12 +64,35 @@ class TestGetRunningMonitors:
         assert result == [("12345", "unknown")]
 
     @patch("pryces.presentation.console.utils.subprocess.run")
-    def test_calls_ps_aux(self, mock_run):
+    def test_calls_ps(self, mock_run):
         mock_run.return_value = Mock(stdout="")
 
         get_running_monitors()
 
-        mock_run.assert_called_once_with(["ps", "aux"], capture_output=True, text=True)
+        mock_run.assert_called_once_with(["ps", "-eo", "pid=,cmd="], capture_output=True, text=True)
+
+
+class TestFormatRunningMonitors:
+
+    def test_formats_single_process(self):
+        processes = [("12345", "/path/to/config.json")]
+
+        result = format_running_monitors(processes)
+
+        assert result == (
+            "Found 1 monitor process(es):\n" "  1. PID 12345 — config: /path/to/config.json"
+        )
+
+    def test_formats_multiple_processes(self):
+        processes = [("11111", "/config/a.json"), ("22222", "/config/b.json")]
+
+        result = format_running_monitors(processes)
+
+        assert result == (
+            "Found 2 monitor process(es):\n"
+            "  1. PID 11111 — config: /config/a.json\n"
+            "  2. PID 22222 — config: /config/b.json"
+        )
 
 
 class TestValidateSymbol:

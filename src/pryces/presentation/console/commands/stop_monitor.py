@@ -3,7 +3,7 @@ import sys
 from io import TextIOBase
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
-from ..utils import get_running_monitors
+from ..utils import format_running_monitors, get_running_monitors
 
 
 class StopMonitorCommand(Command):
@@ -31,12 +31,7 @@ class StopMonitorCommand(Command):
         if not processes:
             return CommandResult(message="No monitor processes found.")
 
-        header = f"Found {len(processes)} monitor process(es):"
-        entries = [
-            f"  {i + 1}. PID {pid} — config: {config_path}"
-            for i, (pid, config_path) in enumerate(processes)
-        ]
-        self._output_stream.write("\n".join([header] + entries) + "\n")
+        self._output_stream.write(format_running_monitors(processes) + "\n")
         self._output_stream.flush()
 
         while True:

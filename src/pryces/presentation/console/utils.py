@@ -9,22 +9,32 @@ _MONITOR_MODULE = "pryces.presentation.scripts.monitor_stocks"
 
 
 def get_running_monitors() -> list[tuple[str, str]]:
-    result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+    result = subprocess.run(["ps", "-eo", "pid=,cmd="], capture_output=True, text=True)
     lines = result.stdout.splitlines()
 
     processes = []
     for line in lines:
-        if _MONITOR_MODULE in line and "ps aux" not in line and "/bin/sh" not in line:
-            parts = line.split()
-            pid = parts[1]
-            try:
-                module_index = parts.index("-m") + 2
-                config_path = parts[module_index] if module_index < len(parts) else "unknown"
-            except ValueError:
-                config_path = "unknown"
-            processes.append((pid, config_path))
+        if _MONITOR_MODULE not in line:
+            continue
+        pid, cmd = line.strip().split(None, 1)
+        try:
+            cmd_parts = cmd.split()
+            module_index = cmd_parts.index("-m") + 2
+            config_path = cmd_parts[module_index] if module_index < len(cmd_parts) else "unknown"
+        except ValueError:
+            config_path = "unknown"
+        processes.append((pid, config_path))
 
     return processes
+
+
+def format_running_monitors(processes: list[tuple[str, str]]) -> str:
+    header = f"Found {len(processes)} monitor process(es):"
+    entries = [
+        f"  {i + 1}. PID {pid} — config: {config_path}"
+        for i, (pid, config_path) in enumerate(processes)
+    ]
+    return "\n".join([header] + entries)
 
 
 def validate_symbol(value: str) -> bool:

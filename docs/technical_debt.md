@@ -60,12 +60,6 @@ Inconsistent with the `SettingsFactory` pattern used elsewhere. Also has unexpla
 magic constants (`5 * 1024 * 1024`, `backupCount=3`).
 **Suggestion:** Either use `SettingsFactory` or extract constants with explanatory names.
 
-### 13. Duplicated process listing format in `StopMonitorCommand` and `ListMonitorsCommand`
-**Files:** `presentation/console/commands/stop_monitor.py`, `list_monitors.py`
-**Violation:** DRY
-Identical header + entry formatting code for listing monitor processes.
-**Suggestion:** Extract a `format_running_monitors(processes)` function into `utils.py`.
-
 ### 14. `StopMonitorCommand` bypasses the Command I/O contract
 **File:** `presentation/console/commands/stop_monitor.py`
 **Violation:** LSP
@@ -78,13 +72,6 @@ contract, with the process selection as an `InputPrompt`.
 ---
 
 ## Minor
-
-### 5. `utils.py` — fragile `ps aux` parsing
-**File:** `presentation/console/utils.py`
-Column index assumptions (`parts[1]`, `parts.index("-m") + 2`) in `get_running_monitors()` are
-brittle across Unix variants. While a bounds check (`if module_index < len(parts)`) exists,
-there is no validation that `parts[1]` is a valid PID.
-**Suggestion:** Use `ps` with explicit `-o` format specifier for reliable column extraction.
 
 ### 25. `StopMonitorCommand` uses `TextIOBase` while `InteractiveMenu` uses `TextIO`
 **Files:** `presentation/console/commands/stop_monitor.py`, `menu.py`
@@ -120,8 +107,6 @@ aggregate behavior.
 | Medium | 2 | `tuple` instead of `list` in `SymbolConfig` |
 | Medium | 3 | Add `from e` in `ConfigManager` exception re-raise (all 3 branches) |
 | Medium | 4 | Fix `logging.py` env access + magic constants |
-| Medium | 13 | Duplicated process listing format |
 | Medium | 14 | `StopMonitorCommand` bypasses Command I/O contract |
-| Low | 5 | Fragile `ps aux` parsing |
 | Low | 25 | `TextIOBase` vs `TextIO` inconsistency |
 | Low | 26 | `utils.py` line exceeds 100-char limit |
