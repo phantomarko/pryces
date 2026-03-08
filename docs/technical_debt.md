@@ -32,14 +32,6 @@ identified so they can be addressed intentionally rather than discovered acciden
 
 ## Important
 
-### 1. `CheckReadinessCommand` — SRP + OCP violation
-**File:** `presentation/console/commands/check_readiness.py`
-**Violation:** SRP, OCP
-Checks env vars, checks Telegram connectivity, formats output, and aggregates results —
-all in one class with mutable `_all_ready` state. Adding a new check requires modifying `execute()`.
-**Suggestion:** A list of `Checker` strategies (each returning pass/fail + message) makes this
-open for extension.
-
 ### 2. Mutable `list` field in frozen `SymbolConfig`
 **File:** `presentation/scripts/config.py`
 **Violation:** Correctness risk
@@ -81,7 +73,6 @@ aggregate behavior.
 
 | Priority | # | Item |
 |---|---|---|
-| Medium | 1 | `CheckReadinessCommand` → Checker strategy pattern |
 | Medium | 2 | `tuple` instead of `list` in `SymbolConfig` |
 | Medium | 4 | Fix `logging.py` env access + magic constants |
 | Low | 26 | `utils.py` line exceeds 100-char limit |

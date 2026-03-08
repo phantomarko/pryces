@@ -1,21 +1,30 @@
 from unittest.mock import Mock, patch
 
+import pytest
 
-from pryces.application.interfaces import MessageSender
+from pryces.application.interfaces import Logger, MessageSender
 from pryces.application.use_cases.send_messages import SendMessages
-from pryces.presentation.console.commands.check_readiness import CheckReadinessCommand
 from pryces.presentation.console.commands.base import CommandMetadata
+from pryces.presentation.console.commands.check_readiness import (
+    CheckReadinessCommand,
+    CheckResult,
+    Checker,
+    EnvVarsChecker,
+    TelegramChecker,
+)
 
 
 class TestCheckReadinessCommand:
 
-    def setup_method(self):
-        self.mock_sender = Mock(spec=MessageSender)
-        use_case = SendMessages(sender=self.mock_sender)
-        self.command = CheckReadinessCommand(use_case, logger_factory=Mock())
+    def _make_checker(self, ready: bool, message: str) -> Checker:
+        checker = Mock(spec=Checker)
+        checker.check.return_value = CheckResult(ready=ready, message=message)
+        return checker
 
     def test_get_metadata_returns_correct_metadata(self):
-        metadata = self.command.get_metadata()
+        command = CheckReadinessCommand(checkers=[], logger_factory=Mock())
+
+        metadata = command.get_metadata()
 
         assert isinstance(metadata, CommandMetadata)
         assert metadata.id == "check_readiness"
@@ -25,20 +34,65 @@ class TestCheckReadinessCommand:
         )
 
     def test_get_input_prompts_returns_empty_list(self):
-        prompts = self.command.get_input_prompts()
+        command = CheckReadinessCommand(checkers=[], logger_factory=Mock())
 
-        assert prompts == []
+        assert command.get_input_prompts() == []
 
-    def test_all_ready_is_true_by_default(self):
-        assert self.command._all_ready is True
+    def test_execute_all_ready_no_warning(self):
+        checkers = [
+            self._make_checker(ready=True, message="[READY] A"),
+            self._make_checker(ready=True, message="[READY] B"),
+        ]
+        command = CheckReadinessCommand(checkers=checkers, logger_factory=Mock())
+
+        result = command.execute()
+
+        assert result.message == "[READY] A\n[READY] B"
+        assert result.success is True
+        assert "restart the app" not in result.message
+
+    def test_execute_any_failed_appends_warning(self):
+        checkers = [
+            self._make_checker(ready=False, message="[NOT READY] A"),
+            self._make_checker(ready=True, message="[READY] B"),
+        ]
+        command = CheckReadinessCommand(checkers=checkers, logger_factory=Mock())
+
+        result = command.execute()
+
+        assert result.success is False
+        assert result.message.endswith(
+            "Fix the errors above and restart the app for changes to take effect."
+        )
+
+    def test_execute_preserves_checker_message_order(self):
+        checkers = [
+            self._make_checker(ready=True, message="[READY] First"),
+            self._make_checker(ready=False, message="[NOT READY] Second"),
+        ]
+        command = CheckReadinessCommand(checkers=checkers, logger_factory=Mock())
+
+        result = command.execute()
+
+        assert result.message.index("[READY] First") < result.message.index("[NOT READY] Second")
+
+    def test_execute_calls_every_checker(self):
+        checkers = [
+            self._make_checker(ready=True, message="[READY] A"),
+            self._make_checker(ready=True, message="[READY] B"),
+        ]
+        command = CheckReadinessCommand(checkers=checkers, logger_factory=Mock())
+
+        command.execute()
+
+        for checker in checkers:
+            checker.check.assert_called_once()
 
 
-class TestCheckReadinessEnv:
+class TestEnvVarsChecker:
 
     def setup_method(self):
-        self.mock_sender = Mock(spec=MessageSender)
-        use_case = SendMessages(sender=self.mock_sender)
-        self.command = CheckReadinessCommand(use_case, logger_factory=Mock())
+        self.checker = EnvVarsChecker()
 
     @patch.dict(
         "os.environ",
@@ -49,11 +103,11 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_ready_when_all_required_vars_valid(self):
-        result = self.command._check_env()
+    def test_ready_when_required_vars_valid(self):
+        result = self.checker.check()
 
-        assert result == "[READY] Environment variables"
-        assert self.command._all_ready is True
+        assert result.ready is True
+        assert result.message == "[READY] Environment variables"
 
     @patch.dict(
         "os.environ",
@@ -65,94 +119,74 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_ready_when_logs_directory_exists(self):
-        result = self.command._check_env()
+    def test_ready_when_logs_directory_exists(self):
+        result = self.checker.check()
 
-        assert result == "[READY] Environment variables"
+        assert result.ready is True
 
     @patch.dict("os.environ", {"MAX_FETCH_WORKERS": "4"}, clear=True)
-    def test_env_not_ready_when_telegram_vars_missing(self):
-        result = self.command._check_env()
+    def test_not_ready_when_telegram_vars_missing(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "TELEGRAM_BOT_TOKEN is missing or empty" in result
-        assert "TELEGRAM_GROUP_ID is missing or empty" in result
-        assert self.command._all_ready is False
-
-    @patch.dict(
-        "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "  ",
-            "TELEGRAM_GROUP_ID": "",
-            "MAX_FETCH_WORKERS": "4",
-        },
-        clear=True,
-    )
-    def test_env_not_ready_when_telegram_vars_blank(self):
-        result = self.command._check_env()
-
-        assert "[NOT READY] Environment variables" in result
-        assert "TELEGRAM_BOT_TOKEN is missing or empty" in result
-        assert "TELEGRAM_GROUP_ID is missing or empty" in result
+        assert result.ready is False
+        assert "TELEGRAM_BOT_TOKEN is missing or empty" in result.message
+        assert "TELEGRAM_GROUP_ID is missing or empty" in result.message
 
     @patch.dict(
         "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "abc",
-        },
+        {"TELEGRAM_BOT_TOKEN": "  ", "TELEGRAM_GROUP_ID": "", "MAX_FETCH_WORKERS": "4"},
         clear=True,
     )
-    def test_env_not_ready_when_max_fetch_workers_not_integer(self):
-        result = self.command._check_env()
+    def test_not_ready_when_telegram_vars_blank(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "MAX_FETCH_WORKERS is missing or not a valid integer" in result
+        assert result.ready is False
+        assert "TELEGRAM_BOT_TOKEN is missing or empty" in result.message
+        assert "TELEGRAM_GROUP_ID is missing or empty" in result.message
 
     @patch.dict(
         "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-        },
+        {"TELEGRAM_BOT_TOKEN": "token", "TELEGRAM_GROUP_ID": "123", "MAX_FETCH_WORKERS": "abc"},
         clear=True,
     )
-    def test_env_not_ready_when_max_fetch_workers_missing(self):
-        result = self.command._check_env()
+    def test_not_ready_when_max_fetch_workers_not_integer(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "MAX_FETCH_WORKERS is missing or not a valid integer" in result
+        assert result.ready is False
+        assert "MAX_FETCH_WORKERS is missing or not a valid integer" in result.message
 
     @patch.dict(
         "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "0",
-        },
+        {"TELEGRAM_BOT_TOKEN": "token", "TELEGRAM_GROUP_ID": "123"},
         clear=True,
     )
-    def test_env_not_ready_when_max_fetch_workers_zero(self):
-        result = self.command._check_env()
+    def test_not_ready_when_max_fetch_workers_missing(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "MAX_FETCH_WORKERS must be a positive integer" in result
+        assert result.ready is False
+        assert "MAX_FETCH_WORKERS is missing or not a valid integer" in result.message
 
     @patch.dict(
         "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "-1",
-        },
+        {"TELEGRAM_BOT_TOKEN": "token", "TELEGRAM_GROUP_ID": "123", "MAX_FETCH_WORKERS": "0"},
         clear=True,
     )
-    def test_env_not_ready_when_max_fetch_workers_negative(self):
-        result = self.command._check_env()
+    def test_not_ready_when_max_fetch_workers_zero(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "MAX_FETCH_WORKERS must be a positive integer" in result
+        assert result.ready is False
+        assert "MAX_FETCH_WORKERS must be a positive integer" in result.message
+
+    @patch.dict(
+        "os.environ",
+        {"TELEGRAM_BOT_TOKEN": "token", "TELEGRAM_GROUP_ID": "123", "MAX_FETCH_WORKERS": "-1"},
+        clear=True,
+    )
+    def test_not_ready_when_max_fetch_workers_negative(self):
+        result = self.checker.check()
+
+        assert result.ready is False
+        assert "MAX_FETCH_WORKERS must be a positive integer" in result.message
 
     @patch.dict(
         "os.environ",
@@ -164,11 +198,11 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_not_ready_when_logs_directory_not_exists(self):
-        result = self.command._check_env()
+    def test_not_ready_when_logs_directory_not_exists(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "LOGS_DIRECTORY is not a valid directory" in result
+        assert result.ready is False
+        assert "LOGS_DIRECTORY is not a valid directory" in result.message
 
     @patch.dict(
         "os.environ",
@@ -180,10 +214,10 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_ready_when_logs_directory_empty(self):
-        result = self.command._check_env()
+    def test_ready_when_logs_directory_empty(self):
+        result = self.checker.check()
 
-        assert result == "[READY] Environment variables"
+        assert result.ready is True
 
     @patch.dict(
         "os.environ",
@@ -195,10 +229,10 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_ready_when_extra_delay_is_zero(self):
-        result = self.command._check_env()
+    def test_ready_when_extra_delay_is_zero(self):
+        result = self.checker.check()
 
-        assert result == "[READY] Environment variables"
+        assert result.ready is True
 
     @patch.dict(
         "os.environ",
@@ -210,10 +244,10 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_ready_when_extra_delay_is_positive(self):
-        result = self.command._check_env()
+    def test_ready_when_extra_delay_is_positive(self):
+        result = self.checker.check()
 
-        assert result == "[READY] Environment variables"
+        assert result.ready is True
 
     @patch.dict(
         "os.environ",
@@ -225,12 +259,11 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_not_ready_when_extra_delay_is_negative(self):
-        result = self.command._check_env()
+    def test_not_ready_when_extra_delay_is_negative(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "EXTRA_DELAY_IN_MINUTES must be a non-negative integer" in result
-        assert self.command._all_ready is False
+        assert result.ready is False
+        assert "EXTRA_DELAY_IN_MINUTES must be a non-negative integer" in result.message
 
     @patch.dict(
         "os.environ",
@@ -242,90 +275,42 @@ class TestCheckReadinessEnv:
         },
         clear=True,
     )
-    def test_env_not_ready_when_extra_delay_is_not_integer(self):
-        result = self.command._check_env()
+    def test_not_ready_when_extra_delay_is_not_integer(self):
+        result = self.checker.check()
 
-        assert "[NOT READY] Environment variables" in result
-        assert "EXTRA_DELAY_IN_MINUTES is not a valid integer" in result
-        assert self.command._all_ready is False
+        assert result.ready is False
+        assert "EXTRA_DELAY_IN_MINUTES is not a valid integer" in result.message
 
 
-class TestCheckReadinessTelegram:
+class TestTelegramChecker:
 
     def setup_method(self):
         self.mock_sender = Mock(spec=MessageSender)
-        use_case = SendMessages(sender=self.mock_sender)
-        self.command = CheckReadinessCommand(use_case, logger_factory=Mock())
+        self.checker = TelegramChecker(
+            send_messages=SendMessages(sender=self.mock_sender),
+            logger=Mock(spec=Logger),
+        )
 
-    def test_telegram_ready_when_notification_sent(self):
+    def test_ready_when_message_sent(self):
         self.mock_sender.send_message.return_value = True
 
-        result = self.command._check_telegram()
+        result = self.checker.check()
 
-        assert result == "[READY] Telegram notifications"
-        assert self.command._all_ready is True
+        assert result.ready is True
+        assert result.message == "[READY] Telegram notifications"
 
-    def test_telegram_not_ready_when_notification_fails(self):
+    def test_not_ready_when_message_fails(self):
         self.mock_sender.send_message.return_value = False
 
-        result = self.command._check_telegram()
+        result = self.checker.check()
 
-        assert result == "[NOT READY] Telegram notifications"
-        assert self.command._all_ready is False
+        assert result.ready is False
+        assert result.message == "[NOT READY] Telegram notifications"
 
-    def test_telegram_not_ready_when_unexpected_exception(self):
+    def test_not_ready_when_unexpected_exception(self):
         self.mock_sender.send_message.side_effect = Exception("Connection error")
 
-        result = self.command._check_telegram()
+        result = self.checker.check()
 
-        assert result == "[NOT READY] Telegram notifications"
-        assert self.command._all_ready is False
-
-
-class TestCheckReadinessExecute:
-
-    @patch.dict(
-        "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "4",
-        },
-        clear=True,
-    )
-    def test_execute_does_not_include_warning_when_all_ready(self):
-        mock_sender = Mock(spec=MessageSender)
-        mock_sender.send_message.return_value = True
-        use_case = SendMessages(sender=mock_sender)
-        command = CheckReadinessCommand(use_case, logger_factory=Mock())
-
-        result = command.execute()
-
-        lines = result.message.split("\n")
-        assert lines[0] == "[READY] Environment variables"
-        assert lines[1] == "[READY] Telegram notifications"
-        assert "restart the app" not in result.message
-        assert result.success is True
-
-    @patch.dict(
-        "os.environ",
-        {
-            "MAX_FETCH_WORKERS": "4",
-        },
-        clear=True,
-    )
-    def test_execute_includes_warning_when_any_check_fails(self):
-        mock_sender = Mock(spec=MessageSender)
-        mock_sender.send_message.return_value = False
-        use_case = SendMessages(sender=mock_sender)
-        command = CheckReadinessCommand(use_case, logger_factory=Mock())
-
-        result = command.execute()
-
-        assert result.message.index("[NOT READY] Environment variables") < result.message.index(
-            "[NOT READY] Telegram notifications"
-        )
-        assert result.message.endswith(
-            "Fix the errors above and restart the app for changes to take effect."
-        )
-        assert result.success is False
+        assert result.ready is False
+        assert result.message == "[NOT READY] Telegram notifications"

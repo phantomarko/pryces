@@ -1,7 +1,9 @@
 import os
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 
-from ....application.interfaces import LoggerFactory
+from ....application.interfaces import Logger, LoggerFactory
 from ....application.use_cases.send_messages import SendMessages, SendMessagesRequest
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 
@@ -10,36 +12,20 @@ _NOT_READY = "[NOT READY]"
 _WARNING = "Fix the errors above and restart the app for changes to take effect."
 
 
-class CheckReadinessCommand(Command):
-    def __init__(self, send_messages_use_case: SendMessages, logger_factory: LoggerFactory) -> None:
-        self._send_messages = send_messages_use_case
-        self._logger = logger_factory.get_logger(__name__)
-        self._all_ready = True
+@dataclass(frozen=True)
+class CheckResult:
+    ready: bool
+    message: str
 
-    def get_metadata(self) -> CommandMetadata:
-        return CommandMetadata(
-            id="check_readiness",
-            name="Check Readiness",
-            description="Check if all components and configs are ready for monitoring",
-        )
 
-    def get_input_prompts(self) -> list[InputPrompt]:
-        return []
+class Checker(ABC):
+    @abstractmethod
+    def check(self) -> CheckResult:
+        pass
 
-    def execute(self, **kwargs) -> CommandResult:
-        self._logger.info("Check Readiness command started")
-        self._all_ready = True
-        results = [
-            self._check_env(),
-            self._check_telegram(),
-        ]
-        if not self._all_ready:
-            results.append("")
-            results.append(_WARNING)
-        self._logger.info("Check Readiness command finished")
-        return CommandResult(message="\n".join(results), success=self._all_ready)
 
-    def _check_env(self) -> str:
+class EnvVarsChecker(Checker):
+    def check(self) -> CheckResult:
         errors = []
 
         for var in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_GROUP_ID"):
@@ -67,11 +53,19 @@ class CheckReadinessCommand(Command):
                 errors.append("  - EXTRA_DELAY_IN_MINUTES is not a valid integer")
 
         if errors:
-            self._all_ready = False
-            return f"{_NOT_READY} Environment variables\n" + "\n".join(errors)
-        return f"{_READY} Environment variables"
+            return CheckResult(
+                ready=False,
+                message=f"{_NOT_READY} Environment variables\n" + "\n".join(errors),
+            )
+        return CheckResult(ready=True, message=f"{_READY} Environment variables")
 
-    def _check_telegram(self) -> str:
+
+class TelegramChecker(Checker):
+    def __init__(self, send_messages: SendMessages, logger: Logger) -> None:
+        self._send_messages = send_messages
+        self._logger = logger
+
+    def check(self) -> CheckResult:
         try:
             request = SendMessagesRequest(
                 messages=["Pryces — Stock price monitor.\nhttps://github.com/phantomarko/pryces"]
@@ -79,12 +73,37 @@ class CheckReadinessCommand(Command):
             response = self._send_messages.handle(request)
 
             if response.successful > 0 and response.failed == 0:
-                return f"{_READY} Telegram notifications"
+                return CheckResult(ready=True, message=f"{_READY} Telegram notifications")
             else:
-                self._all_ready = False
-                return f"{_NOT_READY} Telegram notifications"
+                return CheckResult(ready=False, message=f"{_NOT_READY} Telegram notifications")
 
         except Exception as e:
             self._logger.error(f"Telegram readiness check failed: {e}")
-            self._all_ready = False
-            return f"{_NOT_READY} Telegram notifications"
+            return CheckResult(ready=False, message=f"{_NOT_READY} Telegram notifications")
+
+
+class CheckReadinessCommand(Command):
+    def __init__(self, checkers: list[Checker], logger_factory: LoggerFactory) -> None:
+        self._checkers = checkers
+        self._logger = logger_factory.get_logger(__name__)
+
+    def get_metadata(self) -> CommandMetadata:
+        return CommandMetadata(
+            id="check_readiness",
+            name="Check Readiness",
+            description="Check if all components and configs are ready for monitoring",
+        )
+
+    def get_input_prompts(self) -> list[InputPrompt]:
+        return []
+
+    def execute(self, **kwargs) -> CommandResult:
+        self._logger.info("Check Readiness command started")
+        results = [checker.check() for checker in self._checkers]
+        all_ready = all(r.ready for r in results)
+        lines = [r.message for r in results]
+        if not all_ready:
+            lines.append("")
+            lines.append(_WARNING)
+        self._logger.info("Check Readiness command finished")
+        return CommandResult(message="\n".join(lines), success=all_ready)
