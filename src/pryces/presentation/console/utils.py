@@ -15,7 +15,7 @@ def get_running_monitors() -> list[tuple[str, str]]:
 
     processes = []
     for line in lines:
-        if _MONITOR_MODULE not in line:
+        if _MONITOR_MODULE not in line or "/bin/sh" in line:
             continue
         pid, cmd = line.strip().split(None, 1)
         try:
