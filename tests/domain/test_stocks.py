@@ -233,7 +233,7 @@ class TestIsCloseToSMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("105.00"),
+            fifty_day_average=Decimal("102.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -249,7 +249,7 @@ class TestIsCloseToSMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("95.00"),
+            fifty_day_average=Decimal("98.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -265,7 +265,7 @@ class TestIsCloseToSMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("106.00"),
+            fifty_day_average=Decimal("103.00"),
             market_state=MarketState.OPEN,
         )
 
@@ -279,7 +279,7 @@ class TestIsCloseToSMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("94.00"),
+            fifty_day_average=Decimal("97.00"),
             market_state=MarketState.OPEN,
         )
 
@@ -293,7 +293,7 @@ class TestIsCloseToSMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("105.00"),
+            fifty_day_average=Decimal("102.50"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -309,7 +309,7 @@ class TestIsCloseToSMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("95.00"),
+            fifty_day_average=Decimal("97.50"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -373,7 +373,7 @@ class TestCloseToSMA50Notifications:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("103.00"),
+            fifty_day_average=Decimal("102.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -389,7 +389,7 @@ class TestCloseToSMA50Notifications:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("97.00"),
+            fifty_day_average=Decimal("98.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -405,7 +405,7 @@ class TestCloseToSMA50Notifications:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("110.00"),
+            fifty_day_average=Decimal("103.00"),
             market_state=MarketState.OPEN,
         )
 
@@ -437,7 +437,7 @@ class TestCloseToSMA200Notifications:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            two_hundred_day_average=Decimal("103.00"),
+            two_hundred_day_average=Decimal("102.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -453,7 +453,7 @@ class TestCloseToSMA200Notifications:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("105.00"),
-            two_hundred_day_average=Decimal("97.00"),
+            two_hundred_day_average=Decimal("98.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -469,7 +469,7 @@ class TestCloseToSMA200Notifications:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            two_hundred_day_average=Decimal("110.00"),
+            two_hundred_day_average=Decimal("103.00"),
             market_state=MarketState.OPEN,
         )
 
@@ -1420,8 +1420,8 @@ class TestCloseToSMASuppressedByCrossing:
     def test_close_to_sma50_not_suppressed_when_no_crossing(self):
         stock = Stock(
             symbol="AAPL",
-            current_price=Decimal("96.00"),
-            previous_close_price=Decimal("95.00"),
+            current_price=Decimal("98.00"),
+            previous_close_price=Decimal("97.00"),
             fifty_day_average=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
@@ -1436,8 +1436,8 @@ class TestCloseToSMASuppressedByCrossing:
     def test_close_to_sma200_not_suppressed_when_no_crossing(self):
         stock = Stock(
             symbol="AAPL",
-            current_price=Decimal("96.00"),
-            previous_close_price=Decimal("95.00"),
+            current_price=Decimal("98.00"),
+            previous_close_price=Decimal("97.00"),
             two_hundred_day_average=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
@@ -1490,7 +1490,7 @@ class TestPercentageSuppressedBySMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("103.00"),
+            fifty_day_average=Decimal("102.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
@@ -1507,7 +1507,7 @@ class TestPercentageSuppressedBySMA:
             symbol="AAPL",
             current_price=Decimal("100.00"),
             previous_close_price=Decimal("95.00"),
-            two_hundred_day_average=Decimal("103.00"),
+            two_hundred_day_average=Decimal("102.00"),
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()

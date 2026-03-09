@@ -57,8 +57,7 @@ class Stock:
         "_fulfilled_targets",
     )
 
-    _CLOSE_TO_SMA_UPPER_THRESHOLD = Decimal("5")
-    _CLOSE_TO_SMA_LOWER_THRESHOLD = Decimal("-5")
+    _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
 
     _INCREASE_THRESHOLDS = (
         (Decimal("20"), Notification.create_twenty_percent_increase),
@@ -257,11 +256,11 @@ class Stock:
         return (
             self.previous_close_price < sma
             and self.current_price < sma
-            and change_percentage <= self._CLOSE_TO_SMA_UPPER_THRESHOLD
+            and change_percentage <= self._CLOSE_TO_SMA_THRESHOLD
         ) or (
             self.previous_close_price > sma
             and self.current_price > sma
-            and change_percentage >= self._CLOSE_TO_SMA_LOWER_THRESHOLD
+            and change_percentage >= -self._CLOSE_TO_SMA_THRESHOLD
         )
 
     def _has_crossed_sma(self, sma: Decimal | None) -> bool:
