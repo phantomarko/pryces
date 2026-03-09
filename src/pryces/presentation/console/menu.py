@@ -76,7 +76,7 @@ class InteractiveMenu:
 
     def _execute_command(self, command: Command) -> None:
         metadata = command.get_metadata()
-        self._output.write(f"\n--- {metadata.name} ---\n\n")
+        self._output.write(f"\n--- {metadata.name} ---\n")
 
         inputs = self._collect_inputs(command.get_input_prompts())
 
@@ -84,12 +84,12 @@ class InteractiveMenu:
             self._output.write("\nCommand cancelled.\n")
             return
 
-        self._output.write("\nExecuting...\n\n")
+        if metadata.show_progress:
+            self._output.write("\nExecuting...\n")
 
         try:
             result = command.execute(**inputs)
-            self._output.write(result.message)
-            self._output.write("\n")
+            self._output.write(f"\n{result.message}\n")
         except Exception as e:
             self._output.write(f"\nError executing command: {e}\n")
 
@@ -103,9 +103,11 @@ class InteractiveMenu:
     def _collect_inputs(self, prompts: list[InputPrompt]) -> dict | None:
         inputs = {}
 
-        for prompt in prompts:
+        for i, prompt in enumerate(prompts):
+            if i == 0:
+                self._output.write("\n")
             if prompt.preamble is not None:
-                self._output.write(prompt.preamble + "\n")
+                self._output.write(prompt.preamble + "\n\n")
 
             while True:
                 self._output.write(prompt.prompt)
@@ -119,6 +121,9 @@ class InteractiveMenu:
 
                     value = value.strip()
                     if not value:
+                        if prompt.default is not None:
+                            inputs[prompt.key] = prompt.default
+                            break
                         self._output.write("Input cannot be empty. Try again.\n")
                         continue
 

@@ -159,7 +159,7 @@ class TestInteractiveMenu:
 
         assert inputs == {"value": "test"}
         output = self.output_stream.getvalue()
-        assert output.startswith("Enter: ")
+        assert "\nEnter: " in output
 
     def test_execute_command_collects_inputs_and_executes(self):
         mock_command = Mock(spec=Command)
@@ -260,6 +260,62 @@ class TestInteractiveMenu:
 
         output = self.output_stream.getvalue()
         assert "Invalid selection: 99" in output
+
+    def test_execute_command_shows_executing_banner_when_show_progress_true(self):
+        mock_command = Mock(spec=Command)
+        mock_command.get_metadata.return_value = CommandMetadata(
+            id="test", name="Test Command", description="Test", show_progress=True
+        )
+        mock_command.get_input_prompts.return_value = []
+        mock_command.execute.return_value = CommandResult(message="done")
+
+        self.input_stream.write("\n")
+        self.input_stream.seek(0)
+
+        self.menu._execute_command(mock_command)
+
+        output = self.output_stream.getvalue()
+        assert "Executing..." in output
+
+    def test_execute_command_suppresses_executing_banner_when_show_progress_false(self):
+        mock_command = Mock(spec=Command)
+        mock_command.get_metadata.return_value = CommandMetadata(
+            id="test", name="Test Command", description="Test", show_progress=False
+        )
+        mock_command.get_input_prompts.return_value = []
+        mock_command.execute.return_value = CommandResult(message="done")
+
+        self.input_stream.write("\n")
+        self.input_stream.seek(0)
+
+        self.menu._execute_command(mock_command)
+
+        output = self.output_stream.getvalue()
+        assert "Executing..." not in output
+
+    def test_collect_inputs_uses_default_on_empty_input(self):
+        prompts = [InputPrompt(key="delay", prompt="Delay [0]: ", validator=None, default="0")]
+
+        self.input_stream.write("\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs == {"delay": "0"}
+        output = self.output_stream.getvalue()
+        assert "cannot be empty" not in output
+
+    def test_collect_inputs_rejects_empty_input_when_no_default(self):
+        prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]
+
+        self.input_stream.write("\ntest\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs == {"value": "test"}
+        output = self.output_stream.getvalue()
+        assert "cannot be empty" in output
 
     def test_run_handles_eof_gracefully(self):
         mock_command = Mock(spec=Command)

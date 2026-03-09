@@ -8,6 +8,7 @@ class CommandMetadata:
     id: str
     name: str
     description: str
+    show_progress: bool = True
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,7 @@ class InputPrompt:
     prompt: str
     validator: Callable[[str], bool] | None = None
     preamble: str | None = None
+    default: str | None = None
 
 
 @dataclass(frozen=True)

@@ -22,6 +22,7 @@ class TestMonitorStocksCommand:
         assert isinstance(metadata, CommandMetadata)
         assert metadata.id == "monitor_stocks"
         assert metadata.name == "Monitor Stocks"
+        assert metadata.show_progress is False
 
     def test_get_input_prompts_returns_config_path_prompt(self):
         prompts = self.command.get_input_prompts()
@@ -47,6 +48,7 @@ class TestMonitorStocksCommand:
         assert prompts[2].key == "extra_delay"
         assert "delay" in prompts[2].prompt.lower()
         assert prompts[2].validator is validate_non_negative_integer
+        assert prompts[2].default == "0"
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
     def test_execute_launches_background_process_and_returns_pid(self, mock_popen):

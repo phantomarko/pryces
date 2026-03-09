@@ -11,6 +11,7 @@ class MonitorStocksCommand(Command):
             id="monitor_stocks",
             name="Monitor Stocks",
             description="Monitor stocks for relevant price notifications",
+            show_progress=False,
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
@@ -29,6 +30,7 @@ class MonitorStocksCommand(Command):
                 key="extra_delay",
                 prompt="Extra price delay in minutes [0]: ",
                 validator=validate_non_negative_integer,
+                default="0",
             ),
         ]
 

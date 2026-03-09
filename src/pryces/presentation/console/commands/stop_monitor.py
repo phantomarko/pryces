@@ -17,6 +17,7 @@ class StopMonitorCommand(Command):
             id="stop_monitor",
             name="Stop Monitor Process",
             description="Stop a running monitor process",
+            show_progress=False,
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:

@@ -8,6 +8,7 @@ class ListMonitorsCommand(Command):
             id="list_monitors",
             name="List Monitor Processes",
             description="List running monitor processes",
+            show_progress=False,
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
