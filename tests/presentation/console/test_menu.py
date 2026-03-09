@@ -78,6 +78,21 @@ class TestInteractiveMenu:
 
         assert selection == 0
 
+    def test_collect_inputs_shows_cancel_hint_under_each_prompt(self):
+        prompts = [
+            InputPrompt(key="first", prompt="Enter first: ", validator=None),
+            InputPrompt(key="second", prompt="Enter second: ", validator=None),
+        ]
+
+        self.input_stream.write("a\nb\n")
+        self.input_stream.seek(0)
+
+        self.menu._collect_inputs(prompts)
+
+        output = self.output_stream.getvalue()
+        assert output.count("q to cancel") == 2
+        assert output.index("Enter first:") < output.index("q to cancel")
+
     def test_collect_inputs_gathers_all_prompts(self):
         prompts = [
             InputPrompt(key="name", prompt="Enter name: ", validator=None),
@@ -117,6 +132,39 @@ class TestInteractiveMenu:
         assert inputs == {"value": "test"}
         output = self.output_stream.getvalue()
         assert "cannot be empty" in output
+
+    def test_collect_inputs_returns_none_on_sentinel(self):
+        prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]
+
+        self.input_stream.write("q\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs is None
+
+    def test_collect_inputs_returns_none_on_sentinel_uppercase(self):
+        prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]
+
+        self.input_stream.write("Q\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs is None
+
+    def test_collect_inputs_returns_none_on_sentinel_mid_command(self):
+        prompts = [
+            InputPrompt(key="first", prompt="Enter first: ", validator=None),
+            InputPrompt(key="second", prompt="Enter second: ", validator=None),
+        ]
+
+        self.input_stream.write("AAPL\nq\n")
+        self.input_stream.seek(0)
+
+        inputs = self.menu._collect_inputs(prompts)
+
+        assert inputs is None
 
     def test_collect_inputs_returns_none_on_eof(self):
         prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]

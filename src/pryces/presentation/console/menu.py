@@ -110,7 +110,7 @@ class InteractiveMenu:
                 self._output.write(prompt.preamble + "\n\n")
 
             while True:
-                self._output.write(prompt.prompt)
+                self._output.write(prompt.prompt + "\n  (q to cancel) ")
                 self._output.flush()
 
                 try:
@@ -120,6 +120,10 @@ class InteractiveMenu:
                         return None
 
                     value = value.strip()
+
+                    if value.lower() == "q":
+                        return None
+
                     if not value:
                         if prompt.default is not None:
                             inputs[prompt.key] = prompt.default
