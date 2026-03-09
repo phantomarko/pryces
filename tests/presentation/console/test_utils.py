@@ -100,91 +100,99 @@ class TestCreateMonitorSelectionValidator:
 
     def test_accepts_zero(self):
         validator = create_monitor_selection_validator(3)
-        assert validator("0") is True
+        assert validator("0") is None
 
     def test_accepts_valid_range(self):
         validator = create_monitor_selection_validator(3)
-        assert validator("1") is True
-        assert validator("2") is True
-        assert validator("3") is True
+        assert validator("1") is None
+        assert validator("2") is None
+        assert validator("3") is None
 
     def test_rejects_out_of_range(self):
         validator = create_monitor_selection_validator(2)
-        assert validator("3") is False
-        assert validator("10") is False
+        assert validator("3") is not None
+        assert validator("10") is not None
 
     def test_rejects_negative(self):
         validator = create_monitor_selection_validator(3)
-        assert validator("-1") is False
+        assert validator("-1") is not None
 
     def test_rejects_non_numeric(self):
         validator = create_monitor_selection_validator(3)
-        assert validator("abc") is False
-        assert validator("") is False
+        assert validator("abc") is not None
+        assert validator("") is not None
+
+    def test_error_message_includes_upper_bound(self):
+        validator = create_monitor_selection_validator(5)
+        assert "5" in validator("99")
 
 
 class TestValidateSymbol:
 
     def test_accepts_valid_symbols(self):
-        assert validate_symbol("AAPL") is True
-        assert validate_symbol("GOOGL") is True
-        assert validate_symbol("MSFT") is True
-        assert validate_symbol("BRK.B") is True
-        assert validate_symbol("TSM") is True
+        assert validate_symbol("AAPL") is None
+        assert validate_symbol("GOOGL") is None
+        assert validate_symbol("MSFT") is None
+        assert validate_symbol("BRK.B") is None
+        assert validate_symbol("TSM") is None
 
     def test_rejects_invalid_symbols(self):
-        assert validate_symbol("") is False
-        assert validate_symbol("   ") is False
-        assert validate_symbol("TOOLONGSYMBOL") is False
+        assert validate_symbol("") is not None
+        assert validate_symbol("   ") is not None
+        assert validate_symbol("TOOLONGSYMBOL") is not None
+
+    def test_error_message_describes_constraint(self):
+        error = validate_symbol("TOOLONGSYMBOL")
+        assert "1" in error and "10" in error
 
 
 class TestValidateSymbols:
 
     def test_accepts_valid_single_symbol(self):
-        assert validate_symbols("AAPL") is True
+        assert validate_symbols("AAPL") is None
 
     def test_accepts_valid_comma_separated_symbols(self):
-        assert validate_symbols("AAPL,GOOGL,MSFT") is True
+        assert validate_symbols("AAPL,GOOGL,MSFT") is None
 
     def test_accepts_symbols_with_spaces(self):
-        assert validate_symbols("AAPL, GOOGL, MSFT") is True
-        assert validate_symbols("AAPL , GOOGL , MSFT") is True
+        assert validate_symbols("AAPL, GOOGL, MSFT") is None
+        assert validate_symbols("AAPL , GOOGL , MSFT") is None
 
     def test_rejects_empty_string(self):
-        assert validate_symbols("") is False
-        assert validate_symbols("   ") is False
+        assert validate_symbols("") is not None
+        assert validate_symbols("   ") is not None
 
     def test_rejects_symbols_too_long(self):
-        assert validate_symbols("TOOLONGSYMBOL") is False
-        assert validate_symbols("AAPL,TOOLONGSYMBOL") is False
+        assert validate_symbols("TOOLONGSYMBOL") is not None
+        assert validate_symbols("AAPL,TOOLONGSYMBOL") is not None
 
     def test_rejects_empty_symbols_in_list(self):
-        assert validate_symbols("AAPL,,GOOGL") is False
-        assert validate_symbols(",AAPL,GOOGL") is False
-        assert validate_symbols("AAPL,GOOGL,") is False
+        assert validate_symbols("AAPL,,GOOGL") is not None
+        assert validate_symbols(",AAPL,GOOGL") is not None
+        assert validate_symbols("AAPL,GOOGL,") is not None
 
 
 class TestValidatePositiveInteger:
 
     def test_accepts_positive_integers(self):
-        assert validate_positive_integer("1") is True
-        assert validate_positive_integer("10") is True
-        assert validate_positive_integer("300") is True
+        assert validate_positive_integer("1") is None
+        assert validate_positive_integer("10") is None
+        assert validate_positive_integer("300") is None
 
     def test_rejects_zero(self):
-        assert validate_positive_integer("0") is False
+        assert validate_positive_integer("0") is not None
 
     def test_rejects_negative_numbers(self):
-        assert validate_positive_integer("-1") is False
-        assert validate_positive_integer("-100") is False
+        assert validate_positive_integer("-1") is not None
+        assert validate_positive_integer("-100") is not None
 
     def test_rejects_non_numeric(self):
-        assert validate_positive_integer("abc") is False
-        assert validate_positive_integer("") is False
-        assert validate_positive_integer("1.5") is False
+        assert validate_positive_integer("abc") is not None
+        assert validate_positive_integer("") is not None
+        assert validate_positive_integer("1.5") is not None
 
     def test_rejects_none(self):
-        assert validate_positive_integer(None) is False
+        assert validate_positive_integer(None) is not None
 
 
 class TestValidateFilePath:
@@ -193,25 +201,29 @@ class TestValidateFilePath:
         file = tmp_path / "config.json"
         file.write_text("{}")
 
-        assert validate_file_path(str(file)) is True
+        assert validate_file_path(str(file)) is None
 
     def test_accepts_existing_file_with_whitespace(self, tmp_path):
         file = tmp_path / "config.json"
         file.write_text("{}")
 
-        assert validate_file_path(f"  {file}  ") is True
+        assert validate_file_path(f"  {file}  ") is None
 
     def test_rejects_nonexistent_path(self):
-        assert validate_file_path("/nonexistent/path/to/file.json") is False
+        assert validate_file_path("/nonexistent/path/to/file.json") is not None
 
     def test_rejects_directory(self, tmp_path):
-        assert validate_file_path(str(tmp_path)) is False
+        assert validate_file_path(str(tmp_path)) is not None
 
     def test_rejects_empty_string(self):
-        assert validate_file_path("") is False
+        assert validate_file_path("") is not None
 
     def test_rejects_whitespace_only(self):
-        assert validate_file_path("   ") is False
+        assert validate_file_path("   ") is not None
+
+    def test_error_message_is_descriptive(self):
+        error = validate_file_path("/nonexistent/file.json")
+        assert isinstance(error, str) and len(error) > 0
 
 
 class TestParseSymbolsInput:

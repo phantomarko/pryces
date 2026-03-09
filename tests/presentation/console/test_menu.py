@@ -107,8 +107,8 @@ class TestInteractiveMenu:
         assert inputs == {"name": "John", "age": "25"}
 
     def test_collect_inputs_validates_input(self):
-        def validate_number(value: str) -> bool:
-            return value.isdigit()
+        def validate_number(value: str) -> str | None:
+            return None if value.isdigit() else "Must be a number."
 
         prompts = [InputPrompt(key="count", prompt="Enter count: ", validator=validate_number)]
 
@@ -119,7 +119,7 @@ class TestInteractiveMenu:
 
         assert inputs == {"count": "42"}
         output = self.output_stream.getvalue()
-        assert output.count("Invalid input format") == 2
+        assert output.count("Must be a number.") == 2
 
     def test_collect_inputs_rejects_empty_input(self):
         prompts = [InputPrompt(key="value", prompt="Enter value: ", validator=None)]

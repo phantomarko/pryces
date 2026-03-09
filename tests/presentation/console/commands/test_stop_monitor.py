@@ -49,11 +49,11 @@ class TestStopMonitorCommand:
         prompts = command.get_input_prompts()
         validator = prompts[0].validator
 
-        assert validator("0") is True
-        assert validator("1") is True
-        assert validator("2") is True
-        assert validator("3") is False
-        assert validator("abc") is False
+        assert validator("0") is None
+        assert validator("1") is None
+        assert validator("2") is None
+        assert validator("3") is not None
+        assert validator("abc") is not None
 
     @patch("pryces.presentation.console.commands.stop_monitor.get_running_monitors")
     def test_execute_returns_no_processes_message_when_no_processes(self, mock_get):

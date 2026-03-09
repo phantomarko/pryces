@@ -131,9 +131,11 @@ class InteractiveMenu:
                         self._output.write("Input cannot be empty. Try again.\n")
                         continue
 
-                    if prompt.validator and not prompt.validator(value):
-                        self._output.write("Invalid input format. Try again.\n")
-                        continue
+                    if prompt.validator:
+                        error = prompt.validator(value)
+                        if error is not None:
+                            self._output.write(f"{error} Try again.\n")
+                            continue
 
                     inputs[prompt.key] = value
                     break

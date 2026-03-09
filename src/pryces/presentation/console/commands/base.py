@@ -15,7 +15,7 @@ class CommandMetadata:
 class InputPrompt:
     key: str
     prompt: str
-    validator: Callable[[str], bool] | None = None
+    validator: Callable[[str], str | None] | None = None
     preamble: str | None = None
     default: str | None = None
 

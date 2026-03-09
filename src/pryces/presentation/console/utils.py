@@ -38,46 +38,58 @@ def format_running_monitors(processes: list[tuple[str, str]]) -> str:
     return "\n".join([header] + entries)
 
 
-def create_monitor_selection_validator(process_count: int) -> Callable[[str], bool]:
-    def validator(value: str) -> bool:
+def create_monitor_selection_validator(process_count: int) -> Callable[[str], str | None]:
+    def validator(value: str) -> str | None:
         try:
-            return 0 <= int(value) <= process_count
+            if 0 <= int(value) <= process_count:
+                return None
         except (ValueError, TypeError):
-            return False
+            pass
+        return f"Must be a number between 0 and {process_count}."
 
     return validator
 
 
-def validate_symbol(value: str) -> bool:
-    return bool(value and value.strip() and len(value.strip()) <= 10)
+def validate_symbol(value: str) -> str | None:
+    if value and value.strip() and len(value.strip()) <= 10:
+        return None
+    return "Symbol must be 1–10 characters."
 
 
-def validate_symbols(value: str) -> bool:
+def validate_symbols(value: str) -> str | None:
     if not value or not value.strip():
-        return False
+        return "Each symbol must be 1–10 characters, separated by commas."
 
     symbols = [s.strip() for s in value.split(",")]
-    return all(symbol and len(symbol) <= 10 for symbol in symbols)
+    if all(symbol and len(symbol) <= 10 for symbol in symbols):
+        return None
+    return "Each symbol must be 1–10 characters, separated by commas."
 
 
-def validate_positive_integer(value: str) -> bool:
+def validate_positive_integer(value: str) -> str | None:
     try:
-        return int(value) > 0
+        if int(value) > 0:
+            return None
     except (ValueError, TypeError):
-        return False
+        pass
+    return "Must be a positive integer."
 
 
-def validate_non_negative_integer(value: str) -> bool:
+def validate_non_negative_integer(value: str) -> str | None:
     if not value or not value.strip():
-        return True  # empty string → caller defaults to 0
+        return None  # empty string → caller defaults to 0
     try:
-        return int(value.strip()) >= 0
+        if int(value.strip()) >= 0:
+            return None
     except (ValueError, TypeError):
-        return False
+        pass
+    return "Must be a non-negative integer."
 
 
-def validate_file_path(value: str) -> bool:
-    return bool(value and value.strip() and Path(value.strip()).is_file())
+def validate_file_path(value: str) -> str | None:
+    if value and value.strip() and Path(value.strip()).is_file():
+        return None
+    return "File not found or not a file."
 
 
 def parse_symbols_input(value: str) -> list[str]:
