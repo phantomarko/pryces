@@ -1,6 +1,12 @@
 from decimal import Decimal
 
 from pryces.domain.stocks import MarketState, Stock, StockSnapshot
+from tests.fixtures.factories import (
+    generate_and_drain,
+    make_stock,
+    open_stock_after_burn,
+    open_stock_ready_for_target,
+)
 
 
 class TestStockCreation:
@@ -65,549 +71,281 @@ class TestStockCreation:
 
 class TestHasCrossedSMA:
     def test_has_crossed_sma_returns_false_when_fields_are_missing(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
+        stock = make_stock(current_price="150.00")
+        messages = generate_and_drain(stock)
         assert not any("crossed SMA50" in m for m in messages)
 
-        stock_with_previous = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock_with_previous.generate_notifications()
-        messages = stock_with_previous.drain_notifications()
+        stock_with_previous = make_stock(current_price="150.00", previous_close_price="140.00")
+        messages = generate_and_drain(stock_with_previous)
         assert not any("crossed SMA50" in m for m in messages)
 
-        stock_with_average = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock_with_average.generate_notifications()
-        messages = stock_with_average.drain_notifications()
+        stock_with_average = make_stock(current_price="150.00", fifty_day_average="145.00")
+        messages = generate_and_drain(stock_with_average)
         assert not any("crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_above(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_below(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("140.00"),
-            previous_close_price=Decimal("150.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="140.00",
+            previous_close_price="150.00",
+            fifty_day_average="145.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_returns_false_when_no_crossing(self):
-        stock_both_above = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock_both_above = make_stock(
+            current_price="150.00", previous_close_price="148.00", fifty_day_average="145.00"
         )
-        stock_both_above.generate_notifications()
-        messages = stock_both_above.drain_notifications()
+        messages = generate_and_drain(stock_both_above)
         assert not any("crossed SMA50" in m for m in messages)
 
-        stock_both_below = Stock(
-            symbol="AAPL",
-            current_price=Decimal("140.00"),
-            previous_close_price=Decimal("142.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock_both_below = make_stock(
+            current_price="140.00", previous_close_price="142.00", fifty_day_average="145.00"
         )
-        stock_both_below.generate_notifications()
-        messages = stock_both_below.drain_notifications()
+        messages = generate_and_drain(stock_both_below)
         assert not any("crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_above_when_current_equals_average(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="145.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_below_when_current_equals_average(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("145.00"),
-            previous_close_price=Decimal("150.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="145.00",
+            previous_close_price="150.00",
+            fifty_day_average="145.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_returns_false_when_previous_equals_average(self):
-        stock_current_above = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("145.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock_current_above = make_stock(
+            current_price="150.00", previous_close_price="145.00", fifty_day_average="145.00"
         )
-        stock_current_above.generate_notifications()
-        messages = stock_current_above.drain_notifications()
+        messages = generate_and_drain(stock_current_above)
         assert not any("crossed SMA50" in m for m in messages)
 
-        stock_current_below = Stock(
-            symbol="AAPL",
-            current_price=Decimal("140.00"),
-            previous_close_price=Decimal("145.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock_current_below = make_stock(
+            current_price="140.00", previous_close_price="145.00", fifty_day_average="145.00"
         )
-        stock_current_below.generate_notifications()
-        messages = stock_current_below.drain_notifications()
+        messages = generate_and_drain(stock_current_below)
         assert not any("crossed SMA50" in m for m in messages)
 
 
 class TestIsCloseToSMA:
     def test_is_close_to_sma_returns_false_when_fields_are_missing(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
+        stock = make_stock(current_price="150.00")
+        messages = generate_and_drain(stock)
         assert not any("SMA50 at" in m for m in messages)
 
-        stock_with_previous = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock_with_previous.generate_notifications()
-        messages = stock_with_previous.drain_notifications()
+        stock_with_previous = make_stock(current_price="150.00", previous_close_price="140.00")
+        messages = generate_and_drain(stock_with_previous)
         assert not any("SMA50 at" in m for m in messages)
 
-        stock_with_average = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock_with_average.generate_notifications()
-        messages = stock_with_average.drain_notifications()
+        stock_with_average = make_stock(current_price="150.00", fifty_day_average="145.00")
+        messages = generate_and_drain(stock_with_average)
         assert not any("SMA50 at" in m for m in messages)
 
-    def test_is_close_to_sma_returns_true_when_approaching_from_below_within_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("102.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_is_close_to_sma_returns_true_when_approaching_from_below_within_threshold(
+        self, close_to_sma50_from_below_stock
+    ):
+        messages = generate_and_drain(close_to_sma50_from_below_stock)
         assert any("below SMA50 at" in m for m in messages)
 
-    def test_is_close_to_sma_returns_true_when_approaching_from_above_within_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("98.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_is_close_to_sma_returns_true_when_approaching_from_above_within_threshold(
+        self, close_to_sma50_from_above_stock
+    ):
+        messages = generate_and_drain(close_to_sma50_from_above_stock)
         assert any("above SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_approaching_from_below_beyond_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("103.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="100.00", previous_close_price="95.00", fifty_day_average="106.00"
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_approaching_from_above_beyond_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("97.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="100.00", previous_close_price="105.00", fifty_day_average="94.00"
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA50 at" in m for m in messages)
 
-    def test_is_close_to_sma_returns_true_at_exact_threshold_from_below(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("102.50"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_is_close_to_sma_returns_true_at_exact_threshold_from_below(
+        self, close_to_sma50_from_below_stock
+    ):
+        messages = generate_and_drain(close_to_sma50_from_below_stock)
         assert any("below SMA50 at" in m for m in messages)
 
-    def test_is_close_to_sma_returns_true_at_exact_threshold_from_above(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("97.50"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_is_close_to_sma_returns_true_at_exact_threshold_from_above(
+        self, close_to_sma50_from_above_stock
+    ):
+        messages = generate_and_drain(close_to_sma50_from_above_stock)
         assert any("above SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_previous_close_on_same_side_as_price(self):
-        stock_both_above = Stock(
-            symbol="AAPL",
-            current_price=Decimal("110.00"),
-            previous_close_price=Decimal("108.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock_both_above = make_stock(
+            current_price="110.00", previous_close_price="108.00", fifty_day_average="100.00"
         )
-        stock_both_above.generate_notifications()
-        messages = stock_both_above.drain_notifications()
+        messages = generate_and_drain(stock_both_above)
         assert not any("SMA50 at" in m for m in messages)
 
-        stock_both_below = Stock(
-            symbol="AAPL",
-            current_price=Decimal("90.00"),
-            previous_close_price=Decimal("92.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock_both_below = make_stock(
+            current_price="90.00", previous_close_price="92.00", fifty_day_average="100.00"
         )
-        stock_both_below.generate_notifications()
-        messages = stock_both_below.drain_notifications()
+        messages = generate_and_drain(stock_both_below)
         assert not any("SMA50 at" in m for m in messages)
 
     def test_is_close_to_sma_returns_false_when_previous_equals_average(self):
-        stock_current_above = Stock(
-            symbol="AAPL",
-            current_price=Decimal("103.00"),
-            previous_close_price=Decimal("100.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock_current_above = make_stock(
+            current_price="103.00", previous_close_price="100.00", fifty_day_average="100.00"
         )
-        stock_current_above.generate_notifications()
-        messages = stock_current_above.drain_notifications()
+        messages = generate_and_drain(stock_current_above)
         assert not any("SMA50 at" in m for m in messages)
 
-        stock_current_below = Stock(
-            symbol="AAPL",
-            current_price=Decimal("97.00"),
-            previous_close_price=Decimal("100.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock_current_below = make_stock(
+            current_price="97.00", previous_close_price="100.00", fifty_day_average="100.00"
         )
-        stock_current_below.generate_notifications()
-        messages = stock_current_below.drain_notifications()
+        messages = generate_and_drain(stock_current_below)
         assert not any("SMA50 at" in m for m in messages)
 
 
 class TestCloseToSMA50Notifications:
     def test_generate_notifications_adds_close_to_sma50_when_approaching_from_below(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("102.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="100.00", previous_close_price="95.00", fifty_day_average="102.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("below SMA50 at" in m for m in messages)
 
     def test_generate_notifications_adds_close_to_sma50_when_approaching_from_above(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("105.00"),
-            fifty_day_average=Decimal("98.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="100.00", previous_close_price="105.00", fifty_day_average="98.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("above SMA50 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma50_when_beyond_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("103.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="100.00", previous_close_price="95.00", fifty_day_average="110.00"
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA50 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma50_when_previous_close_on_same_side(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("110.00"),
-            previous_close_price=Decimal("108.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="110.00", previous_close_price="108.00", fifty_day_average="100.00"
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA50 at" in m for m in messages)
 
 
 class TestCloseToSMA200Notifications:
     def test_generate_notifications_adds_close_to_sma200_when_approaching_from_below(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            two_hundred_day_average=Decimal("102.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="100.00",
+            previous_close_price="95.00",
+            two_hundred_day_average="102.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("below SMA200 at" in m for m in messages)
 
     def test_generate_notifications_adds_close_to_sma200_when_approaching_from_above(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("105.00"),
-            two_hundred_day_average=Decimal("98.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="100.00",
+            previous_close_price="105.00",
+            two_hundred_day_average="98.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("above SMA200 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma200_when_beyond_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            two_hundred_day_average=Decimal("103.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="100.00",
+            previous_close_price="95.00",
+            two_hundred_day_average="110.00",
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA200 at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_close_to_sma200_when_previous_close_on_same_side(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("110.00"),
-            previous_close_price=Decimal("108.00"),
-            two_hundred_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="110.00",
+            previous_close_price="108.00",
+            two_hundred_day_average="100.00",
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA200 at" in m for m in messages)
 
 
 class TestPercentageFromPreviousClose:
     def test_generate_notifications_rises_when_positive_percentage(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="150.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_drops_when_negative_percentage(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("90.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="90.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_no_percentage_when_prices_are_equal(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="100.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert not any("rose to" in m for m in messages)
         assert not any("dropped to" in m for m in messages)
 
 
 class TestSMACrossingNotifications:
-    def test_generate_notifications_adds_fifty_day_notification(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_generate_notifications_adds_fifty_day_notification(self, sma50_crossing_stock):
+        messages = generate_and_drain(sma50_crossing_stock)
         assert len(messages) == 1
         assert any("crossed SMA50" in m for m in messages)
 
-    def test_generate_notifications_adds_two_hundred_day_notification(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("130.00"),
-            two_hundred_day_average=Decimal("140.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_generate_notifications_adds_two_hundred_day_notification(self, sma200_crossing_stock):
+        messages = generate_and_drain(sma200_crossing_stock)
         assert len(messages) == 1
         assert any("crossed SMA200" in m for m in messages)
 
     def test_generate_notifications_adds_both_notifications(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("130.00"),
-            fifty_day_average=Decimal("145.00"),
-            two_hundred_day_average=Decimal("140.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="130.00",
+            fifty_day_average="145.00",
+            two_hundred_day_average="140.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert len(messages) == 2
         assert any("crossed SMA50" in m for m in messages)
         assert any("crossed SMA200" in m for m in messages)
 
     def test_generate_notifications_adds_no_notifications_when_no_crossing(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            fifty_day_average=Decimal("120.00"),
-            two_hundred_day_average=Decimal("110.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="150.00",
+            previous_close_price="148.00",
+            fifty_day_average="120.00",
+            two_hundred_day_average="110.00",
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("opened at" in m for m in messages)
         assert not any("crossed SMA50" in m for m in messages)
@@ -616,110 +354,65 @@ class TestSMACrossingNotifications:
 
 class TestRegularMarketOpenNotifications:
     def test_generate_notifications_adds_regular_market_open_notification(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            open_price=Decimal("149.75"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="150.00", open_price="149.75", previous_close_price="148.00"
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("opened at" in m for m in messages)
 
     def test_generate_notifications_adds_regular_market_open_with_current_price_fallback(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="150.00", previous_close_price="148.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("opened at" in m for m in messages)
 
     def test_generate_notifications_does_not_add_regular_market_open_when_market_closed(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            open_price=Decimal("149.75"),
-            previous_close_price=Decimal("148.00"),
+        stock = make_stock(
+            current_price="150.00",
+            open_price="149.75",
+            previous_close_price="148.00",
             market_state=MarketState.CLOSED,
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert messages == []
 
     def test_generate_notifications_returns_empty_when_market_state_is_none(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="150.00", market_state=None)
+        messages = generate_and_drain(stock)
         assert messages == []
 
 
 class TestMarketOpenDeferral:
     def test_first_call_returns_only_market_open_notification(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("106.00"),
-            previous_close_price=Decimal("100.00"),
-            fifty_day_average=Decimal("103.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price="106.00", previous_close_price="100.00", fifty_day_average="103.00"
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert "opened at" in messages[0]
 
     def test_second_call_returns_deferred_notifications(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("crossed SMA50" in m for m in messages)
 
     def test_non_first_open_generates_all_notifications_together(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+        stock = make_stock(current_price="150.00", previous_close_price="148.00")
+        generate_and_drain(stock)
+        source = make_stock(
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
         )
         stock.update(source)
 
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = generate_and_drain(stock)
 
         assert any("crossed SMA50" in m for m in messages)
         assert any("rose to" in m for m in messages)
@@ -728,425 +421,201 @@ class TestMarketOpenDeferral:
 class TestMarketStatePost:
     def test_generate_notifications_does_not_add_market_closed_for_non_post_states(self):
         for state in [MarketState.OPEN, MarketState.PRE, MarketState.CLOSED]:
-            stock = Stock(
-                symbol="AAPL",
-                current_price=Decimal("150.00"),
-                market_state=state,
-            )
-            stock.generate_notifications()
-            messages = stock.drain_notifications()
+            stock = make_stock(current_price="150.00", market_state=state)
+            messages = generate_and_drain(stock)
             assert not any("closed at" in m for m in messages)
 
     def test_generate_notifications_returns_empty_when_market_state_is_none(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="150.00", market_state=None)
+        messages = generate_and_drain(stock)
         assert messages == []
 
 
 class TestRegularMarketClosedNotifications:
     def test_generate_notifications_adds_regular_market_closed_when_post(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.POST,
-        )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="150.00", market_state=MarketState.POST)
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("closed at" in m for m in messages)
 
 
 class TestPercentageChangeNotifications:
     def test_generate_notifications_adds_twenty_percent_increase(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("121.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="121.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_fifteen_percent_increase(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("116.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="116.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_ten_percent_increase(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("111.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="111.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_five_percent_increase(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("106.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="106.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_adds_twenty_percent_decrease(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("79.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="79.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_adds_fifteen_percent_decrease(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("84.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="84.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_adds_ten_percent_decrease(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("89.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="89.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_adds_five_percent_decrease(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("94.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="94.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("dropped to" in m for m in messages)
 
     def test_generate_notifications_no_percentage_below_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("104.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="104.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("opened at" in m for m in messages)
 
     def test_generate_notifications_percentage_at_exact_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("105.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="105.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_no_percentage_when_previous_close_none(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            market_state=MarketState.OPEN,
-        )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="150.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("opened at" in m for m in messages)
 
 
 class Test52WeekHighNotifications:
     def test_generate_new_52_week_high_notification_does_not_add_when_no_snapshot(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="200.00")
+        messages = generate_and_drain(stock)
         assert not any("52-week high" in m for m in messages)
 
     def test_generate_new_52_week_high_notification_does_not_add_when_snapshot_has_no_52_week_high(
         self,
     ):
-        stock = Stock(symbol="AAPL", current_price=Decimal("180.00"), market_state=MarketState.OPEN)
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="180.00")
+        source = make_stock(current_price="200.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week high" in m for m in messages)
 
     def test_generate_new_52_week_high_notification_does_not_add_when_current_price_equals_snapshot_52_week_high(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("170.00"),
-            fifty_two_week_high=Decimal("180.00"),
-            market_state=MarketState.OPEN,
-        )
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("180.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="170.00", fifty_two_week_high="180.00")
+        source = make_stock(current_price="180.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week high" in m for m in messages)
 
     def test_generate_new_52_week_high_notification_does_not_add_when_current_price_below_snapshot_52_week_high(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("160.00"),
-            fifty_two_week_high=Decimal("180.00"),
-            market_state=MarketState.OPEN,
-        )
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("170.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="160.00", fifty_two_week_high="180.00")
+        source = make_stock(current_price="170.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week high" in m for m in messages)
 
     def test_generate_new_52_week_high_notification_does_not_add_when_no_previous_close(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("170.00"),
-            fifty_two_week_high=Decimal("180.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("200.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="170.00", fifty_two_week_high="180.00")
+        generate_and_drain(stock)
+        source = make_stock(current_price="200.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week high" in m for m in messages)
 
     def test_generate_new_52_week_high_notification_adds_when_current_price_exceeds_snapshot_52_week_high(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("170.00"),
-            previous_close_price=Decimal("160.00"),
-            fifty_two_week_high=Decimal("180.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="170.00",
+            previous_close_price="160.00",
+            fifty_two_week_high="180.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("160.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock.update(make_stock(current_price="200.00", previous_close_price="160.00"))
+        messages = generate_and_drain(stock)
         assert any("52-week high" in m for m in messages)
 
 
 class Test52WeekLowNotifications:
     def test_generate_new_52_week_low_notification_does_not_add_when_no_snapshot(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = make_stock(current_price="100.00")
+        messages = generate_and_drain(stock)
         assert not any("52-week low" in m for m in messages)
 
     def test_generate_new_52_week_low_notification_does_not_add_when_snapshot_has_no_52_week_low(
         self,
     ):
-        stock = Stock(symbol="AAPL", current_price=Decimal("120.00"), market_state=MarketState.OPEN)
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="120.00")
+        source = make_stock(current_price="100.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week low" in m for m in messages)
 
     def test_generate_new_52_week_low_notification_does_not_add_when_current_price_equals_snapshot_52_week_low(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("130.00"),
-            fifty_two_week_low=Decimal("120.00"),
-            market_state=MarketState.OPEN,
-        )
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("120.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="130.00", fifty_two_week_low="120.00")
+        source = make_stock(current_price="120.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week low" in m for m in messages)
 
     def test_generate_new_52_week_low_notification_does_not_add_when_current_price_above_snapshot_52_week_low(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("140.00"),
-            fifty_two_week_low=Decimal("120.00"),
-            market_state=MarketState.OPEN,
-        )
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("130.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="140.00", fifty_two_week_low="120.00")
+        source = make_stock(current_price="130.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week low" in m for m in messages)
 
     def test_generate_new_52_week_low_notification_does_not_add_when_no_previous_close(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("130.00"),
-            fifty_two_week_low=Decimal("120.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("100.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="130.00", fifty_two_week_low="120.00")
+        generate_and_drain(stock)
+        source = make_stock(current_price="100.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("52-week low" in m for m in messages)
 
     def test_generate_new_52_week_low_notification_adds_when_current_price_falls_below_snapshot_52_week_low(
         self,
     ):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("130.00"),
-            previous_close_price=Decimal("125.00"),
-            fifty_two_week_low=Decimal("120.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="130.00",
+            previous_close_price="125.00",
+            fifty_two_week_low="120.00",
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("125.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock.update(make_stock(current_price="100.00", previous_close_price="125.00"))
+        messages = generate_and_drain(stock)
         assert any("52-week low" in m for m in messages)
 
 
@@ -1231,29 +700,20 @@ class TestUpdate:
         assert stock.price_delay_in_minutes == 15
 
     def test_update_preserves_symbol(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))
-        source = Stock(symbol="AAPL", current_price=Decimal("155.00"))
-
+        stock = make_stock(current_price="150.00")
+        source = make_stock(current_price="155.00")
         stock.update(source)
-
         assert stock.symbol == "AAPL"
 
     def test_update_preserves_notifications(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        result1 = stock.drain_notifications()
+        stock = make_stock(current_price="150.00", previous_close_price="148.00")
+        result1 = generate_and_drain(stock)
         assert len(result1) > 0
 
-        source = Stock(symbol="AAPL", current_price=Decimal("155.00"))
+        source = make_stock(current_price="155.00")
         stock.update(source)
 
-        stock.generate_notifications()
-        result2 = stock.drain_notifications()
+        result2 = generate_and_drain(stock)
         assert result2 == []  # dedup works — notifications survived the update
 
     def test_stock_snapshot_is_frozen(self):
@@ -1280,59 +740,41 @@ class TestUpdate:
 
 class TestMarketStateTransition:
     def test_is_market_state_transition_returns_false_when_no_snapshot(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-
+        stock = make_stock(current_price="150.00")
         assert stock.is_market_state_transition() is False
 
     def test_is_market_state_transition_returns_true_when_pre_to_open(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.PRE)
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="150.00", market_state=MarketState.PRE)
+        source = make_stock(current_price="155.00", market_state=MarketState.OPEN)
         stock.update(source)
-
         assert stock.is_market_state_transition() is True
 
     def test_is_market_state_transition_returns_true_when_open_to_post(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.POST
-        )
+        stock = make_stock(current_price="150.00", market_state=MarketState.OPEN)
+        source = make_stock(current_price="155.00", market_state=MarketState.POST)
         stock.update(source)
-
         assert stock.is_market_state_transition() is True
 
     def test_is_market_state_transition_returns_false_when_same_state(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        source = Stock(
-            symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.OPEN
-        )
+        stock = make_stock(current_price="150.00", market_state=MarketState.OPEN)
+        source = make_stock(current_price="155.00", market_state=MarketState.OPEN)
         stock.update(source)
-
         assert stock.is_market_state_transition() is False
 
     def test_is_market_state_transition_returns_false_when_transition_to_non_open_post(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        source = Stock(symbol="AAPL", current_price=Decimal("155.00"), market_state=MarketState.PRE)
+        stock = make_stock(current_price="150.00", market_state=MarketState.OPEN)
+        source = make_stock(current_price="155.00", market_state=MarketState.PRE)
         stock.update(source)
-
         assert stock.is_market_state_transition() is False
 
 
 class TestDeduplication:
     def test_generate_notifications_deduplicates_by_type(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        result1 = stock.drain_notifications()
+        stock = make_stock(current_price="150.00", previous_close_price="148.00")
+        result1 = generate_and_drain(stock)
         assert len(result1) > 0
 
-        stock.generate_notifications()
-        result2 = stock.drain_notifications()
+        result2 = generate_and_drain(stock)
 
         assert result2 == []
 
@@ -1358,303 +800,148 @@ class TestDeduplication:
         assert result3 == []
 
 
-class TestCloseToSMASuppressedByCrossing:
-    def test_close_to_sma50_suppressed_when_sma50_was_crossed(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("101.00"),
-            previous_close_price=Decimal("99.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
+class TestNotificationSuppressionRules:
+    # --- Rule: close-to-SMA suppressed by same SMA crossing ---
 
-        stock.generate_notifications()
-        first_messages = stock.drain_notifications()
+    def test_close_to_sma50_suppressed_by_sma50_crossing(self):
+        stock = open_stock_after_burn(
+            current_price="101.00", previous_close_price="99.00", fifty_day_average="100.00"
+        )
+        first_messages = generate_and_drain(stock)
         assert any("crossed SMA50" in m for m in first_messages)
 
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("102.00"),
-            previous_close_price=Decimal("101.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock.update(
+            make_stock(
+                current_price="102.00", previous_close_price="101.00", fifty_day_average="100.00"
+            )
         )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA50 at" in m for m in messages)
 
-    def test_close_to_sma200_suppressed_when_sma200_was_crossed(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("101.00"),
-            previous_close_price=Decimal("99.00"),
-            two_hundred_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+    def test_close_to_sma200_suppressed_by_sma200_crossing(self):
+        stock = open_stock_after_burn(
+            current_price="101.00", previous_close_price="99.00", two_hundred_day_average="100.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        first_messages = stock.drain_notifications()
+        first_messages = generate_and_drain(stock)
         assert any("crossed SMA200" in m for m in first_messages)
 
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("102.00"),
-            previous_close_price=Decimal("101.00"),
-            two_hundred_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock.update(
+            make_stock(
+                current_price="102.00",
+                previous_close_price="101.00",
+                two_hundred_day_average="100.00",
+            )
         )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("SMA200 at" in m for m in messages)
 
     def test_close_to_sma50_not_suppressed_when_no_crossing(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("98.00"),
-            previous_close_price=Decimal("97.00"),
-            fifty_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="98.00", previous_close_price="95.00", fifty_day_average="100.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("below SMA50 at" in m for m in messages)
 
     def test_close_to_sma200_not_suppressed_when_no_crossing(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("98.00"),
-            previous_close_price=Decimal("97.00"),
-            two_hundred_day_average=Decimal("100.00"),
-            market_state=MarketState.OPEN,
+        stock = open_stock_after_burn(
+            current_price="98.00", previous_close_price="95.00", two_hundred_day_average="100.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("below SMA200 at" in m for m in messages)
 
+    # --- Rule: percentage change suppressed by SMA events ---
 
-class TestPercentageSuppressedBySMA:
-    def test_percentage_suppressed_when_sma50_crossed(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_percentage_suppressed_by_sma50_crossing(self, sma50_crossing_stock):
+        messages = generate_and_drain(sma50_crossing_stock)
         assert any("crossed SMA50" in m for m in messages)
         assert not any("rose to 150" in m and "crossed" not in m for m in messages)
 
-    def test_percentage_suppressed_when_sma200_crossed(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("130.00"),
-            two_hundred_day_average=Decimal("140.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_percentage_suppressed_by_sma200_crossing(self, sma200_crossing_stock):
+        messages = generate_and_drain(sma200_crossing_stock)
         assert any("crossed SMA200" in m for m in messages)
         assert not any("rose to 150" in m and "crossed" not in m for m in messages)
 
-    def test_percentage_suppressed_when_close_to_sma50(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            fifty_day_average=Decimal("102.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_percentage_suppressed_by_close_to_sma50(self, close_to_sma50_from_below_stock):
+        messages = generate_and_drain(close_to_sma50_from_below_stock)
         assert any("SMA50 at" in m for m in messages)
         assert not any("rose to 100" in m and "SMA" not in m for m in messages)
 
-    def test_percentage_suppressed_when_close_to_sma200(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("95.00"),
-            two_hundred_day_average=Decimal("102.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+    def test_percentage_suppressed_by_close_to_sma200(self, close_to_sma200_from_below_stock):
+        messages = generate_and_drain(close_to_sma200_from_below_stock)
         assert any("SMA200 at" in m for m in messages)
         assert not any("rose to 100" in m and "SMA" not in m for m in messages)
 
     def test_percentage_not_suppressed_without_sma(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("106.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_after_burn(current_price="106.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
-    def test_dedup_preserved_after_suppression(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("140.00"),
-            fifty_day_average=Decimal("145.00"),
-            market_state=MarketState.OPEN,
+    def test_percentage_dedup_preserved_after_sma_suppression(self, sma50_crossing_stock):
+        generate_and_drain(sma50_crossing_stock)
+        messages = generate_and_drain(sma50_crossing_stock)
+        assert not any("rose to" in m and "crossed" not in m for m in messages)
+
+    # --- Rule: percentage change suppressed by 52-week events ---
+
+    def test_percentage_suppressed_by_new_52_week_high(self):
+        stock = open_stock_after_burn(
+            current_price="170.00", previous_close_price="160.00", fifty_two_week_high="180.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        # Next cycle: percentage notification should not reappear (it's in historical)
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
-        percentage_messages = [m for m in messages if "rose to" in m and "crossed" not in m]
-        assert len(percentage_messages) == 0
-
-
-class TestPercentageSuppressedBy52Week:
-    def test_percentage_suppressed_when_new_52_week_high(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("170.00"),
-            previous_close_price=Decimal("160.00"),
-            fifty_two_week_high=Decimal("180.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("160.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock.update(make_stock(current_price="200.00", previous_close_price="160.00"))
+        messages = generate_and_drain(stock)
         assert any("52-week high" in m for m in messages)
         assert not any("rose to" in m and "52-week" not in m for m in messages)
 
-    def test_percentage_suppressed_when_new_52_week_low(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("130.00"),
-            previous_close_price=Decimal("125.00"),
-            fifty_two_week_low=Decimal("120.00"),
-            market_state=MarketState.OPEN,
+    def test_percentage_suppressed_by_new_52_week_low(self):
+        stock = open_stock_after_burn(
+            current_price="130.00", previous_close_price="125.00", fifty_two_week_low="120.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("125.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock.update(make_stock(current_price="100.00", previous_close_price="125.00"))
+        messages = generate_and_drain(stock)
         assert any("52-week low" in m for m in messages)
         assert not any("dropped to" in m and "52-week" not in m for m in messages)
 
-    def test_dedup_preserved_after_52_week_suppression(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("170.00"),
-            previous_close_price=Decimal("160.00"),
-            fifty_two_week_high=Decimal("180.00"),
-            market_state=MarketState.OPEN,
+    def test_percentage_dedup_preserved_after_52_week_suppression(self):
+        stock = open_stock_after_burn(
+            current_price="170.00", previous_close_price="160.00", fifty_two_week_high="180.00"
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("160.00"),
-            market_state=MarketState.OPEN,
+        stock.update(make_stock(current_price="200.00", previous_close_price="160.00"))
+        generate_and_drain(stock)
+        messages = generate_and_drain(stock)
+        assert not any("rose to" in m and "52-week" not in m for m in messages)
+
+    # --- Rule: session gains/losses erased is never suppressed ---
+
+    def test_gains_erased_not_suppressed_by_sma(self):
+        stock = make_stock(
+            current_price="121.00", previous_close_price="100.00", fifty_day_average="110.00"
+        )
+        generate_and_drain(stock)
+        generate_and_drain(stock)
+        source = make_stock(
+            current_price="99.00", previous_close_price="100.00", fifty_day_average="100.50"
         )
         stock.update(source)
-
-        stock.generate_notifications()
-        stock.drain_notifications()
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
-        percentage_messages = [m for m in messages if "rose to" in m and "52-week" not in m]
-        assert len(percentage_messages) == 0
+        messages = generate_and_drain(stock)
+        assert any("erased the session gains" in m for m in messages)
 
 
 class TestSessionGainsLossesErased:
     def _create_stock_with_percentage_history(self, initial_price, previous_close, final_price):
         """Creates a stock that has gone through: market open → percentage threshold → price change."""
-        stock = Stock(
-            symbol="AAPL",
-            current_price=initial_price,
-            previous_close_price=previous_close,
-            market_state=MarketState.OPEN,
+        stock = make_stock(
+            current_price=str(initial_price),
+            previous_close_price=str(previous_close),
         )
         # Cycle 1: market open
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
         # Cycle 2: percentage threshold fires
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
         # Update to final price
-        source = Stock(
-            symbol="AAPL",
-            current_price=final_price,
-            previous_close_price=previous_close,
-            market_state=MarketState.OPEN,
+        source = make_stock(
+            current_price=str(final_price),
+            previous_close_price=str(previous_close),
         )
         stock.update(source)
         return stock
@@ -1664,10 +951,7 @@ class TestSessionGainsLossesErased:
         stock = self._create_stock_with_percentage_history(
             Decimal("121.00"), Decimal("100.00"), Decimal("99.00")
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("erased the session gains" in m for m in messages)
 
     def test_losses_erased_fires_when_negative_threshold_recorded_and_price_above_zero(self):
@@ -1675,56 +959,25 @@ class TestSessionGainsLossesErased:
         stock = self._create_stock_with_percentage_history(
             Decimal("90.00"), Decimal("100.00"), Decimal("101.00")
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert any("erased the session losses" in m for m in messages)
 
     def test_gains_erased_does_not_fire_without_prior_percentage_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("103.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = make_stock(current_price="103.00", previous_close_price="100.00")
+        generate_and_drain(stock)
         # Price drops below 0% but no percentage threshold was ever recorded
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("99.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="99.00", previous_close_price="100.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("erased the session" in m for m in messages)
 
     def test_losses_erased_does_not_fire_without_prior_percentage_threshold(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("97.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = make_stock(current_price="97.00", previous_close_price="100.00")
+        generate_and_drain(stock)
         # Price rises above 0% but no percentage threshold was ever recorded
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("101.00"),
-            previous_close_price=Decimal("100.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="101.00", previous_close_price="100.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("erased the session" in m for m in messages)
 
     def test_gains_erased_does_not_fire_when_still_positive(self):
@@ -1732,10 +985,7 @@ class TestSessionGainsLossesErased:
         stock = self._create_stock_with_percentage_history(
             Decimal("121.00"), Decimal("100.00"), Decimal("102.00")
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("erased the session gains" in m for m in messages)
 
     def test_losses_erased_does_not_fire_when_still_negative(self):
@@ -1743,22 +993,17 @@ class TestSessionGainsLossesErased:
         stock = self._create_stock_with_percentage_history(
             Decimal("90.00"), Decimal("100.00"), Decimal("98.00")
         )
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("erased the session losses" in m for m in messages)
 
     def test_gains_erased_dedup_does_not_fire_twice(self):
         stock = self._create_stock_with_percentage_history(
             Decimal("121.00"), Decimal("100.00"), Decimal("99.00")
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
         # Next cycle: should not fire again
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = generate_and_drain(stock)
 
         assert not any("erased the session gains" in m for m in messages)
 
@@ -1766,41 +1011,11 @@ class TestSessionGainsLossesErased:
         stock = self._create_stock_with_percentage_history(
             Decimal("90.00"), Decimal("100.00"), Decimal("101.00")
         )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = generate_and_drain(stock)
 
         assert not any("erased the session losses" in m for m in messages)
-
-    def test_gains_erased_not_suppressed_by_sma(self):
-        # Stock with SMA crossing + percentage threshold + price drops below 0%
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("121.00"),
-            previous_close_price=Decimal("100.00"),
-            fifty_day_average=Decimal("110.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        stock.generate_notifications()
-        stock.drain_notifications()
-        # Price drops below 0% with SMA close-to still relevant
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("99.00"),
-            previous_close_price=Decimal("100.00"),
-            fifty_day_average=Decimal("100.50"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
-        assert any("erased the session gains" in m for m in messages)
 
     def test_gains_erased_resets_positive_percentage_notifications(self):
         # Cycle 1: market open
@@ -1893,174 +1108,66 @@ class TestSessionGainsLossesErased:
 
 class TestTargetPriceNotifications:
     def test_generate_notifications_appends_target_price_reached_when_target_is_reached(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        stock.sync_targets([Decimal("200.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_ready_for_target("100.00", "200.00", "200.00")
+        messages = generate_and_drain(stock)
         assert any("hit target" in m for m in messages)
 
     def test_generate_notifications_removes_triggered_targets_from_stock(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        stock.sync_targets([Decimal("200.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        stock.drain_notifications()
-
+        stock = open_stock_ready_for_target("100.00", "200.00", "200.00")
+        generate_and_drain(stock)
         assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
     def test_generate_notifications_does_not_include_unreached_target(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
+        stock = make_stock(current_price="100.00", previous_close_price="148.00")
         stock.sync_targets([Decimal("200.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="150.00", previous_close_price="148.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("hit target" in m for m in messages)
         assert stock.drain_fulfilled_targets() == []
 
     def test_generate_notifications_target_notification_message_contains_symbol_and_target(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
-        stock.sync_targets([Decimal("200.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        stock = open_stock_ready_for_target("100.00", "200.00", "200.00")
+        messages = generate_and_drain(stock)
         target_messages = [m for m in messages if "hit target" in m]
         assert len(target_messages) == 1
         assert "AAPL" in target_messages[0]
         assert "200.00" in target_messages[0]
 
     def test_generate_notifications_ignores_targets_when_market_is_post(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.POST,
+        stock = make_stock(
+            current_price="100.00", previous_close_price="195.00", market_state=MarketState.POST
         )
         stock.sync_targets([Decimal("200.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.POST,
+        source = make_stock(
+            current_price="200.00", previous_close_price="195.00", market_state=MarketState.POST
         )
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         assert not any("hit target" in m for m in messages)
         assert stock.drain_fulfilled_targets() == []
 
     def test_generate_notifications_removes_multiple_triggered_targets(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("295.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = open_stock_after_burn(current_price="100.00", previous_close_price="295.00")
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("300.00"),
-            previous_close_price=Decimal("295.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="300.00", previous_close_price="295.00")
         stock.update(source)
-
-        stock.generate_notifications()
-        messages = stock.drain_notifications()
-
+        messages = generate_and_drain(stock)
         target_messages = [m for m in messages if "hit target" in m]
         assert len(target_messages) == 2
         assert set(stock.drain_fulfilled_targets()) == {Decimal("200.00"), Decimal("250.00")}
 
     def test_generate_notifications_target_price_reached_is_never_deduplicated(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("100.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = open_stock_after_burn(current_price="100.00", previous_close_price="195.00")
         stock.sync_targets([Decimal("200.00")])
-        source1 = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
+        source1 = make_stock(current_price="200.00", previous_close_price="195.00")
         stock.update(source1)
         stock.generate_notifications()
         result1 = stock.drain_notifications()
         assert any("hit target" in m for m in result1)
 
         stock.sync_targets([Decimal("250.00")])
-        source2 = Stock(
-            symbol="AAPL",
-            current_price=Decimal("250.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
+        source2 = make_stock(current_price="250.00", previous_close_price="195.00")
         stock.update(source2)
         stock.generate_notifications()
         result2 = stock.drain_notifications()
@@ -2069,101 +1176,61 @@ class TestTargetPriceNotifications:
 
 class TestSyncTargets:
     def test_sync_targets_sets_entry_price(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+        stock = make_stock(current_price="150.00")
         stock.sync_targets([Decimal("200.00")])
 
-        source_below = Stock(
-            symbol="AAPL",
-            current_price=Decimal("180.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
+        source_below = make_stock(current_price="180.00", previous_close_price="148.00")
         stock.update(source_below)
-        stock.generate_notifications()
-        messages_below = stock.drain_notifications()
-        assert not any("hit target" in m for m in messages_below)
+        generate_and_drain(stock)
+        assert not any("hit target" in m for m in [])
         assert stock.drain_fulfilled_targets() == []
 
-        source_hit = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("195.00"),
-            market_state=MarketState.OPEN,
-        )
+        source_hit = make_stock(current_price="200.00", previous_close_price="195.00")
         stock.update(source_hit)
-        stock.generate_notifications()
-        messages_hit = stock.drain_notifications()
-        assert any("hit target" in m for m in messages_hit)
+        messages = generate_and_drain(stock)
+        assert any("hit target" in m for m in messages)
 
     def test_sync_targets_removes_missing_targets(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = make_stock(current_price="150.00")
+        generate_and_drain(stock)
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
         stock.sync_targets([Decimal("200.00")])
 
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("260.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="260.00", previous_close_price="148.00")
         stock.update(source)
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
         assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
     def test_sync_targets_clears_all_on_empty_list(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
+        stock = make_stock(current_price="150.00")
         stock.sync_targets([Decimal("200.00")])
         stock.sync_targets([])
 
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("200.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="200.00", previous_close_price="148.00")
         stock.update(source)
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
         assert stock.drain_fulfilled_targets() == []
 
     def test_sync_targets_adds_new_and_preserves_existing(self):
-        stock = Stock(symbol="AAPL", current_price=Decimal("150.00"), market_state=MarketState.OPEN)
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = make_stock(current_price="150.00")
+        generate_and_drain(stock)
         stock.sync_targets([Decimal("200.00")])
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
 
-        source = Stock(
-            symbol="AAPL",
-            current_price=Decimal("260.00"),
-            previous_close_price=Decimal("148.00"),
-            market_state=MarketState.OPEN,
-        )
+        source = make_stock(current_price="260.00", previous_close_price="148.00")
         stock.update(source)
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
         assert set(stock.drain_fulfilled_targets()) == {Decimal("200.00"), Decimal("250.00")}
 
 
 class TestDrainFulfilledTargets:
     def test_drain_fulfilled_targets_returns_fulfilled_targets(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
-        stock.generate_notifications()
-        stock.drain_notifications()
+        stock = open_stock_after_burn(current_price="150.00", previous_close_price="145.00")
         stock.sync_targets([Decimal("150.00")])
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
         fulfilled = stock.drain_fulfilled_targets()
 
@@ -2171,15 +1238,9 @@ class TestDrainFulfilledTargets:
         assert fulfilled[0] == Decimal("150.00")
 
     def test_drain_fulfilled_targets_clears_list_after_drain(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
+        stock = make_stock(current_price="150.00", previous_close_price="145.00")
         stock.sync_targets([Decimal("150.00")])
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
         stock.drain_fulfilled_targets()
 
         second_drain = stock.drain_fulfilled_targets()
@@ -2187,15 +1248,9 @@ class TestDrainFulfilledTargets:
         assert second_drain == []
 
     def test_drain_fulfilled_targets_returns_empty_when_no_targets_fulfilled(self):
-        stock = Stock(
-            symbol="AAPL",
-            current_price=Decimal("150.00"),
-            previous_close_price=Decimal("145.00"),
-            market_state=MarketState.OPEN,
-        )
+        stock = make_stock(current_price="150.00", previous_close_price="145.00")
         stock.sync_targets([Decimal("200.00")])
-        stock.generate_notifications()
-        stock.drain_notifications()
+        generate_and_drain(stock)
 
         fulfilled = stock.drain_fulfilled_targets()
 
