@@ -497,8 +497,8 @@ class TestFormatConfigDetails:
                 SymbolConfig(symbol="GOOG", prices=[]),
             ],
         )
-        result = format_config_details(config, "portfolio.json")
-        assert "portfolio.json" in result
+        result = format_config_details(config, "portfolio.json", 1)
+        assert "1. Config: portfolio.json" in result
         assert "60" in result
         assert "AAPL" in result
         assert "150" in result

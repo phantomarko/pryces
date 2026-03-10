@@ -108,8 +108,8 @@ def format_config_list(paths: list[Path]) -> str:
     return "\n".join([header] + entries) + "\n"
 
 
-def format_config_details(config: MonitorStocksConfig, name: str) -> str:
-    parts = [f"Config: {name}", f"  Interval: {config.interval}s", "  Symbols:"]
+def format_config_details(config: MonitorStocksConfig, name: str, number: int) -> str:
+    parts = [f"{number}. Config: {name}", f"  Interval: {config.interval}s", "  Symbols:"]
     for sc in config.symbols:
         if sc.prices:
             prices_str = ", ".join(str(p) for p in sc.prices)

@@ -5,7 +5,7 @@ from pryces.presentation.scripts.config import ConfigManager, MonitorStocksConfi
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 from ..utils import (
     create_config_selection_validator,
-    format_config_list,
+    format_config_details,
     get_config_files,
     parse_symbols_with_targets,
     validate_positive_integer,
@@ -43,12 +43,20 @@ class EditConfigCommand(Command):
             return []
 
         count = len(self._config_files)
+        details_parts = []
+        for i, path in enumerate(self._config_files):
+            try:
+                config = ConfigManager(path).read_monitor_stocks_config()
+                details_parts.append(format_config_details(config, path.name, i + 1))
+            except Exception:
+                details_parts.append(f"{i + 1}. {path.name} (failed to load)")
+        preamble = f"Found {count} config(s):\n\n" + "\n\n".join(details_parts) + "\n"
         return [
             InputPrompt(
                 key="config_selection",
                 prompt=f"Select config (1-{count}): ",
                 validator=create_config_selection_validator(count),
-                preamble=format_config_list(self._config_files),
+                preamble=preamble,
             ),
             InputPrompt(
                 key="operation",

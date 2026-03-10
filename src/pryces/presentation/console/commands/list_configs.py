@@ -22,11 +22,11 @@ class ListConfigsCommand(Command):
             return CommandResult(f"No configs found in {CONFIGS_DIR.name}/.")
 
         parts = []
-        for path in paths:
+        for i, path in enumerate(paths):
             try:
                 config = ConfigManager(path).read_monitor_stocks_config()
-                parts.append(format_config_details(config, path.name))
+                parts.append(format_config_details(config, path.name, i + 1))
             except Exception as e:
-                parts.append(f"{path.name}: error loading config — {e}")
+                parts.append(f"{i + 1}. {path.name}: error loading config — {e}")
 
         return CommandResult("\n\n".join(parts))
