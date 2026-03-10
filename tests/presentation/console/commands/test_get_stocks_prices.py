@@ -19,7 +19,7 @@ class TestGetStocksPricesCommand:
         self.command = GetStocksPricesCommand(use_case, logger_factory=Mock())
 
     def test_execute_returns_formatted_multiple_stocks(self):
-        symbols = "AAPL,GOOGL,MSFT"
+        symbols = "AAPL GOOGL MSFT"
         self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
             create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
@@ -34,7 +34,7 @@ class TestGetStocksPricesCommand:
         assert "Summary: 3 requested, 3 successful, 0 failed" in result.message
 
     def test_execute_handles_partial_failures(self):
-        symbols = "AAPL,INVALID,GOOGL"
+        symbols = "AAPL INVALID GOOGL"
         self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
             create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
@@ -47,7 +47,7 @@ class TestGetStocksPricesCommand:
         assert "Summary: 3 requested, 2 successful, 1 failed" in result.message
 
     def test_execute_handles_all_failures(self):
-        symbols = "INVALID1,INVALID2,INVALID3"
+        symbols = "INVALID1 INVALID2 INVALID3"
         self.mock_provider.get_stocks.return_value = []
 
         result = self.command.execute(symbols)
@@ -65,7 +65,7 @@ class TestGetStocksPricesCommand:
         assert "2847.123456789" in result.message
 
     def test_execute_returns_error_on_unexpected_exception(self):
-        symbols = "AAPL,GOOGL"
+        symbols = "AAPL GOOGL"
         error_message = "Network connection failed"
         self.mock_provider.get_stocks.side_effect = Exception(error_message)
 
@@ -76,7 +76,7 @@ class TestGetStocksPricesCommand:
         assert result.success is False
 
     def test_execute_handles_responses_with_minimal_fields(self):
-        symbols = "AAPL,GOOGL"
+        symbols = "AAPL GOOGL"
         self.mock_provider.get_stocks.return_value = [
             create_stock(
                 "AAPL",
@@ -167,11 +167,11 @@ class TestGetStocksPricesCommand:
         assert len(prompts) == 1
         assert isinstance(prompts[0], InputPrompt)
         assert prompts[0].key == "symbols"
-        assert "commas" in prompts[0].prompt.lower()
+        assert "spaces" in prompts[0].prompt.lower()
         assert prompts[0].validator is validate_symbols
 
     def test_execute_accepts_kwargs_for_compatibility(self):
-        symbols = "AAPL,GOOGL"
+        symbols = "AAPL GOOGL"
         self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25")),
             create_stock("GOOGL", Decimal("2847.50")),

@@ -22,7 +22,7 @@ class GetStocksPricesCommand(Command):
         return [
             InputPrompt(
                 key="symbols",
-                prompt="Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): ",
+                prompt="Enter stock symbols separated by spaces (e.g., AAPL GOOGL MSFT): ",
                 validator=validate_symbols,
             )
         ]

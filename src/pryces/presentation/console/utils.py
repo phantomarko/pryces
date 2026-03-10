@@ -62,12 +62,12 @@ def validate_symbol(value: str) -> str | None:
 
 def validate_symbols(value: str) -> str | None:
     if not value or not value.strip():
-        return "Each symbol must be 1–10 characters, separated by commas."
+        return "Each symbol must be 1–10 characters, separated by spaces."
 
-    symbols = [s.strip() for s in value.split(",")]
+    symbols = value.split()
     if all(symbol and len(symbol) <= 10 for symbol in symbols):
         return None
-    return "Each symbol must be 1–10 characters, separated by commas."
+    return "Each symbol must be 1–10 characters, separated by spaces."
 
 
 def validate_positive_integer(value: str) -> str | None:
@@ -168,8 +168,7 @@ def parse_symbols_with_targets(value: str) -> list[SymbolConfig]:
 
 
 def parse_symbols_input(value: str) -> list[str]:
-    symbols = [s.strip().upper() for s in value.split(",")]
-    return [s for s in symbols if s]
+    return [s.upper() for s in value.split() if s]
 
 
 FIELD_LABELS = [

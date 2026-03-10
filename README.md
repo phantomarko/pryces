@@ -195,7 +195,7 @@ Configs are stored in the `configs/` directory at the project root. Use the CLI 
 Lists all configs in `configs/`, showing interval and symbols with target prices for each.
 
 ```
-Config: portfolio.json
+1. Config: portfolio.json
   Interval: 60s
   Symbols:
     AAPL: 150, 160
@@ -224,8 +224,17 @@ Picks from existing configs, then lets you change either the interval or the sym
 
 ```
 Found 2 config(s):
-  1. portfolio.json
-  2. watchlist.json
+
+1. Config: portfolio.json
+  Interval: 60s
+  Symbols:
+    AAPL: 150, 160
+    MSFT
+
+2. Config: watchlist.json
+  Interval: 30s
+  Symbols:
+    GOOGL
 
 Select config (1-2): 1
 What to edit: 1=interval  2=symbols and targets
@@ -310,10 +319,10 @@ Enter `0` to cancel without stopping anything.
 
 #### Get Stock Prices
 
-Retrieves current price and market details for one or multiple stock symbols. Enter a single symbol or a comma-separated list.
+Retrieves current price and market details for one or multiple stock symbols. Enter a single symbol or a space-separated list.
 
 ```
-Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL
+Enter stock symbols separated by spaces (e.g., AAPL GOOGL MSFT): AAPL
 ```
 
 Example output for a single symbol:
@@ -336,7 +345,7 @@ AAPL - Apple Inc. (USD)
 When fetching multiple symbols, each result is separated by a divider line, followed by a summary:
 
 ```
-Enter stock symbols separated by commas (e.g., AAPL,GOOGL,MSFT): AAPL,GOOGL,MSFT
+Enter stock symbols separated by spaces (e.g., AAPL GOOGL MSFT): AAPL GOOGL MSFT
 ```
 
 ```
