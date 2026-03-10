@@ -219,68 +219,6 @@ class TestEnvVarsChecker:
 
         assert result.ready is True
 
-    @patch.dict(
-        "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "4",
-            "EXTRA_DELAY_IN_MINUTES": "0",
-        },
-        clear=True,
-    )
-    def test_ready_when_extra_delay_is_zero(self):
-        result = self.checker.check()
-
-        assert result.ready is True
-
-    @patch.dict(
-        "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "4",
-            "EXTRA_DELAY_IN_MINUTES": "5",
-        },
-        clear=True,
-    )
-    def test_ready_when_extra_delay_is_positive(self):
-        result = self.checker.check()
-
-        assert result.ready is True
-
-    @patch.dict(
-        "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "4",
-            "EXTRA_DELAY_IN_MINUTES": "-1",
-        },
-        clear=True,
-    )
-    def test_not_ready_when_extra_delay_is_negative(self):
-        result = self.checker.check()
-
-        assert result.ready is False
-        assert "EXTRA_DELAY_IN_MINUTES must be a non-negative integer" in result.message
-
-    @patch.dict(
-        "os.environ",
-        {
-            "TELEGRAM_BOT_TOKEN": "token",
-            "TELEGRAM_GROUP_ID": "123",
-            "MAX_FETCH_WORKERS": "4",
-            "EXTRA_DELAY_IN_MINUTES": "abc",
-        },
-        clear=True,
-    )
-    def test_not_ready_when_extra_delay_is_not_integer(self):
-        result = self.checker.check()
-
-        assert result.ready is False
-        assert "EXTRA_DELAY_IN_MINUTES is not a valid integer" in result.message
-
 
 class TestTelegramChecker:
 

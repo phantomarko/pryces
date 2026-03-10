@@ -14,8 +14,13 @@ Retrieves real-time stock data from Yahoo Finance and delivers Telegram notifica
   - [Scripts](#scripts)
     - [Monitor Stocks](#monitor-stocks)
   - [Interactive CLI](#interactive-cli)
-    - [Monitor Stocks (CLI)](#monitor-stocks-cli)
+    - [List Configs](#list-configs)
+    - [Create Config](#create-config)
+    - [Edit Config](#edit-config)
+    - [Delete Config](#delete-config)
+    - [Execute Monitor Process](#execute-monitor-process)
     - [List Monitor Processes](#list-monitor-processes)
+    - [Stop Monitor Process](#stop-monitor-process)
     - [Get Stock Prices](#get-stock-prices)
     - [Check Readiness](#check-readiness)
 - [Contributing](#contributing)
@@ -34,7 +39,7 @@ The monitoring tool is designed around the concept of a **daily market session**
 The following events are detected and sent as Telegram messages during a monitoring run:
 
 - Market open / market closed
-- Price is close to crossing the 50-day or 200-day moving average (within 5%)
+- Price is close to crossing the 50-day or 200-day moving average (within 2.5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)
 - Session gains erased (price crossed back below 0% after a positive percentage threshold)
@@ -248,7 +253,7 @@ Type 'yes' to confirm deletion: yes
 Config deleted: portfolio.json
 ```
 
-#### Monitor Stocks (CLI)
+#### Execute Monitor Process
 
 Picks from configs in `configs/`, then prompts for duration and optional extra delay. Launches the [Monitor Stocks](#monitor-stocks) as a detached background process.
 
