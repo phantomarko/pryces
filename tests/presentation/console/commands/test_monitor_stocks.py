@@ -1,11 +1,11 @@
 import subprocess
 import sys
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
 from pryces.presentation.console.utils import (
-    validate_file_path,
     validate_non_negative_integer,
     validate_positive_integer,
 )
@@ -21,49 +21,61 @@ class TestMonitorStocksCommand:
 
         assert isinstance(metadata, CommandMetadata)
         assert metadata.id == "monitor_stocks"
-        assert metadata.name == "Monitor Stocks"
+        assert metadata.name == "Execute Monitor Process"
         assert metadata.show_progress is False
 
-    def test_get_input_prompts_returns_config_path_prompt(self):
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_get_input_prompts_returns_empty_when_no_configs(self, mock_get):
+        mock_get.return_value = []
+        prompts = self.command.get_input_prompts()
+        assert prompts == []
+
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_get_input_prompts_returns_three_prompts_when_configs_exist(self, mock_get, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+
         prompts = self.command.get_input_prompts()
 
         assert len(prompts) == 3
-        assert isinstance(prompts[0], InputPrompt)
-        assert prompts[0].key == "config_path"
-        assert "json" in prompts[0].prompt.lower()
-        assert prompts[0].validator is validate_file_path
-
-    def test_get_input_prompts_returns_duration_prompt(self):
-        prompts = self.command.get_input_prompts()
-
-        assert isinstance(prompts[1], InputPrompt)
+        assert prompts[0].key == "config_selection"
         assert prompts[1].key == "duration"
-        assert "duration" in prompts[1].prompt.lower()
         assert prompts[1].validator is validate_positive_integer
-
-    def test_get_input_prompts_returns_extra_delay_prompt(self):
-        prompts = self.command.get_input_prompts()
-
-        assert isinstance(prompts[2], InputPrompt)
         assert prompts[2].key == "extra_delay"
-        assert "delay" in prompts[2].prompt.lower()
         assert prompts[2].validator is validate_non_negative_integer
         assert prompts[2].default == "0"
 
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_returns_error_when_no_configs(self, mock_get):
+        mock_get.return_value = []
+        self.command.get_input_prompts()
+        result = self.command.execute()
+        assert result.success is False
+        assert "No configs" in result.message
+
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_launches_background_process_and_returns_pid(self, mock_popen):
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_launches_background_process_and_returns_pid(
+        self, mock_get, mock_popen, tmp_path
+    ):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+        self.command.get_input_prompts()
+
         mock_process = Mock()
         mock_process.pid = 12345
         mock_popen.return_value = mock_process
 
-        result = self.command.execute(config_path="/path/to/config.json", duration="10")
+        result = self.command.execute(config_selection="1", duration="10")
 
         mock_popen.assert_called_once_with(
             [
                 sys.executable,
                 "-m",
                 "pryces.presentation.scripts.monitor_stocks",
-                "/path/to/config.json",
+                str(path),
                 "--duration",
                 "10",
                 "--extra-delay",
@@ -76,82 +88,69 @@ class TestMonitorStocksCommand:
         assert "PID: 12345" in result.message
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_strips_whitespace_from_config_path(self, mock_popen):
-        mock_process = Mock()
-        mock_process.pid = 99999
-        mock_popen.return_value = mock_process
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_passes_extra_delay_to_subprocess(self, mock_get, mock_popen, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+        self.command.get_input_prompts()
 
-        result = self.command.execute(config_path="  /path/to/config.json  ", duration="10")
-
-        args = mock_popen.call_args[0][0]
-        assert args[3] == "/path/to/config.json"
-        assert "PID: 99999" in result.message
-
-    @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_accepts_kwargs_for_compatibility(self, mock_popen):
-        mock_process = Mock()
-        mock_process.pid = 1
-        mock_popen.return_value = mock_process
-
-        result = self.command.execute(
-            config_path="/path/to/config.json", duration="10", extra_arg="ignored"
-        )
-
-        assert "Monitor started in background" in result.message
-
-    @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_returns_message_with_background_info(self, mock_popen):
-        mock_process = Mock()
-        mock_process.pid = 42
-        mock_popen.return_value = mock_process
-
-        result = self.command.execute(config_path="/path/to/config.json", duration="10")
-
-        assert result.message == "Monitor started in background (PID: 42)"
-
-    @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_passes_extra_delay_to_subprocess(self, mock_popen):
         mock_process = Mock()
         mock_process.pid = 100
         mock_popen.return_value = mock_process
 
-        self.command.execute(config_path="/path/to/config.json", duration="10", extra_delay="5")
+        self.command.execute(config_selection="1", duration="10", extra_delay="5")
 
         args = mock_popen.call_args[0][0]
         assert "--extra-delay" in args
         assert args[args.index("--extra-delay") + 1] == "5"
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_defaults_extra_delay_to_zero_when_empty(self, mock_popen):
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_defaults_extra_delay_to_zero_when_empty(self, mock_get, mock_popen, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+        self.command.get_input_prompts()
+
         mock_process = Mock()
         mock_process.pid = 100
         mock_popen.return_value = mock_process
 
-        self.command.execute(config_path="/path/to/config.json", duration="10", extra_delay="")
+        self.command.execute(config_selection="1", duration="10", extra_delay="")
 
         args = mock_popen.call_args[0][0]
-        assert "--extra-delay" in args
         assert args[args.index("--extra-delay") + 1] == "0"
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_defaults_extra_delay_to_zero_when_not_provided(self, mock_popen):
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_returns_message_with_background_info(self, mock_get, mock_popen, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+        self.command.get_input_prompts()
+
         mock_process = Mock()
-        mock_process.pid = 100
+        mock_process.pid = 42
         mock_popen.return_value = mock_process
 
-        self.command.execute(config_path="/path/to/config.json", duration="10")
+        result = self.command.execute(config_selection="1", duration="10")
 
-        args = mock_popen.call_args[0][0]
-        assert "--extra-delay" in args
-        assert args[args.index("--extra-delay") + 1] == "0"
+        assert result.message == "Monitor started in background (PID: 42)"
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
-    def test_execute_passes_duration_to_subprocess(self, mock_popen):
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_passes_duration_to_subprocess(self, mock_get, mock_popen, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+        self.command.get_input_prompts()
+
         mock_process = Mock()
         mock_process.pid = 100
         mock_popen.return_value = mock_process
 
-        self.command.execute(config_path="/path/to/config.json", duration="30")
+        self.command.execute(config_selection="1", duration="30")
 
         args = mock_popen.call_args[0][0]
         assert "--duration" in args

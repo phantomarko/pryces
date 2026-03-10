@@ -1,25 +1,41 @@
 import subprocess
 import sys
+from pathlib import Path
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
-from ..utils import validate_file_path, validate_non_negative_integer, validate_positive_integer
+from ..utils import (
+    create_config_selection_validator,
+    format_config_list,
+    get_config_files,
+    validate_non_negative_integer,
+    validate_positive_integer,
+)
 
 
 class MonitorStocksCommand(Command):
+    def __init__(self) -> None:
+        self._config_files: list[Path] = []
+
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(
             id="monitor_stocks",
-            name="Monitor Stocks",
+            name="Execute Monitor Process",
             description="Monitor stocks for relevant price notifications",
             show_progress=False,
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
+        self._config_files = get_config_files()
+        if not self._config_files:
+            return []
+
+        count = len(self._config_files)
         return [
             InputPrompt(
-                key="config_path",
-                prompt="Enter the path to the JSON config file (e.g., monitor.json): ",
-                validator=validate_file_path,
+                key="config_selection",
+                prompt=f"Select config (1-{count}): ",
+                validator=create_config_selection_validator(count),
+                preamble=format_config_list(self._config_files),
             ),
             InputPrompt(
                 key="duration",
@@ -35,14 +51,22 @@ class MonitorStocksCommand(Command):
         ]
 
     def execute(
-        self, config_path: str = None, duration: str = None, extra_delay: str = "", **kwargs
+        self,
+        config_selection: str = None,
+        duration: str = None,
+        extra_delay: str = "",
+        **kwargs,
     ) -> CommandResult:
+        if not self._config_files:
+            return CommandResult("No configs found. Create one first.", success=False)
+
+        config_path = str(self._config_files[int(config_selection) - 1])
         extra_delay_minutes = int(extra_delay.strip()) if extra_delay.strip() else 0
         cmd = [
             sys.executable,
             "-m",
             "pryces.presentation.scripts.monitor_stocks",
-            config_path.strip(),
+            config_path,
             "--duration",
             str(int(duration)),
             "--extra-delay",

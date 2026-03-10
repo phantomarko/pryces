@@ -98,15 +98,15 @@ Monitors stocks and sends Telegram notifications, driven by a JSON configuration
 
 ```bash
 # using Makefile
-make monitor                                      # defaults to monitor.json.example, 1 minute
+make monitor                                      # defaults to configs/example.json, 1 minute
 make monitor DURATION=30                          # monitor for 30 minutes
 make monitor CONFIG=monitor_alternative.json DURATION=60
 make monitor DURATION=30 EXTRA_DELAY=5            # add 5 minutes to the price delay
 
 # or using Python
 source venv/bin/activate
-python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --duration 30
-python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --duration 60 --extra-delay 5
+python -m pryces.presentation.scripts.monitor_stocks configs/example.json --duration 30
+python -m pryces.presentation.scripts.monitor_stocks configs/example.json --duration 60 --extra-delay 5
 ```
 
 Run in the background (detached from the terminal):
@@ -116,14 +116,14 @@ nohup make monitor CONFIG=monitor_alternative.json DURATION=60 &
 
 # or using Python
 source venv/bin/activate
-nohup python -m pryces.presentation.scripts.monitor_stocks monitor.json.example --duration 60 &
+nohup python -m pryces.presentation.scripts.monitor_stocks configs/example.json --duration 60 &
 ```
 
 **Arguments:**
 
 | Python argument | Makefile variable | Description |
 |---|---|---|
-| `config` | `CONFIG` | Path to the JSON configuration file (required, defaults to `monitor.json.example` in Makefile) |
+| `config` | `CONFIG` | Path to the JSON configuration file (required, defaults to `configs/example.json` in Makefile) |
 | `--duration N` | `DURATION=N` | Monitoring duration in minutes (required, defaults to `1` in Makefile) |
 | `--extra-delay N` | `EXTRA_DELAY=N` | Extra minutes added to the exchange-reported price delay. Only applied when the exchange already reports a non-zero delay. Defaults to `0`. |
 
@@ -132,7 +132,7 @@ Log files are created with a timestamp. To check the log:
 tail -f /tmp/pryces_monitor_20260212_143025.log
 ```
 
-**Configuration file format** (see `monitor.json.example`):
+**Configuration file format** (see `configs/example.json`):
 
 ```json
 {
@@ -172,19 +172,91 @@ Available commands:
 
 | # | Command | Description |
 |---|---------|-------------|
-| 1 | Monitor Stocks | Launch stock monitor as background process |
-| 2 | List Monitor Processes | List running monitor processes |
-| 3 | Stop Monitor Process | Stop a running monitor process |
-| 4 | Get Stock Prices | Current price and details for one or multiple symbols |
-| 5 | Check Readiness | Verify env vars and Telegram connectivity |
+| 1 | List Configs | List all configs in the `configs/` directory |
+| 2 | Create Config | Create a new monitoring config |
+| 3 | Edit Config | Edit interval or symbols of an existing config |
+| 4 | Delete Config | Delete an existing config |
+| 5 | Execute Monitor Process | Launch stock monitor as background process |
+| 6 | List Monitor Processes | List running monitor processes |
+| 7 | Stop Monitor Process | Stop a running monitor process |
+| 8 | Get Stock Prices | Current price and details for one or multiple symbols |
+| 9 | Check Readiness | Verify env vars and Telegram connectivity |
 | 0 | Exit | Exit the program |
+
+Configs are stored in the `configs/` directory at the project root. Use the CLI to create and manage them — there is no need to edit JSON files manually.
+
+#### List Configs
+
+Lists all configs in `configs/`, showing interval and symbols with target prices for each.
+
+```
+Config: portfolio.json
+  Interval: 60s
+  Symbols:
+    AAPL: 150, 160
+    MSFT
+```
+
+#### Create Config
+
+Prompts for a name (without `.json`), interval in seconds, and symbols with optional target prices.
+
+```
+Config name (without .json): portfolio
+Interval in seconds: 60
+Symbols (e.g. AAPL MSFT:150,155 GOOG): AAPL MSFT:150,155.50 GOOG
+```
+
+```
+Config created: /path/to/configs/portfolio.json
+```
+
+Symbols format: space-separated tokens where each token is either `SYMBOL` or `SYMBOL:P1,P2,...`.
+
+#### Edit Config
+
+Picks from existing configs, then lets you change either the interval or the symbols/targets.
+
+```
+Found 2 config(s):
+  1. portfolio.json
+  2. watchlist.json
+
+Select config (1-2): 1
+What to edit: 1=interval  2=symbols and targets
+What to edit (1 or 2): 2
+Symbols: AAPL:200 MSFT GOOG:150,160
+```
+
+```
+Config updated: portfolio.json
+```
+
+#### Delete Config
+
+Picks from existing configs and prompts for confirmation before deleting.
+
+```
+Found 1 config(s):
+  1. portfolio.json
+
+Select config to delete (1-1): 1
+Type 'yes' to confirm deletion: yes
+```
+
+```
+Config deleted: portfolio.json
+```
 
 #### Monitor Stocks (CLI)
 
-Launches the [Monitor Stocks](#monitor-stocks) as a detached background process. See that section for config format and notification details.
+Picks from configs in `configs/`, then prompts for duration and optional extra delay. Launches the [Monitor Stocks](#monitor-stocks) as a detached background process.
 
 ```
-Enter the path to the JSON config file (e.g., monitor.json): monitor.json.example
+Found 1 config(s):
+  1. portfolio.json
+
+Select config (1-1): 1
 Monitoring duration in minutes: 60
 Extra price delay in minutes [0]: 5
 ```

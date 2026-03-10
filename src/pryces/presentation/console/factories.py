@@ -1,11 +1,15 @@
 from ...application.interfaces import LoggerFactory, MessageSender, StockProvider
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
+from .commands.check_readiness import CheckReadinessCommand, EnvVarsChecker, TelegramChecker
+from .commands.create_config import CreateConfigCommand
+from .commands.delete_config import DeleteConfigCommand
+from .commands.edit_config import EditConfigCommand
 from .commands.get_stocks_prices import GetStocksPricesCommand
+from .commands.list_configs import ListConfigsCommand
+from .commands.list_monitors import ListMonitorsCommand
 from .commands.monitor_stocks import MonitorStocksCommand
 from .commands.registry import CommandRegistry
-from .commands.check_readiness import CheckReadinessCommand, EnvVarsChecker, TelegramChecker
-from .commands.list_monitors import ListMonitorsCommand
 from .commands.stop_monitor import StopMonitorCommand
 
 
@@ -48,8 +52,24 @@ class CommandFactory:
     def _create_stop_monitor_command(self) -> StopMonitorCommand:
         return StopMonitorCommand()
 
+    def _create_list_configs_command(self) -> ListConfigsCommand:
+        return ListConfigsCommand()
+
+    def _create_create_config_command(self) -> CreateConfigCommand:
+        return CreateConfigCommand()
+
+    def _create_edit_config_command(self) -> EditConfigCommand:
+        return EditConfigCommand()
+
+    def _create_delete_config_command(self) -> DeleteConfigCommand:
+        return DeleteConfigCommand()
+
     def create_command_registry(self) -> CommandRegistry:
         registry = CommandRegistry()
+        registry.register(self._create_list_configs_command())
+        registry.register(self._create_create_config_command())
+        registry.register(self._create_edit_config_command())
+        registry.register(self._create_delete_config_command())
         registry.register(self._create_monitor_stocks_command())
         registry.register(self._create_list_monitors_command())
         registry.register(self._create_stop_monitor_command())

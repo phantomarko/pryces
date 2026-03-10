@@ -4,28 +4,22 @@
     {
       "symbol": "ASPI",
       "prices": [
-        5.0
+        4.9
       ]
     },
     {
       "symbol": "HUMA",
       "prices": [
-        0.92,
         1.0
       ]
     },
     {
       "symbol": "QTRX",
-      "prices": [
-        5.5
-      ]
+      "prices": []
     },
     {
       "symbol": "OUST",
-      "prices": [
-        15.0,
-        17.5
-      ]
+      "prices": []
     },
     {
       "symbol": "ADUR",

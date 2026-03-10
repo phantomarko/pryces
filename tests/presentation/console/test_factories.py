@@ -84,7 +84,7 @@ class TestCommandFactory:
 
         assert isinstance(command, MonitorStocksCommand)
 
-    def test_monitor_stocks_is_first_command_in_registry(self):
+    def test_list_configs_is_first_command_in_registry(self):
         mock_provider = Mock(spec=StockProvider)
         factory = CommandFactory(
             stock_provider=mock_provider,
@@ -95,4 +95,4 @@ class TestCommandFactory:
         registry = factory.create_command_registry()
         all_commands = registry.get_all_commands()
 
-        assert all_commands[0].get_metadata().id == "monitor_stocks"
+        assert all_commands[0].get_metadata().id == "list_configs"

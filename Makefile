@@ -1,4 +1,4 @@
-CONFIG ?= monitor.json.example
+CONFIG ?= configs/example.json
 DURATION ?= 1
 DEBUG_FLAG := $(if $(DEBUG),--debug,)
 VERBOSE_FLAG := $(if $(VERBOSE),--verbose,)

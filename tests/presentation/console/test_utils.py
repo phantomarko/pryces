@@ -1,18 +1,26 @@
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from pryces.presentation.console.utils import (
+    create_config_selection_validator,
     create_monitor_selection_validator,
+    format_config_details,
+    format_config_list,
     format_running_monitors,
     format_stock,
     format_stock_list,
+    get_config_files,
     get_running_monitors,
     parse_symbols_input,
+    parse_symbols_with_targets,
     validate_file_path,
     validate_positive_integer,
     validate_symbol,
     validate_symbols,
+    validate_symbols_with_targets,
 )
+from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
 from tests.fixtures.factories import create_stock_dto
 
 
@@ -437,3 +445,138 @@ class TestFormatStockList:
 
         assert result.count("------------------------------------------------------------") == 2
         assert "Summary: 3 requested, 3 successful, 0 failed" in result
+
+
+class TestGetConfigFiles:
+
+    def test_returns_empty_when_dir_does_not_exist(self, tmp_path):
+        with patch("pryces.presentation.console.utils.CONFIGS_DIR", tmp_path / "nonexistent"):
+            result = get_config_files()
+        assert result == []
+
+    def test_returns_sorted_json_files(self, tmp_path):
+        (tmp_path / "b.json").touch()
+        (tmp_path / "a.json").touch()
+        (tmp_path / "c.txt").touch()
+        with patch("pryces.presentation.console.utils.CONFIGS_DIR", tmp_path):
+            result = get_config_files()
+        names = [p.name for p in result]
+        assert names == ["a.json", "b.json"]
+
+    def test_excludes_non_json_files(self, tmp_path):
+        (tmp_path / "config.yaml").touch()
+        (tmp_path / "config.json").touch()
+        with patch("pryces.presentation.console.utils.CONFIGS_DIR", tmp_path):
+            result = get_config_files()
+        assert len(result) == 1
+        assert result[0].name == "config.json"
+
+
+class TestFormatConfigList:
+
+    def test_formats_single_config(self, tmp_path):
+        paths = [tmp_path / "portfolio.json"]
+        result = format_config_list(paths)
+        assert result == "Found 1 config(s):\n  1. portfolio.json"
+
+    def test_formats_multiple_configs(self, tmp_path):
+        paths = [tmp_path / "a.json", tmp_path / "b.json"]
+        result = format_config_list(paths)
+        assert "Found 2 config(s):" in result
+        assert "1. a.json" in result
+        assert "2. b.json" in result
+
+
+class TestFormatConfigDetails:
+
+    def test_formats_config_with_target_prices(self):
+        config = MonitorStocksConfig(
+            interval=60,
+            symbols=[
+                SymbolConfig(symbol="AAPL", prices=[Decimal("150"), Decimal("160")]),
+                SymbolConfig(symbol="GOOG", prices=[]),
+            ],
+        )
+        result = format_config_details(config, "portfolio.json")
+        assert "portfolio.json" in result
+        assert "60" in result
+        assert "AAPL" in result
+        assert "150" in result
+        assert "160" in result
+        assert "GOOG" in result
+
+
+class TestCreateConfigSelectionValidator:
+
+    def test_accepts_valid_range(self):
+        validator = create_config_selection_validator(3)
+        assert validator("1") is None
+        assert validator("2") is None
+        assert validator("3") is None
+
+    def test_rejects_zero(self):
+        validator = create_config_selection_validator(3)
+        assert validator("0") is not None
+
+    def test_rejects_out_of_range(self):
+        validator = create_config_selection_validator(2)
+        assert validator("3") is not None
+
+    def test_rejects_non_numeric(self):
+        validator = create_config_selection_validator(3)
+        assert validator("abc") is not None
+        assert validator("") is not None
+
+    def test_error_message_includes_bounds(self):
+        validator = create_config_selection_validator(5)
+        error = validator("99")
+        assert "1" in error and "5" in error
+
+
+class TestValidateSymbolsWithTargets:
+
+    def test_accepts_plain_symbols(self):
+        assert validate_symbols_with_targets("AAPL MSFT GOOG") is None
+
+    def test_accepts_symbols_with_prices(self):
+        assert validate_symbols_with_targets("AAPL:150,160 MSFT:200") is None
+
+    def test_accepts_mixed(self):
+        assert validate_symbols_with_targets("AAPL MSFT:150,155.50 GOOG") is None
+
+    def test_rejects_empty(self):
+        assert validate_symbols_with_targets("") is not None
+        assert validate_symbols_with_targets("   ") is not None
+
+    def test_rejects_invalid_symbol(self):
+        assert validate_symbols_with_targets("TOOLONGSYMBOL") is not None
+
+    def test_rejects_invalid_price(self):
+        assert validate_symbols_with_targets("AAPL:notaprice") is not None
+
+
+class TestParseSymbolsWithTargets:
+
+    def test_parses_plain_symbols(self):
+        result = parse_symbols_with_targets("AAPL MSFT")
+        assert len(result) == 2
+        assert result[0].symbol == "AAPL"
+        assert result[0].prices == []
+        assert result[1].symbol == "MSFT"
+
+    def test_parses_symbols_with_prices(self):
+        result = parse_symbols_with_targets("AAPL:150,160")
+        assert result[0].symbol == "AAPL"
+        assert result[0].prices == [Decimal("150"), Decimal("160")]
+
+    def test_converts_to_uppercase(self):
+        result = parse_symbols_with_targets("aapl")
+        assert result[0].symbol == "AAPL"
+
+    def test_parses_mixed_input(self):
+        result = parse_symbols_with_targets("AAPL MSFT:200,210 GOOG")
+        assert result[0].symbol == "AAPL"
+        assert result[0].prices == []
+        assert result[1].symbol == "MSFT"
+        assert result[1].prices == [Decimal("200"), Decimal("210")]
+        assert result[2].symbol == "GOOG"

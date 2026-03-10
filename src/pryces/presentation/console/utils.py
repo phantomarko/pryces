@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import subprocess
 from collections.abc import Callable
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from pryces.application.dtos import StockDTO
+from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
 
 _MONITOR_MODULE = "pryces.presentation.scripts.monitor_stocks"
+
+CONFIGS_DIR = Path(__file__).resolve().parents[4] / "configs"
 
 
 def get_running_monitors() -> list[tuple[str, str]]:
@@ -90,6 +94,77 @@ def validate_file_path(value: str) -> str | None:
     if value and value.strip() and Path(value.strip()).is_file():
         return None
     return "File not found or not a file."
+
+
+def get_config_files() -> list[Path]:
+    if not CONFIGS_DIR.exists():
+        return []
+    return sorted(CONFIGS_DIR.glob("*.json"))
+
+
+def format_config_list(paths: list[Path]) -> str:
+    header = f"Found {len(paths)} config(s):"
+    entries = [f"  {i + 1}. {p.name}" for i, p in enumerate(paths)]
+    return "\n".join([header] + entries)
+
+
+def format_config_details(config: MonitorStocksConfig, name: str) -> str:
+    parts = [f"Config: {name}", f"  Interval: {config.interval}s", "  Symbols:"]
+    for sc in config.symbols:
+        if sc.prices:
+            prices_str = ", ".join(str(p) for p in sc.prices)
+            parts.append(f"    {sc.symbol}: {prices_str}")
+        else:
+            parts.append(f"    {sc.symbol}")
+    return "\n".join(parts)
+
+
+def create_config_selection_validator(count: int) -> Callable[[str], str | None]:
+    def validator(value: str) -> str | None:
+        try:
+            n = int(value)
+            if 1 <= n <= count:
+                return None
+        except (ValueError, TypeError):
+            pass
+        return f"Must be a number between 1 and {count}."
+
+    return validator
+
+
+def validate_symbols_with_targets(value: str) -> str | None:
+    if not value or not value.strip():
+        return "Enter at least one symbol."
+
+    tokens = value.strip().split()
+    for token in tokens:
+        if ":" in token:
+            symbol, prices_str = token.split(":", 1)
+            if validate_symbol(symbol.upper()) is not None:
+                return f"Invalid symbol '{symbol}'."
+            for p in prices_str.split(","):
+                try:
+                    Decimal(p.strip())
+                except InvalidOperation:
+                    return f"Invalid price '{p}' for symbol '{symbol}'."
+        else:
+            if validate_symbol(token.upper()) is not None:
+                return f"Invalid symbol '{token}'."
+
+    return None
+
+
+def parse_symbols_with_targets(value: str) -> list[SymbolConfig]:
+    result = []
+    for token in value.strip().split():
+        if ":" in token:
+            symbol, prices_str = token.split(":", 1)
+            prices = [Decimal(p.strip()) for p in prices_str.split(",") if p.strip()]
+        else:
+            symbol = token
+            prices = []
+        result.append(SymbolConfig(symbol=symbol.upper(), prices=prices))
+    return result
 
 
 def parse_symbols_input(value: str) -> list[str]:
