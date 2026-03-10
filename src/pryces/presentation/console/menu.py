@@ -103,11 +103,10 @@ class InteractiveMenu:
     def _collect_inputs(self, prompts: list[InputPrompt]) -> dict | None:
         inputs = {}
 
-        for i, prompt in enumerate(prompts):
-            if i == 0:
-                self._output.write("\n")
+        for prompt in prompts:
+            self._output.write("\n")
             if prompt.preamble is not None:
-                self._output.write(prompt.preamble + "\n\n")
+                self._output.write(prompt.preamble + "\n")
 
             while True:
                 self._output.write(prompt.prompt + "\n  (q to cancel) ")

@@ -26,7 +26,7 @@ class StopMonitorCommand(Command):
         if not self._processes:
             return []
 
-        preamble = format_running_monitors(self._processes)
+        preamble = format_running_monitors(self._processes) + "\n"
         count = len(self._processes)
 
         return [

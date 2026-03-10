@@ -105,7 +105,7 @@ def get_config_files() -> list[Path]:
 def format_config_list(paths: list[Path]) -> str:
     header = f"Found {len(paths)} config(s):"
     entries = [f"  {i + 1}. {p.name}" for i, p in enumerate(paths)]
-    return "\n".join([header] + entries)
+    return "\n".join([header] + entries) + "\n"
 
 
 def format_config_details(config: MonitorStocksConfig, name: str) -> str:

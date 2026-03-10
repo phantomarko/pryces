@@ -477,7 +477,7 @@ class TestFormatConfigList:
     def test_formats_single_config(self, tmp_path):
         paths = [tmp_path / "portfolio.json"]
         result = format_config_list(paths)
-        assert result == "Found 1 config(s):\n  1. portfolio.json"
+        assert result == "Found 1 config(s):\n  1. portfolio.json\n"
 
     def test_formats_multiple_configs(self, tmp_path):
         paths = [tmp_path / "a.json", tmp_path / "b.json"]
