@@ -7,6 +7,7 @@ import pytest
 from pryces.presentation.scripts.bot_commands import (
     BotCommandDispatcher,
     HelpCommand,
+    SymbolsCommand,
     TargetAddCommand,
     TargetRemoveCommand,
     TargetsCommand,
@@ -184,6 +185,23 @@ class TestTargetRemoveCommand:
         result = cmd.execute(["MSFT", "100"])
 
         assert "is not tracked" in result
+
+
+class TestSymbolsCommand:
+
+    def test_lists_all_symbols(self):
+        cmd = SymbolsCommand(lambda: ["AAPL", "GOOGL", "MSFT"])
+
+        result = cmd.execute([])
+
+        assert result == "AAPL, GOOGL, MSFT"
+
+    def test_returns_no_symbols_message_when_empty(self):
+        cmd = SymbolsCommand(lambda: [])
+
+        result = cmd.execute([])
+
+        assert result == "No symbols tracked"
 
 
 class TestHelpCommand:

@@ -36,6 +36,7 @@ class BotCommand(ABC):
 
 
 _FindConfigFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
+_GetAllSymbolsFn = Callable[[], list[str]]
 
 
 def _find_symbol_config(
@@ -175,6 +176,33 @@ class TargetRemoveCommand(BotCommand):
             return f"Removed target {price} from {symbol}"
         except Exception as e:
             return f"Error: {e}"
+
+
+class SymbolsCommand(BotCommand):
+    def __init__(self, get_all_symbols: _GetAllSymbolsFn) -> None:
+        self._get_all_symbols = get_all_symbols
+
+    @property
+    def name(self) -> str:
+        return "/symbols"
+
+    @property
+    def usage(self) -> str:
+        return "/symbols"
+
+    @property
+    def description(self) -> str:
+        return "List all tracked symbols"
+
+    @property
+    def arg_count(self) -> int:
+        return 0
+
+    def execute(self, args: list[str]) -> str:
+        symbols = self._get_all_symbols()
+        if not symbols:
+            return "No symbols tracked"
+        return ", ".join(symbols)
 
 
 class HelpCommand(BotCommand):

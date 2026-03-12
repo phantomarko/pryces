@@ -138,3 +138,17 @@ def find_config_for_symbol(symbol: str) -> tuple[Path, MonitorStocksConfig] | No
         except ConfigLoadingFailed:
             continue
     return None
+
+
+def get_all_tracked_symbols() -> list[str]:
+    if not CONFIGS_DIR.exists():
+        return []
+    symbols: set[str] = set()
+    for path in CONFIGS_DIR.glob("*.json"):
+        try:
+            config = ConfigManager(path).read_monitor_stocks_config()
+            for sc in config.symbols:
+                symbols.add(sc.symbol)
+        except ConfigLoadingFailed:
+            continue
+    return sorted(symbols)

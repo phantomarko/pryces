@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from pryces.presentation.scripts.config import ConfigManager, MonitorStocksConfig, SymbolConfig
+from pryces.presentation.scripts.config import (
+    ConfigManager,
+    MonitorStocksConfig,
+    SymbolConfig,
+    get_all_tracked_symbols,
+)
 from pryces.presentation.scripts.exceptions import ConfigLoadingFailed
 
 
@@ -152,3 +157,67 @@ class TestConfigManager:
         assert restored.interval == config.interval
         assert restored.symbols[0].symbol == "HUMA"
         assert restored.symbols[0].prices == [Decimal("1"), Decimal("0.92")]
+
+
+class TestGetAllTrackedSymbols:
+
+    def test_collects_symbols_from_multiple_configs(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        (tmp_path / "a.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        (tmp_path / "b.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "MSFT", "prices": []}]})
+        )
+
+        result = get_all_tracked_symbols()
+
+        assert result == ["AAPL", "MSFT"]
+
+    def test_returns_empty_list_when_no_configs(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+
+        result = get_all_tracked_symbols()
+
+        assert result == []
+
+    def test_skips_malformed_configs(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        (tmp_path / "good.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        (tmp_path / "bad.json").write_text("not json")
+
+        result = get_all_tracked_symbols()
+
+        assert result == ["AAPL"]
+
+    def test_deduplicates_and_sorts_symbols(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        (tmp_path / "a.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [
+                        {"symbol": "MSFT", "prices": []},
+                        {"symbol": "AAPL", "prices": []},
+                    ],
+                }
+            )
+        )
+        (tmp_path / "b.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+
+        result = get_all_tracked_symbols()
+
+        assert result == ["AAPL", "MSFT"]
+
+    def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(
+            "pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path / "nonexistent"
+        )
+
+        result = get_all_tracked_symbols()
+
+        assert result == []

@@ -180,6 +180,7 @@ python -m pryces.presentation.scripts.telegram_bot --verbose
 
 | Command | Description |
 |---|---|
+| `/symbols` | List all tracked symbols across configs |
 | `/targets <symbol>` | List all target prices for a symbol |
 | `/target_add <symbol> <price>` | Add a target price to a symbol |
 | `/target_remove <symbol> <price>` | Remove a specific target price from a symbol |
