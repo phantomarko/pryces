@@ -1,5 +1,6 @@
 import json
 from decimal import Decimal
+from unittest.mock import Mock
 
 import pytest
 
@@ -205,7 +206,7 @@ class TestBotCommandDispatcher:
     def _make_dispatcher(self):
         targets = TargetsCommand(lambda s: None)
         help_cmd = HelpCommand([targets])
-        return BotCommandDispatcher([targets, help_cmd])
+        return BotCommandDispatcher([targets, help_cmd], logger_factory=Mock())
 
     def test_dispatches_known_command(self):
         dispatcher = self._make_dispatcher()

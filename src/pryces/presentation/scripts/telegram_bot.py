@@ -51,12 +51,7 @@ class TelegramBotScript:
                 offset = update.update_id + 1
 
 
-class _ScriptContext:
-    def __init__(self, script: TelegramBotScript) -> None:
-        self.script = script
-
-
-def _create_script(logger_factory: LoggerFactory) -> _ScriptContext:
+def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     telegram_settings = SettingsFactory.create_telegram_settings()
     poller = TelegramUpdatePoller(settings=telegram_settings, logger_factory=logger_factory)
     message_sender = TelegramMessageSender(
@@ -70,7 +65,7 @@ def _create_script(logger_factory: LoggerFactory) -> _ScriptContext:
     help_cmd = HelpCommand(commands + [HelpCommand([])])
     all_commands = commands + [help_cmd]
 
-    dispatcher = BotCommandDispatcher(all_commands)
+    dispatcher = BotCommandDispatcher(all_commands, logger_factory)
     script = TelegramBotScript(
         poller=poller,
         message_sender=message_sender,
@@ -78,7 +73,7 @@ def _create_script(logger_factory: LoggerFactory) -> _ScriptContext:
         group_id=telegram_settings.group_id,
         logger_factory=logger_factory,
     )
-    return _ScriptContext(script=script)
+    return script
 
 
 def main() -> int:
@@ -96,8 +91,8 @@ def main() -> int:
     logger_factory = PythonLoggerFactory()
 
     try:
-        context = _create_script(logger_factory)
-        context.script.run()
+        script = _create_script(logger_factory)
+        script.run()
     except KeyboardInterrupt:
         logger_factory.get_logger(__name__).info("Bot stopped by user.")
     except Exception as e:

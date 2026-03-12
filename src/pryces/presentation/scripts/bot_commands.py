@@ -5,6 +5,7 @@ from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+from ...application.interfaces import LoggerFactory
 from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
 
 
@@ -37,6 +38,30 @@ class BotCommand(ABC):
 _FindConfigFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 
 
+def _find_symbol_config(
+    find_config: _FindConfigFn, symbol: str
+) -> tuple[Path, MonitorStocksConfig, SymbolConfig] | str:
+    result = find_config(symbol)
+    if result is None:
+        return f"{symbol} is not tracked"
+    path, config = result
+    for sc in config.symbols:
+        if sc.symbol == symbol:
+            return path, config, sc
+    return f"{symbol} is not tracked"
+
+
+def _update_symbol_prices(
+    path: Path, config: MonitorStocksConfig, symbol: str, new_prices: list[Decimal]
+) -> None:
+    updated_symbols = [
+        SymbolConfig(symbol=sc.symbol, prices=new_prices) if sc.symbol == symbol else sc
+        for sc in config.symbols
+    ]
+    new_config = MonitorStocksConfig(interval=config.interval, symbols=updated_symbols)
+    ConfigManager(path).write_monitor_stocks_config(new_config)
+
+
 class TargetsCommand(BotCommand):
     def __init__(self, find_config: _FindConfigFn) -> None:
         self._find_config = find_config
@@ -60,17 +85,14 @@ class TargetsCommand(BotCommand):
     def execute(self, args: list[str]) -> str:
         symbol = args[0].upper()
         try:
-            result = self._find_config(symbol)
-            if result is None:
-                return f"{symbol} is not tracked"
-            _, config = result
-            for sc in config.symbols:
-                if sc.symbol == symbol:
-                    if not sc.prices:
-                        return f"{symbol} targets: none"
-                    prices_str = ", ".join(str(p) for p in sc.prices)
-                    return f"{symbol} targets: {prices_str}"
-            return f"{symbol} is not tracked"
+            result = _find_symbol_config(self._find_config, symbol)
+            if isinstance(result, str):
+                return result
+            _, _, sc = result
+            if not sc.prices:
+                return f"{symbol} targets: none"
+            prices_str = ", ".join(str(p) for p in sc.prices)
+            return f"{symbol} targets: {prices_str}"
         except Exception as e:
             return f"Error: {e}"
 
@@ -103,22 +125,13 @@ class TargetAddCommand(BotCommand):
             return f"Invalid price: {args[1]}"
 
         try:
-            result = self._find_config(symbol)
-            if result is None:
-                return f"{symbol} is not tracked"
-            path, config = result
-            updated_symbols = []
-            for sc in config.symbols:
-                if sc.symbol == symbol:
-                    if price in sc.prices:
-                        return f"{symbol} already has target {price}"
-                    updated_symbols.append(
-                        SymbolConfig(symbol=sc.symbol, prices=sc.prices + [price])
-                    )
-                else:
-                    updated_symbols.append(sc)
-            new_config = MonitorStocksConfig(interval=config.interval, symbols=updated_symbols)
-            ConfigManager(path).write_monitor_stocks_config(new_config)
+            result = _find_symbol_config(self._find_config, symbol)
+            if isinstance(result, str):
+                return result
+            path, config, sc = result
+            if price in sc.prices:
+                return f"{symbol} already has target {price}"
+            _update_symbol_prices(path, config, symbol, sc.prices + [price])
             return f"Added target {price} to {symbol}"
         except Exception as e:
             return f"Error: {e}"
@@ -152,29 +165,13 @@ class TargetRemoveCommand(BotCommand):
             return f"Invalid price: {args[1]}"
 
         try:
-            result = self._find_config(symbol)
-            if result is None:
-                return f"{symbol} is not tracked"
-            path, config = result
-            updated_symbols = []
-            found = False
-            for sc in config.symbols:
-                if sc.symbol == symbol:
-                    if price not in sc.prices:
-                        return f"{symbol} does not have target {price}"
-                    updated_symbols.append(
-                        SymbolConfig(
-                            symbol=sc.symbol,
-                            prices=[p for p in sc.prices if p != price],
-                        )
-                    )
-                    found = True
-                else:
-                    updated_symbols.append(sc)
-            if not found:
-                return f"{symbol} is not tracked"
-            new_config = MonitorStocksConfig(interval=config.interval, symbols=updated_symbols)
-            ConfigManager(path).write_monitor_stocks_config(new_config)
+            result = _find_symbol_config(self._find_config, symbol)
+            if isinstance(result, str):
+                return result
+            path, config, sc = result
+            if price not in sc.prices:
+                return f"{symbol} does not have target {price}"
+            _update_symbol_prices(path, config, symbol, [p for p in sc.prices if p != price])
             return f"Removed target {price} from {symbol}"
         except Exception as e:
             return f"Error: {e}"
@@ -206,8 +203,9 @@ class HelpCommand(BotCommand):
 
 
 class BotCommandDispatcher:
-    def __init__(self, commands: list[BotCommand]) -> None:
+    def __init__(self, commands: list[BotCommand], logger_factory: LoggerFactory) -> None:
         self._commands = {cmd.name: cmd for cmd in commands}
+        self._logger = logger_factory.get_logger(__name__)
 
     def dispatch(self, text: str) -> str:
         tokens = text.strip().split()
@@ -219,4 +217,5 @@ class BotCommandDispatcher:
             return "Unknown command, use /help"
         if len(args) != cmd.arg_count:
             return f"Usage: {cmd.usage}"
+        self._logger.info(f"Executing {name} with args {args}")
         return cmd.execute(args)
