@@ -13,6 +13,7 @@ Retrieves real-time stock data from Yahoo Finance and delivers Telegram notifica
 - [Usage](#usage)
   - [Scripts](#scripts)
     - [Monitor Stocks](#monitor-stocks)
+    - [Telegram Bot](#telegram-bot)
   - [Interactive CLI](#interactive-cli)
     - [List Configs](#list-configs)
     - [Create Config](#create-config)
@@ -159,6 +160,32 @@ The `prices` list under each symbol defines **target price levels**. When a targ
 The **configuration file is re-read on every monitoring cycle**, so you can edit `interval` or `symbols` while the script is running and the changes will take effect on the next iteration — no restart required.
 
 See [Tracked Notifications](#tracked-notifications) for the full list of events detected and sent during a run.
+
+#### Telegram Bot
+
+Listens for commands in the configured Telegram group and manages target prices in config files — listing, adding, and removing targets without leaving Telegram. The bot locates the config containing the given symbol automatically (first alphabetical match wins).
+
+```bash
+# using Makefile
+make bot
+make bot VERBOSE=1
+
+# or using Python
+source venv/bin/activate
+python -m pryces.presentation.scripts.telegram_bot
+python -m pryces.presentation.scripts.telegram_bot --verbose
+```
+
+**Available commands** (sent as messages in the Telegram group):
+
+| Command | Description |
+|---|---|
+| `/targets <symbol>` | List all target prices for a symbol |
+| `/target_add <symbol> <price>` | Add a target price to a symbol |
+| `/target_remove <symbol> <price>` | Remove a specific target price from a symbol |
+| `/help` | Show all commands with usage |
+
+Messages from chats other than `TELEGRAM_GROUP_ID` are silently ignored. The bot uses long-polling (`getUpdates`) — no webhook or public URL is required.
 
 ### Interactive CLI
 

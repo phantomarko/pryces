@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from decimal import Decimal
@@ -6,6 +8,8 @@ from pathlib import Path
 from ...application.dtos import TargetPriceDTO
 from ...application.interfaces import LoggerFactory
 from .exceptions import ConfigLoadingFailed
+
+CONFIGS_DIR = Path(__file__).resolve().parents[4] / "configs"
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,3 +125,16 @@ class ConfigRefresher:
             for s in self._config.symbols
         ]
         self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
+
+
+def find_config_for_symbol(symbol: str) -> tuple[Path, MonitorStocksConfig] | None:
+    if not CONFIGS_DIR.exists():
+        return None
+    for path in sorted(CONFIGS_DIR.glob("*.json")):
+        try:
+            config = ConfigManager(path).read_monitor_stocks_config()
+            if any(s.symbol == symbol.upper() for s in config.symbols):
+                return path, config
+        except ConfigLoadingFailed:
+            continue
+    return None

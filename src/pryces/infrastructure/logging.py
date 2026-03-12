@@ -9,6 +9,7 @@ from pryces.application.interfaces import Logger, LoggerFactory
 
 CLI_ENTRY_POINT = "cli"
 MONITOR_ENTRY_POINT = "monitor"
+BOT_ENTRY_POINT = "bot"
 
 
 @dataclass(frozen=True)
