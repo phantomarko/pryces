@@ -49,6 +49,10 @@ def main() -> int:
         menu.run()
         return 0
 
+    except KeyboardInterrupt:
+        logger.info("CLI stopped by user.")
+        return 0
+
     except Exception as e:
         message = f"CLI error: {e}"
         print(message)

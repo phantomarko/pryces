@@ -152,6 +152,8 @@ def main() -> int:
             context.script.run()
         finally:
             context.message_sender.shutdown()
+    except KeyboardInterrupt:
+        logger_factory.get_logger(__name__).info("Monitor stopped by user.")
     except ConfigLoadingFailed as e:
         print(f"Error: {e}")
         return 1
