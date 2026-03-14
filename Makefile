@@ -1,4 +1,3 @@
-CONFIG ?= configs/example.json
 DURATION ?= 1
 DEBUG_FLAG := $(if $(DEBUG),--debug,)
 VERBOSE_FLAG := $(if $(VERBOSE),--verbose,)
@@ -11,6 +10,9 @@ cli:
 	$(VENV)/python -m pryces.presentation.console.cli $(DEBUG_FLAG)
 
 monitor:
+ifndef CONFIG
+	$(error CONFIG is required. Usage: make monitor CONFIG=configs/myconfig.json)
+endif
 	$(VENV)/python -m pryces.presentation.scripts.monitor_stocks $(CONFIG) --duration $(DURATION) $(DEBUG_FLAG) $(VERBOSE_FLAG) $(EXTRA_DELAY_FLAG)
 
 bot:

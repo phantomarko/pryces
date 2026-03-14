@@ -104,32 +104,31 @@ Monitors stocks and sends Telegram notifications, driven by a JSON configuration
 
 ```bash
 # using Makefile
-make monitor                                      # defaults to configs/example.json, 1 minute
-make monitor DURATION=30                          # monitor for 30 minutes
-make monitor CONFIG=monitor_alternative.json DURATION=60
-make monitor DURATION=30 EXTRA_DELAY=5            # add 5 minutes to the price delay
+make monitor CONFIG=portfolio.json                            # monitor for 1 minute (default)
+make monitor CONFIG=portfolio.json DURATION=30               # monitor for 30 minutes
+make monitor CONFIG=portfolio.json DURATION=60 EXTRA_DELAY=5 # add 5 minutes to the price delay
 
 # or using Python
 source venv/bin/activate
-python -m pryces.presentation.scripts.monitor_stocks configs/example.json --duration 30
-python -m pryces.presentation.scripts.monitor_stocks configs/example.json --duration 60 --extra-delay 5
+python -m pryces.presentation.scripts.monitor_stocks configs/portfolio.json --duration 30
+python -m pryces.presentation.scripts.monitor_stocks configs/portfolio.json --duration 60 --extra-delay 5
 ```
 
 Run in the background (detached from the terminal):
 ```bash
 # using Makefile
-nohup make monitor CONFIG=monitor_alternative.json DURATION=60 &
+nohup make monitor CONFIG=portfolio.json DURATION=60 &
 
 # or using Python
 source venv/bin/activate
-nohup python -m pryces.presentation.scripts.monitor_stocks configs/example.json --duration 60 &
+nohup python -m pryces.presentation.scripts.monitor_stocks configs/portfolio.json --duration 60 &
 ```
 
 **Arguments:**
 
 | Python argument | Makefile variable | Description |
 |---|---|---|
-| `config` | `CONFIG` | Path to the JSON configuration file (required, defaults to `configs/example.json` in Makefile) |
+| `config` | `CONFIG` | Path to the JSON configuration file (required) |
 | `--duration N` | `DURATION=N` | Monitoring duration in minutes (required, defaults to `1` in Makefile) |
 | `--extra-delay N` | `EXTRA_DELAY=N` | Extra minutes added to the exchange-reported price delay. Only applied when the exchange already reports a non-zero delay. Defaults to `0`. |
 
@@ -138,7 +137,7 @@ Log files are created with a timestamp. To check the log:
 tail -f /tmp/pryces_monitor_20260212_143025.log
 ```
 
-**Configuration file format** (see `configs/example.json`):
+**Configuration file format:**
 
 ```json
 {
