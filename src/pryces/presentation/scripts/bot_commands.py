@@ -36,6 +36,7 @@ class BotCommand(ABC):
 
 
 _FindConfigFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
+_FindConfigByNameFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _GetAllSymbolsFn = Callable[[], list[str]]
 _GetConfigNamesFn = Callable[[], list[str]]
 
@@ -62,6 +63,20 @@ def _update_symbol_prices(
     ]
     new_config = MonitorStocksConfig(interval=config.interval, symbols=updated_symbols)
     ConfigManager(path).write_monitor_stocks_config(new_config)
+
+
+def _add_symbol_to_config(path: Path, config: MonitorStocksConfig, symbol: str) -> None:
+    updated = config.symbols + [SymbolConfig(symbol=symbol, prices=[])]
+    ConfigManager(path).write_monitor_stocks_config(
+        MonitorStocksConfig(interval=config.interval, symbols=updated)
+    )
+
+
+def _remove_symbol_from_config(path: Path, config: MonitorStocksConfig, symbol: str) -> None:
+    updated = [sc for sc in config.symbols if sc.symbol != symbol]
+    ConfigManager(path).write_monitor_stocks_config(
+        MonitorStocksConfig(interval=config.interval, symbols=updated)
+    )
 
 
 class TargetsCommand(BotCommand):
@@ -175,6 +190,77 @@ class TargetRemoveCommand(BotCommand):
                 return f"{symbol} does not have target {price}"
             _update_symbol_prices(path, config, symbol, [p for p in sc.prices if p != price])
             return f"Removed target {price} from {symbol}"
+        except Exception as e:
+            return f"Error: {e}"
+
+
+class SymbolAddCommand(BotCommand):
+    def __init__(self, find_config_by_name: _FindConfigByNameFn) -> None:
+        self._find_config_by_name = find_config_by_name
+
+    @property
+    def name(self) -> str:
+        return "/symbol_add"
+
+    @property
+    def usage(self) -> str:
+        return "/symbol_add <symbol> <config>"
+
+    @property
+    def description(self) -> str:
+        return "Add a symbol to a config"
+
+    @property
+    def arg_count(self) -> int:
+        return 2
+
+    def execute(self, args: list[str]) -> str:
+        symbol = args[0].upper()
+        config_name = args[1]
+        try:
+            result = self._find_config_by_name(config_name)
+            if result is None:
+                return f"Config {config_name} not found"
+            path, config = result
+            if any(sc.symbol == symbol for sc in config.symbols):
+                return f"{symbol} is already in {config_name}"
+            _add_symbol_to_config(path, config, symbol)
+            return f"Added {symbol} to {config_name}"
+        except Exception as e:
+            return f"Error: {e}"
+
+
+class SymbolRemoveCommand(BotCommand):
+    def __init__(self, find_config: _FindConfigFn) -> None:
+        self._find_config = find_config
+
+    @property
+    def name(self) -> str:
+        return "/symbol_remove"
+
+    @property
+    def usage(self) -> str:
+        return "/symbol_remove <symbol>"
+
+    @property
+    def description(self) -> str:
+        return "Remove a symbol from its config"
+
+    @property
+    def arg_count(self) -> int:
+        return 1
+
+    def execute(self, args: list[str]) -> str:
+        symbol = args[0].upper()
+        try:
+            result = self._find_config(symbol)
+            if result is None:
+                return f"{symbol} is not tracked"
+            path, config = result
+            if len(config.symbols) == 1:
+                return "Cannot remove the last symbol from a config"
+            _remove_symbol_from_config(path, config, symbol)
+            return f"Removed {symbol} from config"
         except Exception as e:
             return f"Error: {e}"
 

@@ -127,6 +127,16 @@ class ConfigRefresher:
         self._logger.info(f"Stocks: {' | '.join(stocks_info)}")
 
 
+def find_config_by_name(config_name: str) -> tuple[Path, MonitorStocksConfig] | None:
+    if not CONFIGS_DIR.exists():
+        return None
+    path = CONFIGS_DIR / f"{config_name}.json"
+    try:
+        return path, ConfigManager(path).read_monitor_stocks_config()
+    except ConfigLoadingFailed:
+        return None
+
+
 def find_config_for_symbol(symbol: str) -> tuple[Path, MonitorStocksConfig] | None:
     if not CONFIGS_DIR.exists():
         return None

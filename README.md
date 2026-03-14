@@ -163,7 +163,7 @@ See [Tracked Notifications](#tracked-notifications) for the full list of events 
 
 #### Telegram Bot
 
-Listens for commands in the configured Telegram group and manages target prices in config files — listing, adding, and removing targets without leaving Telegram. The bot locates the config containing the given symbol automatically (first alphabetical match wins).
+Listens for commands in the configured Telegram group and manages symbols and target prices in config files — listing, adding, and removing them without leaving Telegram. The bot locates the config containing the given symbol automatically (first alphabetical match wins).
 
 ```bash
 # using Makefile
@@ -180,7 +180,10 @@ python -m pryces.presentation.scripts.telegram_bot --verbose
 
 | Command | Description |
 |---|---|
+| `/configs` | List all config files |
 | `/symbols` | List all tracked symbols across configs |
+| `/symbol_add <symbol> <config>` | Add a symbol to a config |
+| `/symbol_remove <symbol>` | Remove a symbol from its config |
 | `/targets <symbol>` | List all target prices for a symbol |
 | `/target_add <symbol> <price>` | Add a target price to a symbol |
 | `/target_remove <symbol> <price>` | Remove a specific target price from a symbol |

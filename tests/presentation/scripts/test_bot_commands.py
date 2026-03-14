@@ -8,6 +8,8 @@ from pryces.presentation.scripts.bot_commands import (
     BotCommandDispatcher,
     ConfigsCommand,
     HelpCommand,
+    SymbolAddCommand,
+    SymbolRemoveCommand,
     SymbolsCommand,
     TargetAddCommand,
     TargetRemoveCommand,
@@ -186,6 +188,118 @@ class TestTargetRemoveCommand:
         result = cmd.execute(["MSFT", "100"])
 
         assert "is not tracked" in result
+
+
+def make_find_config_by_name(tmp_path, config=None, name="test"):
+    if config is None:
+        config = make_config()
+    write_config(tmp_path, config, f"{name}.json")
+
+    def find_config_by_name(config_name):
+        if config_name != name:
+            return None
+        from pryces.presentation.scripts.config import ConfigManager
+
+        path = tmp_path / f"{config_name}.json"
+        return path, ConfigManager(path).read_monitor_stocks_config()
+
+    return find_config_by_name
+
+
+class TestSymbolAddCommand:
+
+    def test_adds_symbol_to_config(self, tmp_path):
+        find_config_by_name = make_find_config_by_name(tmp_path)
+        cmd = SymbolAddCommand(find_config_by_name)
+
+        result = cmd.execute(["MSFT", "test"])
+
+        assert "Added" in result
+        assert "MSFT" in result
+
+    def test_persists_added_symbol(self, tmp_path):
+        find_config_by_name = make_find_config_by_name(tmp_path)
+        cmd = SymbolAddCommand(find_config_by_name)
+
+        cmd.execute(["MSFT", "test"])
+
+        saved = json.loads((tmp_path / "test.json").read_text())
+        symbols = [s["symbol"] for s in saved["symbols"]]
+        assert "MSFT" in symbols
+
+    def test_rejects_unknown_config(self, tmp_path):
+        find_config_by_name = make_find_config_by_name(tmp_path)
+        cmd = SymbolAddCommand(find_config_by_name)
+
+        result = cmd.execute(["MSFT", "nonexistent"])
+
+        assert "not found" in result
+
+    def test_rejects_duplicate_symbol(self, tmp_path):
+        find_config_by_name = make_find_config_by_name(tmp_path)
+        cmd = SymbolAddCommand(find_config_by_name)
+
+        result = cmd.execute(["AAPL", "test"])
+
+        assert "already in" in result
+
+    def test_uppercases_symbol(self, tmp_path):
+        find_config_by_name = make_find_config_by_name(tmp_path)
+        cmd = SymbolAddCommand(find_config_by_name)
+
+        cmd.execute(["msft", "test"])
+
+        saved = json.loads((tmp_path / "test.json").read_text())
+        symbols = [s["symbol"] for s in saved["symbols"]]
+        assert "MSFT" in symbols
+
+
+class TestSymbolRemoveCommand:
+
+    def test_removes_symbol_from_config(self, tmp_path):
+        find_config = make_find_config(tmp_path)
+        cmd = SymbolRemoveCommand(find_config)
+
+        result = cmd.execute(["AAPL"])
+
+        assert "Removed" in result
+        assert "AAPL" in result
+
+    def test_persists_removed_symbol(self, tmp_path):
+        find_config = make_find_config(tmp_path)
+        cmd = SymbolRemoveCommand(find_config)
+
+        cmd.execute(["AAPL"])
+
+        saved = json.loads((tmp_path / "test.json").read_text())
+        symbols = [s["symbol"] for s in saved["symbols"]]
+        assert "AAPL" not in symbols
+        assert "GOOGL" in symbols
+
+    def test_reports_symbol_not_found(self, tmp_path):
+        find_config = make_find_config(tmp_path)
+        cmd = SymbolRemoveCommand(find_config)
+
+        result = cmd.execute(["MSFT"])
+
+        assert "is not tracked" in result
+
+    def test_rejects_removing_last_symbol(self, tmp_path):
+        config = make_config(symbols=[SymbolConfig("AAPL", [Decimal("150")])])
+        find_config = make_find_config(tmp_path, config)
+        cmd = SymbolRemoveCommand(find_config)
+
+        result = cmd.execute(["AAPL"])
+
+        assert "Cannot remove the last symbol" in result
+
+    def test_uppercases_symbol(self, tmp_path):
+        find_config = make_find_config(tmp_path)
+        cmd = SymbolRemoveCommand(find_config)
+
+        result = cmd.execute(["aapl"])
+
+        assert "Removed" in result
 
 
 class TestSymbolsCommand:
