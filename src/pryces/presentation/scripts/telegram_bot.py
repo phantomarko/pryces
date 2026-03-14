@@ -11,13 +11,14 @@ from ...infrastructure.senders import TelegramMessageSender
 from .bot_commands import (
     BotCommand,
     BotCommandDispatcher,
+    ConfigsCommand,
     HelpCommand,
     SymbolsCommand,
     TargetAddCommand,
     TargetRemoveCommand,
     TargetsCommand,
 )
-from .config import find_config_for_symbol, get_all_tracked_symbols
+from .config import find_config_for_symbol, get_all_tracked_symbols, get_config_names
 
 
 class TelegramBotScript:
@@ -63,7 +64,14 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     target_add_cmd = TargetAddCommand(find_config_for_symbol)
     target_remove_cmd = TargetRemoveCommand(find_config_for_symbol)
     symbols_cmd = SymbolsCommand(get_all_tracked_symbols)
-    commands: list[BotCommand] = [symbols_cmd, targets_cmd, target_add_cmd, target_remove_cmd]
+    configs_cmd = ConfigsCommand(get_config_names)
+    commands: list[BotCommand] = [
+        configs_cmd,
+        symbols_cmd,
+        targets_cmd,
+        target_add_cmd,
+        target_remove_cmd,
+    ]
     help_cmd = HelpCommand(commands + [HelpCommand([])])
     all_commands = commands + [help_cmd]
 

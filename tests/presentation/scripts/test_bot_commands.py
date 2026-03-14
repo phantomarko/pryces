@@ -6,6 +6,7 @@ import pytest
 
 from pryces.presentation.scripts.bot_commands import (
     BotCommandDispatcher,
+    ConfigsCommand,
     HelpCommand,
     SymbolsCommand,
     TargetAddCommand,
@@ -202,6 +203,19 @@ class TestSymbolsCommand:
         result = cmd.execute([])
 
         assert result == "No symbols tracked"
+
+
+class TestConfigsCommand:
+
+    def test_lists_config_names(self):
+        cmd = ConfigsCommand(lambda: ["alpha", "beta"])
+        result = cmd.execute([])
+        assert result == "alpha, beta"
+
+    def test_returns_no_configs_message_when_empty(self):
+        cmd = ConfigsCommand(lambda: [])
+        result = cmd.execute([])
+        assert result == "No configs found"
 
 
 class TestHelpCommand:

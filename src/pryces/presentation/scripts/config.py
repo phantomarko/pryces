@@ -140,6 +140,12 @@ def find_config_for_symbol(symbol: str) -> tuple[Path, MonitorStocksConfig] | No
     return None
 
 
+def get_config_names() -> list[str]:
+    if not CONFIGS_DIR.exists():
+        return []
+    return sorted(path.stem for path in CONFIGS_DIR.glob("*.json"))
+
+
 def get_all_tracked_symbols() -> list[str]:
     if not CONFIGS_DIR.exists():
         return []

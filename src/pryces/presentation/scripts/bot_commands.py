@@ -37,6 +37,7 @@ class BotCommand(ABC):
 
 _FindConfigFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _GetAllSymbolsFn = Callable[[], list[str]]
+_GetConfigNamesFn = Callable[[], list[str]]
 
 
 def _find_symbol_config(
@@ -203,6 +204,33 @@ class SymbolsCommand(BotCommand):
         if not symbols:
             return "No symbols tracked"
         return ", ".join(symbols)
+
+
+class ConfigsCommand(BotCommand):
+    def __init__(self, get_config_names: _GetConfigNamesFn) -> None:
+        self._get_config_names = get_config_names
+
+    @property
+    def name(self) -> str:
+        return "/configs"
+
+    @property
+    def usage(self) -> str:
+        return "/configs"
+
+    @property
+    def description(self) -> str:
+        return "List all config files"
+
+    @property
+    def arg_count(self) -> int:
+        return 0
+
+    def execute(self, args: list[str]) -> str:
+        names = self._get_config_names()
+        if not names:
+            return "No configs found"
+        return ", ".join(names)
 
 
 class HelpCommand(BotCommand):
