@@ -68,32 +68,46 @@ class Stock:
     _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
 
     _STOCK_INCREASE_THRESHOLDS = (
-        (Decimal("25"), NotificationType.LEVEL_5_INCREASE),
-        (Decimal("20"), NotificationType.LEVEL_4_INCREASE),
-        (Decimal("15"), NotificationType.LEVEL_3_INCREASE),
-        (Decimal("10"), NotificationType.LEVEL_2_INCREASE),
-        (Decimal("5"), NotificationType.LEVEL_1_INCREASE),
+        (Decimal("20"), NotificationType.LEVEL_5_INCREASE),
+        (Decimal("16"), NotificationType.LEVEL_4_INCREASE),
+        (Decimal("12"), NotificationType.LEVEL_3_INCREASE),
+        (Decimal("8"), NotificationType.LEVEL_2_INCREASE),
+        (Decimal("4"), NotificationType.LEVEL_1_INCREASE),
     )
     _STOCK_DECREASE_THRESHOLDS = (
-        (Decimal("-25"), NotificationType.LEVEL_5_DECREASE),
-        (Decimal("-20"), NotificationType.LEVEL_4_DECREASE),
-        (Decimal("-15"), NotificationType.LEVEL_3_DECREASE),
-        (Decimal("-10"), NotificationType.LEVEL_2_DECREASE),
-        (Decimal("-5"), NotificationType.LEVEL_1_DECREASE),
+        (Decimal("-20"), NotificationType.LEVEL_5_DECREASE),
+        (Decimal("-16"), NotificationType.LEVEL_4_DECREASE),
+        (Decimal("-12"), NotificationType.LEVEL_3_DECREASE),
+        (Decimal("-8"), NotificationType.LEVEL_2_DECREASE),
+        (Decimal("-4"), NotificationType.LEVEL_1_DECREASE),
+    )
+    _CRYPTO_INCREASE_THRESHOLDS = (
+        (Decimal("10"), NotificationType.LEVEL_5_INCREASE),
+        (Decimal("8"), NotificationType.LEVEL_4_INCREASE),
+        (Decimal("6"), NotificationType.LEVEL_3_INCREASE),
+        (Decimal("4"), NotificationType.LEVEL_2_INCREASE),
+        (Decimal("2"), NotificationType.LEVEL_1_INCREASE),
+    )
+    _CRYPTO_DECREASE_THRESHOLDS = (
+        (Decimal("-10"), NotificationType.LEVEL_5_DECREASE),
+        (Decimal("-8"), NotificationType.LEVEL_4_DECREASE),
+        (Decimal("-6"), NotificationType.LEVEL_3_DECREASE),
+        (Decimal("-4"), NotificationType.LEVEL_2_DECREASE),
+        (Decimal("-2"), NotificationType.LEVEL_1_DECREASE),
     )
     _DEFAULT_INCREASE_THRESHOLDS = (
-        (Decimal("12.5"), NotificationType.LEVEL_5_INCREASE),
-        (Decimal("10"), NotificationType.LEVEL_4_INCREASE),
-        (Decimal("7.5"), NotificationType.LEVEL_3_INCREASE),
-        (Decimal("5"), NotificationType.LEVEL_2_INCREASE),
-        (Decimal("2.5"), NotificationType.LEVEL_1_INCREASE),
+        (Decimal("3.75"), NotificationType.LEVEL_5_INCREASE),
+        (Decimal("3"), NotificationType.LEVEL_4_INCREASE),
+        (Decimal("2.25"), NotificationType.LEVEL_3_INCREASE),
+        (Decimal("1.5"), NotificationType.LEVEL_2_INCREASE),
+        (Decimal("0.75"), NotificationType.LEVEL_1_INCREASE),
     )
     _DEFAULT_DECREASE_THRESHOLDS = (
-        (Decimal("-12.5"), NotificationType.LEVEL_5_DECREASE),
-        (Decimal("-10"), NotificationType.LEVEL_4_DECREASE),
-        (Decimal("-7.5"), NotificationType.LEVEL_3_DECREASE),
-        (Decimal("-5"), NotificationType.LEVEL_2_DECREASE),
-        (Decimal("-2.5"), NotificationType.LEVEL_1_DECREASE),
+        (Decimal("-3.75"), NotificationType.LEVEL_5_DECREASE),
+        (Decimal("-3"), NotificationType.LEVEL_4_DECREASE),
+        (Decimal("-2.25"), NotificationType.LEVEL_3_DECREASE),
+        (Decimal("-1.5"), NotificationType.LEVEL_2_DECREASE),
+        (Decimal("-0.75"), NotificationType.LEVEL_1_DECREASE),
     )
 
     def __init__(
@@ -324,6 +338,9 @@ class Stock:
         if self._kind == InstrumentType.STOCK:
             inc = self._STOCK_INCREASE_THRESHOLDS
             dec = self._STOCK_DECREASE_THRESHOLDS
+        elif self._kind == InstrumentType.CRYPTO:
+            inc = self._CRYPTO_INCREASE_THRESHOLDS
+            dec = self._CRYPTO_DECREASE_THRESHOLDS
         else:
             inc = self._DEFAULT_INCREASE_THRESHOLDS
             dec = self._DEFAULT_DECREASE_THRESHOLDS
@@ -372,7 +389,7 @@ class Stock:
             )
 
     def _generate_regular_market_open_notification(self) -> None:
-        if self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN):
+        if self._is_crypto() or self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN):
             return
         self._pending_notifications.append(
             Notification.create_regular_market_open(
@@ -528,11 +545,9 @@ class Stock:
         self._targets = remaining
 
     def _generate_market_open_notifications(self) -> None:
-        if self._is_crypto():
-            return
         had_market_open = self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN)
         self._generate_regular_market_open_notification()
-        if not had_market_open:
+        if not had_market_open and not self._is_crypto():
             return
         self._generate_fifty_day_average_crossed_notification()
         self._generate_close_to_fifty_day_average_notification()

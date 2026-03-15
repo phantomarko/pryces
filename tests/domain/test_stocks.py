@@ -445,45 +445,58 @@ class TestRegularMarketClosedNotifications:
 
 class TestPercentageChangeNotifications:
     _STOCK_THRESHOLDS = [
-        ("106.00", "100.00", "rose to"),
-        ("111.00", "100.00", "rose to"),
-        ("116.00", "100.00", "rose to"),
-        ("121.00", "100.00", "rose to"),
-        ("126.00", "100.00", "rose to"),
-        ("94.00", "100.00", "dropped to"),
-        ("89.00", "100.00", "dropped to"),
-        ("84.00", "100.00", "dropped to"),
-        ("79.00", "100.00", "dropped to"),
-        ("74.00", "100.00", "dropped to"),
+        ("104.10", "100.00", "rose to"),
+        ("108.10", "100.00", "rose to"),
+        ("112.10", "100.00", "rose to"),
+        ("116.10", "100.00", "rose to"),
+        ("120.10", "100.00", "rose to"),
+        ("95.90", "100.00", "dropped to"),
+        ("91.90", "100.00", "dropped to"),
+        ("87.90", "100.00", "dropped to"),
+        ("83.90", "100.00", "dropped to"),
+        ("79.90", "100.00", "dropped to"),
     ]
 
     _DEFAULT_THRESHOLDS = [
-        ("102.60", "100.00", "rose to"),
-        ("105.10", "100.00", "rose to"),
-        ("107.60", "100.00", "rose to"),
+        ("100.80", "100.00", "rose to"),
+        ("101.60", "100.00", "rose to"),
+        ("102.30", "100.00", "rose to"),
+        ("103.10", "100.00", "rose to"),
+        ("103.80", "100.00", "rose to"),
+        ("99.20", "100.00", "dropped to"),
+        ("98.40", "100.00", "dropped to"),
+        ("97.70", "100.00", "dropped to"),
+        ("96.90", "100.00", "dropped to"),
+        ("96.20", "100.00", "dropped to"),
+    ]
+
+    _CRYPTO_THRESHOLDS = [
+        ("102.10", "100.00", "rose to"),
+        ("104.10", "100.00", "rose to"),
+        ("106.10", "100.00", "rose to"),
+        ("108.10", "100.00", "rose to"),
         ("110.10", "100.00", "rose to"),
-        ("112.60", "100.00", "rose to"),
-        ("97.40", "100.00", "dropped to"),
-        ("94.90", "100.00", "dropped to"),
-        ("92.40", "100.00", "dropped to"),
+        ("97.90", "100.00", "dropped to"),
+        ("95.90", "100.00", "dropped to"),
+        ("93.90", "100.00", "dropped to"),
+        ("91.90", "100.00", "dropped to"),
         ("89.90", "100.00", "dropped to"),
-        ("87.40", "100.00", "dropped to"),
     ]
 
     @pytest.mark.parametrize(
         "current_price, previous_close, expected_text",
         _STOCK_THRESHOLDS,
         ids=[
-            "stock_5pct_increase",
-            "stock_10pct_increase",
-            "stock_15pct_increase",
+            "stock_4pct_increase",
+            "stock_8pct_increase",
+            "stock_12pct_increase",
+            "stock_16pct_increase",
             "stock_20pct_increase",
-            "stock_25pct_increase",
-            "stock_5pct_decrease",
-            "stock_10pct_decrease",
-            "stock_15pct_decrease",
+            "stock_4pct_decrease",
+            "stock_8pct_decrease",
+            "stock_12pct_decrease",
+            "stock_16pct_decrease",
             "stock_20pct_decrease",
-            "stock_25pct_decrease",
         ],
     )
     def test_stock_percentage_thresholds(self, current_price, previous_close, expected_text):
@@ -500,16 +513,16 @@ class TestPercentageChangeNotifications:
         "current_price, previous_close, expected_text",
         _DEFAULT_THRESHOLDS,
         ids=[
-            "default_2.5pct_increase",
-            "default_5pct_increase",
-            "default_7.5pct_increase",
-            "default_10pct_increase",
-            "default_12.5pct_increase",
-            "default_2.5pct_decrease",
-            "default_5pct_decrease",
-            "default_7.5pct_decrease",
-            "default_10pct_decrease",
-            "default_12.5pct_decrease",
+            "default_0.75pct_increase",
+            "default_1.5pct_increase",
+            "default_2.25pct_increase",
+            "default_3pct_increase",
+            "default_3.75pct_increase",
+            "default_0.75pct_decrease",
+            "default_1.5pct_decrease",
+            "default_2.25pct_decrease",
+            "default_3pct_decrease",
+            "default_3.75pct_decrease",
         ],
     )
     def test_default_percentage_thresholds(self, current_price, previous_close, expected_text):
@@ -522,9 +535,43 @@ class TestPercentageChangeNotifications:
         assert len(messages) == 1
         assert any(expected_text in m for m in messages)
 
+    @pytest.mark.parametrize(
+        "current_price, previous_close, expected_text",
+        _CRYPTO_THRESHOLDS,
+        ids=[
+            "crypto_2pct_increase",
+            "crypto_4pct_increase",
+            "crypto_6pct_increase",
+            "crypto_8pct_increase",
+            "crypto_10pct_increase",
+            "crypto_2pct_decrease",
+            "crypto_4pct_decrease",
+            "crypto_6pct_decrease",
+            "crypto_8pct_decrease",
+            "crypto_10pct_decrease",
+        ],
+    )
+    def test_crypto_percentage_thresholds(self, current_price, previous_close, expected_text):
+        stock = make_stock(
+            current_price=current_price,
+            previous_close_price=previous_close,
+            kind=InstrumentType.CRYPTO,
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any(expected_text in m for m in messages)
+
+    def test_index_percentage_thresholds(self):
+        stock = open_stock_after_burn(
+            current_price="100.80", previous_close_price="100.00", kind=InstrumentType.INDEX
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("rose to" in m for m in messages)
+
     def test_none_kind_uses_default_thresholds(self):
         stock = open_stock_after_burn(
-            current_price="102.60", previous_close_price="100.00", kind=None
+            current_price="100.80", previous_close_price="100.00", kind=None
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
@@ -532,7 +579,7 @@ class TestPercentageChangeNotifications:
 
     def test_stock_no_percentage_below_threshold(self):
         stock = make_stock(
-            current_price="104.00",
+            current_price="103.90",
             previous_close_price="100.00",
             kind=InstrumentType.STOCK,
         )
@@ -542,7 +589,7 @@ class TestPercentageChangeNotifications:
 
     def test_default_no_percentage_below_threshold(self):
         stock = make_stock(
-            current_price="102.00",
+            current_price="100.70",
             previous_close_price="100.00",
             kind=InstrumentType.ETF,
         )
@@ -552,7 +599,7 @@ class TestPercentageChangeNotifications:
 
     def test_stock_percentage_at_exact_threshold(self):
         stock = open_stock_after_burn(
-            current_price="105.00",
+            current_price="104.00",
             previous_close_price="100.00",
             kind=InstrumentType.STOCK,
         )
@@ -562,7 +609,7 @@ class TestPercentageChangeNotifications:
 
     def test_default_percentage_at_exact_threshold(self):
         stock = open_stock_after_burn(
-            current_price="102.50",
+            current_price="100.75",
             previous_close_price="100.00",
             kind=InstrumentType.ETF,
         )
@@ -840,7 +887,7 @@ class TestMarketStateTransition:
 
 class TestDeduplication:
     def test_generate_notifications_deduplicates_by_type(self):
-        stock = make_stock(current_price="150.00", previous_close_price="148.00")
+        stock = make_stock(current_price="150.00", previous_close_price="149.50")
         result1 = generate_and_drain(stock)
         assert len(result1) > 0
 
