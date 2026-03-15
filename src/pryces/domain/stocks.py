@@ -299,6 +299,9 @@ class Stock:
     def _is_market_state_post(self) -> bool:
         return self._market_state == MarketState.POST
 
+    def _is_crypto(self) -> bool:
+        return self._kind == InstrumentType.CRYPTO
+
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
@@ -498,6 +501,8 @@ class Stock:
         self._targets = remaining
 
     def _generate_market_open_notifications(self) -> None:
+        if self._is_crypto():
+            return
         had_market_open = self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN)
         self._generate_regular_market_open_notification()
         if not had_market_open:
@@ -541,4 +546,6 @@ class Stock:
         self._notifications = [n for n in self._notifications if n.type not in decrease_types]
 
     def _generate_market_closed_notifications(self) -> None:
+        if self._is_crypto():
+            return
         self._generate_regular_market_closed_notification()

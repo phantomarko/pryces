@@ -39,7 +39,7 @@ The monitoring tool is designed around the concept of a **daily market session**
 
 The following events are detected and sent as Telegram messages during a monitoring run:
 
-- Market open / market closed
+- Market open / market closed (not generated for crypto instruments — crypto markets run 24/7)
 - Price is close to crossing the 50-day or 200-day moving average (within 2.5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved more than 5%, 10%, 15%, or 20% from the previous close (up or down)

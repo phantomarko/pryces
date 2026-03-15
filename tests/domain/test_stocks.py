@@ -1257,3 +1257,41 @@ class TestDrainFulfilledTargets:
         fulfilled = stock.drain_fulfilled_targets()
 
         assert fulfilled == []
+
+
+class TestCryptoNotifications:
+    def test_crypto_open_market_state_generates_no_notifications(self):
+        stock = Stock(
+            symbol="BTC-USD",
+            current_price=Decimal("50000.00"),
+            market_state=MarketState.OPEN,
+            kind=InstrumentType.CRYPTO,
+        )
+
+        messages = generate_and_drain(stock)
+
+        assert messages == []
+
+    def test_crypto_post_market_state_generates_no_notifications(self):
+        stock = Stock(
+            symbol="BTC-USD",
+            current_price=Decimal("50000.00"),
+            market_state=MarketState.POST,
+            kind=InstrumentType.CRYPTO,
+        )
+
+        messages = generate_and_drain(stock)
+
+        assert messages == []
+
+    def test_non_crypto_open_market_state_generates_market_open_notification(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            kind=InstrumentType.STOCK,
+        )
+
+        messages = generate_and_drain(stock)
+
+        assert any("open" in m.lower() for m in messages)
