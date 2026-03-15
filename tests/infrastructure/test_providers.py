@@ -1,7 +1,9 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.domain.stocks import MarketState
+import pytest
+
+from pryces.domain.stocks import InstrumentType, MarketState
 from pryces.infrastructure.providers import YahooFinanceMapper
 
 
@@ -22,6 +24,7 @@ def _build_full_info(**overrides) -> dict:
         "currency": "USD",
         "marketState": "REGULAR",
         "exchangeDataDelayedBy": 0,
+        "quoteType": "EQUITY",
     }
     info.update(overrides)
     return info
@@ -48,6 +51,7 @@ class TestYahooFinanceMapper:
         assert stock.fifty_two_week_low == Decimal("120.0")
         assert stock.market_state == MarketState.OPEN
         assert stock.price_delay_in_minutes == 0
+        assert stock.kind == InstrumentType.STOCK
 
     def test_returns_none_for_empty_info(self):
         mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
@@ -186,3 +190,24 @@ class TestYahooFinanceMapper:
 
         assert stock is not None
         assert stock.symbol == "AAPL"
+
+    @pytest.mark.parametrize(
+        "quote_type, expected_kind",
+        [
+            ("EQUITY", InstrumentType.STOCK),
+            ("ETF", InstrumentType.ETF),
+            ("CRYPTOCURRENCY", InstrumentType.CRYPTO),
+            ("INDEX", InstrumentType.INDEX),
+            ("MUTUALFUND", None),
+            ("FUTURE", None),
+            (None, None),
+        ],
+    )
+    def test_maps_instrument_types(self, quote_type, expected_kind):
+        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+        info = _build_full_info(quoteType=quote_type)
+
+        stock = mapper.map("AAPL", info)
+
+        assert stock is not None
+        assert stock.kind == expected_kind

@@ -173,6 +173,7 @@ def parse_symbols_input(value: str) -> list[str]:
 
 FIELD_LABELS = [
     ("market_state", "Market State"),
+    ("kind", "Type"),
     ("current_price", "Current Price"),
     ("previous_close_price", "Previous Close"),
     ("open_price", "Open"),

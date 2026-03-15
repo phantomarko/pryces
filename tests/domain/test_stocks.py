@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.domain.stocks import MarketState, Stock, StockSnapshot
+from pryces.domain.stocks import InstrumentType, MarketState, Stock, StockSnapshot
 from tests.fixtures.factories import (
     generate_and_drain,
     make_stock,
@@ -30,6 +30,7 @@ class TestStockCreation:
             two_hundred_day_average=Decimal("140.00"),
             fifty_two_week_high=Decimal("160.00"),
             fifty_two_week_low=Decimal("120.00"),
+            kind=InstrumentType.STOCK,
         )
 
         assert stock.symbol == "AAPL"
@@ -44,6 +45,7 @@ class TestStockCreation:
         assert stock.two_hundred_day_average == Decimal("140.00")
         assert stock.fifty_two_week_high == Decimal("160.00")
         assert stock.fifty_two_week_low == Decimal("120.00")
+        assert stock.kind == InstrumentType.STOCK
 
     def test_stock_is_immutable(self):
         stock = Stock(symbol="AAPL", current_price=Decimal("150.00"))

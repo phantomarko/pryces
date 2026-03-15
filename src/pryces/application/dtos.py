@@ -22,6 +22,7 @@ class StockDTO:
     fifty_two_week_low: Decimal | None = None
     market_state: str | None = None
     price_delay_in_minutes: int | None = None
+    kind: str | None = None
 
     @staticmethod
     def from_stock(stock: Stock) -> StockDTO:
@@ -40,6 +41,7 @@ class StockDTO:
             fifty_two_week_low=stock.fifty_two_week_low,
             market_state=stock.market_state.value if stock.market_state else None,
             price_delay_in_minutes=stock.price_delay_in_minutes,
+            kind=stock.kind.value if stock.kind else None,
         )
 
 

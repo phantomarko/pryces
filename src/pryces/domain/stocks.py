@@ -34,6 +34,13 @@ class MarketState(str, Enum):
     CLOSED = "CLOSED"
 
 
+class InstrumentType(str, Enum):
+    STOCK = "STOCK"
+    ETF = "ETF"
+    CRYPTO = "CRYPTO"
+    INDEX = "INDEX"
+
+
 class Stock:
     __slots__ = (
         "_symbol",
@@ -50,6 +57,7 @@ class Stock:
         "_fifty_two_week_low",
         "_market_state",
         "_price_delay_in_minutes",
+        "_kind",
         "_snapshot",
         "_notifications",
         "_pending_notifications",
@@ -89,6 +97,7 @@ class Stock:
         fifty_two_week_low: Decimal | None = None,
         market_state: MarketState | None = None,
         price_delay_in_minutes: int | None = None,
+        kind: InstrumentType | None = None,
     ):
         self._symbol = symbol
         self._current_price = current_price
@@ -104,6 +113,7 @@ class Stock:
         self._fifty_two_week_low = fifty_two_week_low
         self._market_state = market_state
         self._price_delay_in_minutes = price_delay_in_minutes
+        self._kind = kind
         self._snapshot: StockSnapshot | None = None
         self._notifications: list[Notification] = []
         self._pending_notifications: list[Notification] = []
@@ -167,6 +177,10 @@ class Stock:
         return self._price_delay_in_minutes
 
     @property
+    def kind(self) -> "InstrumentType | None":
+        return self._kind
+
+    @property
     def snapshot(self) -> StockSnapshot | None:
         return self._snapshot
 
@@ -213,6 +227,7 @@ class Stock:
         self._fifty_two_week_low = source._fifty_two_week_low
         self._market_state = source._market_state
         self._price_delay_in_minutes = source._price_delay_in_minutes
+        self._kind = source._kind
 
     def is_market_state_transition(self) -> bool:
         return (

@@ -5,7 +5,7 @@ from decimal import Decimal
 import yfinance as yf
 
 from ..application.interfaces import LoggerFactory, StockProvider
-from ..domain.stocks import MarketState, Stock
+from ..domain.stocks import InstrumentType, MarketState, Stock
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +51,7 @@ class YahooFinanceMapper:
         market_state = self._map_market_state(info.get("marketState"))
         exchange_delay = info.get("exchangeDataDelayedBy") or 0
         price_delay_in_minutes = exchange_delay + self._extra_delay_in_minutes
+        kind = self._map_instrument_type(info.get("quoteType"))
 
         return Stock(
             symbol=symbol.upper(),
@@ -75,7 +76,19 @@ class YahooFinanceMapper:
             ),
             market_state=market_state,
             price_delay_in_minutes=price_delay_in_minutes,
+            kind=kind,
         )
+
+    def _map_instrument_type(self, value: str | None) -> InstrumentType | None:
+        mapping = {
+            "EQUITY": InstrumentType.STOCK,
+            "ETF": InstrumentType.ETF,
+            "CRYPTOCURRENCY": InstrumentType.CRYPTO,
+            "INDEX": InstrumentType.INDEX,
+        }
+        if value is None:
+            return None
+        return mapping.get(value)
 
     def _map_market_state(self, value: str | None) -> MarketState | None:
         match value:
