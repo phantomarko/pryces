@@ -449,10 +449,12 @@ class TestPercentageChangeNotifications:
         ("111.00", "100.00", "rose to"),
         ("116.00", "100.00", "rose to"),
         ("121.00", "100.00", "rose to"),
+        ("126.00", "100.00", "rose to"),
         ("94.00", "100.00", "dropped to"),
         ("89.00", "100.00", "dropped to"),
         ("84.00", "100.00", "dropped to"),
         ("79.00", "100.00", "dropped to"),
+        ("74.00", "100.00", "dropped to"),
     ]
 
     _DEFAULT_THRESHOLDS = [
@@ -460,10 +462,12 @@ class TestPercentageChangeNotifications:
         ("105.10", "100.00", "rose to"),
         ("107.60", "100.00", "rose to"),
         ("110.10", "100.00", "rose to"),
+        ("112.60", "100.00", "rose to"),
         ("97.40", "100.00", "dropped to"),
         ("94.90", "100.00", "dropped to"),
         ("92.40", "100.00", "dropped to"),
         ("89.90", "100.00", "dropped to"),
+        ("87.40", "100.00", "dropped to"),
     ]
 
     @pytest.mark.parametrize(
@@ -474,10 +478,12 @@ class TestPercentageChangeNotifications:
             "stock_10pct_increase",
             "stock_15pct_increase",
             "stock_20pct_increase",
+            "stock_25pct_increase",
             "stock_5pct_decrease",
             "stock_10pct_decrease",
             "stock_15pct_decrease",
             "stock_20pct_decrease",
+            "stock_25pct_decrease",
         ],
     )
     def test_stock_percentage_thresholds(self, current_price, previous_close, expected_text):
@@ -498,10 +504,12 @@ class TestPercentageChangeNotifications:
             "default_5pct_increase",
             "default_7.5pct_increase",
             "default_10pct_increase",
+            "default_12.5pct_increase",
             "default_2.5pct_decrease",
             "default_5pct_decrease",
             "default_7.5pct_decrease",
             "default_10pct_decrease",
+            "default_12.5pct_decrease",
         ],
     )
     def test_default_percentage_thresholds(self, current_price, previous_close, expected_text):

@@ -68,24 +68,28 @@ class Stock:
     _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
 
     _STOCK_INCREASE_THRESHOLDS = (
+        (Decimal("25"), NotificationType.LEVEL_5_INCREASE),
         (Decimal("20"), NotificationType.LEVEL_4_INCREASE),
         (Decimal("15"), NotificationType.LEVEL_3_INCREASE),
         (Decimal("10"), NotificationType.LEVEL_2_INCREASE),
         (Decimal("5"), NotificationType.LEVEL_1_INCREASE),
     )
     _STOCK_DECREASE_THRESHOLDS = (
+        (Decimal("-25"), NotificationType.LEVEL_5_DECREASE),
         (Decimal("-20"), NotificationType.LEVEL_4_DECREASE),
         (Decimal("-15"), NotificationType.LEVEL_3_DECREASE),
         (Decimal("-10"), NotificationType.LEVEL_2_DECREASE),
         (Decimal("-5"), NotificationType.LEVEL_1_DECREASE),
     )
     _DEFAULT_INCREASE_THRESHOLDS = (
+        (Decimal("12.5"), NotificationType.LEVEL_5_INCREASE),
         (Decimal("10"), NotificationType.LEVEL_4_INCREASE),
         (Decimal("7.5"), NotificationType.LEVEL_3_INCREASE),
         (Decimal("5"), NotificationType.LEVEL_2_INCREASE),
         (Decimal("2.5"), NotificationType.LEVEL_1_INCREASE),
     )
     _DEFAULT_DECREASE_THRESHOLDS = (
+        (Decimal("-12.5"), NotificationType.LEVEL_5_DECREASE),
         (Decimal("-10"), NotificationType.LEVEL_4_DECREASE),
         (Decimal("-7.5"), NotificationType.LEVEL_3_DECREASE),
         (Decimal("-5"), NotificationType.LEVEL_2_DECREASE),
@@ -451,6 +455,7 @@ class Stock:
             NotificationType.LEVEL_2_INCREASE,
             NotificationType.LEVEL_3_INCREASE,
             NotificationType.LEVEL_4_INCREASE,
+            NotificationType.LEVEL_5_INCREASE,
         }
         return any(n.type in increase_types for n in self._notifications)
 
@@ -460,6 +465,7 @@ class Stock:
             NotificationType.LEVEL_2_DECREASE,
             NotificationType.LEVEL_3_DECREASE,
             NotificationType.LEVEL_4_DECREASE,
+            NotificationType.LEVEL_5_DECREASE,
         }
         return any(n.type in decrease_types for n in self._notifications)
 
@@ -554,6 +560,7 @@ class Stock:
             NotificationType.LEVEL_2_INCREASE,
             NotificationType.LEVEL_3_INCREASE,
             NotificationType.LEVEL_4_INCREASE,
+            NotificationType.LEVEL_5_INCREASE,
         }
         self._notifications = [n for n in self._notifications if n.type not in increase_types]
 
@@ -563,6 +570,7 @@ class Stock:
             NotificationType.LEVEL_2_DECREASE,
             NotificationType.LEVEL_3_DECREASE,
             NotificationType.LEVEL_4_DECREASE,
+            NotificationType.LEVEL_5_DECREASE,
         }
         self._notifications = [n for n in self._notifications if n.type not in decrease_types]
 

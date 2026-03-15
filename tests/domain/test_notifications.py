@@ -199,10 +199,12 @@ def test_create_percentage_change_preserves_notification_type():
         NotificationType.LEVEL_2_INCREASE,
         NotificationType.LEVEL_3_INCREASE,
         NotificationType.LEVEL_4_INCREASE,
+        NotificationType.LEVEL_5_INCREASE,
         NotificationType.LEVEL_1_DECREASE,
         NotificationType.LEVEL_2_DECREASE,
         NotificationType.LEVEL_3_DECREASE,
         NotificationType.LEVEL_4_DECREASE,
+        NotificationType.LEVEL_5_DECREASE,
     ]:
         notification = Notification.create_percentage_change(
             notification_type, "AAPL", Decimal("150.00"), Decimal("5.00")
@@ -285,10 +287,12 @@ def test_notification_type_enum_has_expected_values():
     assert NotificationType.LEVEL_2_INCREASE.value == "LEVEL_2_INCREASE"
     assert NotificationType.LEVEL_3_INCREASE.value == "LEVEL_3_INCREASE"
     assert NotificationType.LEVEL_4_INCREASE.value == "LEVEL_4_INCREASE"
+    assert NotificationType.LEVEL_5_INCREASE.value == "LEVEL_5_INCREASE"
     assert NotificationType.LEVEL_1_DECREASE.value == "LEVEL_1_DECREASE"
     assert NotificationType.LEVEL_2_DECREASE.value == "LEVEL_2_DECREASE"
     assert NotificationType.LEVEL_3_DECREASE.value == "LEVEL_3_DECREASE"
     assert NotificationType.LEVEL_4_DECREASE.value == "LEVEL_4_DECREASE"
+    assert NotificationType.LEVEL_5_DECREASE.value == "LEVEL_5_DECREASE"
     assert NotificationType.SESSION_GAINS_ERASED.value == "SESSION_GAINS_ERASED"
     assert NotificationType.SESSION_LOSSES_ERASED.value == "SESSION_LOSSES_ERASED"
     assert NotificationType.NEW_52_WEEK_HIGH.value == "NEW_52_WEEK_HIGH"
