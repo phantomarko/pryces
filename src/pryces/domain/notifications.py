@@ -11,14 +11,14 @@ class NotificationType(Enum):
     CLOSE_TO_SMA200 = "CLOSE_TO_SMA200"
     REGULAR_MARKET_OPEN = "REGULAR_MARKET_OPEN"
     REGULAR_MARKET_CLOSED = "REGULAR_MARKET_CLOSED"
-    FIVE_PERCENT_INCREASE = "FIVE_PERCENT_INCREASE"
-    TEN_PERCENT_INCREASE = "TEN_PERCENT_INCREASE"
-    FIFTEEN_PERCENT_INCREASE = "FIFTEEN_PERCENT_INCREASE"
-    TWENTY_PERCENT_INCREASE = "TWENTY_PERCENT_INCREASE"
-    FIVE_PERCENT_DECREASE = "FIVE_PERCENT_DECREASE"
-    TEN_PERCENT_DECREASE = "TEN_PERCENT_DECREASE"
-    FIFTEEN_PERCENT_DECREASE = "FIFTEEN_PERCENT_DECREASE"
-    TWENTY_PERCENT_DECREASE = "TWENTY_PERCENT_DECREASE"
+    LEVEL_1_INCREASE = "LEVEL_1_INCREASE"
+    LEVEL_2_INCREASE = "LEVEL_2_INCREASE"
+    LEVEL_3_INCREASE = "LEVEL_3_INCREASE"
+    LEVEL_4_INCREASE = "LEVEL_4_INCREASE"
+    LEVEL_1_DECREASE = "LEVEL_1_DECREASE"
+    LEVEL_2_DECREASE = "LEVEL_2_DECREASE"
+    LEVEL_3_DECREASE = "LEVEL_3_DECREASE"
+    LEVEL_4_DECREASE = "LEVEL_4_DECREASE"
     SESSION_GAINS_ERASED = "SESSION_GAINS_ERASED"
     SESSION_LOSSES_ERASED = "SESSION_LOSSES_ERASED"
     NEW_52_WEEK_HIGH = "NEW_52_WEEK_HIGH"
@@ -115,88 +115,14 @@ class Notification:
         )
 
     @staticmethod
-    def create_five_percent_increase(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
+    def create_percentage_change(
+        notification_type: NotificationType,
+        symbol: str,
+        current_price: Decimal,
+        change_percentage: Decimal,
     ) -> "Notification":
         return Notification._create_price_change(
-            NotificationType.FIVE_PERCENT_INCREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_ten_percent_increase(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.TEN_PERCENT_INCREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_fifteen_percent_increase(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.FIFTEEN_PERCENT_INCREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_twenty_percent_increase(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.TWENTY_PERCENT_INCREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_five_percent_decrease(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.FIVE_PERCENT_DECREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_ten_percent_decrease(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.TEN_PERCENT_DECREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_fifteen_percent_decrease(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.FIFTEEN_PERCENT_DECREASE,
-            symbol,
-            current_price,
-            change_percentage,
-        )
-
-    @staticmethod
-    def create_twenty_percent_decrease(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        return Notification._create_price_change(
-            NotificationType.TWENTY_PERCENT_DECREASE,
+            notification_type,
             symbol,
             current_price,
             change_percentage,

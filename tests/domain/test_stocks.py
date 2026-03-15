@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+import pytest
+
 from pryces.domain.stocks import InstrumentType, MarketState, Stock, StockSnapshot
 from tests.fixtures.factories import (
     generate_and_drain,
@@ -442,62 +444,120 @@ class TestRegularMarketClosedNotifications:
 
 
 class TestPercentageChangeNotifications:
-    def test_generate_notifications_adds_twenty_percent_increase(self):
-        stock = open_stock_after_burn(current_price="121.00", previous_close_price="100.00")
+    _STOCK_THRESHOLDS = [
+        ("106.00", "100.00", "rose to"),
+        ("111.00", "100.00", "rose to"),
+        ("116.00", "100.00", "rose to"),
+        ("121.00", "100.00", "rose to"),
+        ("94.00", "100.00", "dropped to"),
+        ("89.00", "100.00", "dropped to"),
+        ("84.00", "100.00", "dropped to"),
+        ("79.00", "100.00", "dropped to"),
+    ]
+
+    _DEFAULT_THRESHOLDS = [
+        ("102.60", "100.00", "rose to"),
+        ("105.10", "100.00", "rose to"),
+        ("107.60", "100.00", "rose to"),
+        ("110.10", "100.00", "rose to"),
+        ("97.40", "100.00", "dropped to"),
+        ("94.90", "100.00", "dropped to"),
+        ("92.40", "100.00", "dropped to"),
+        ("89.90", "100.00", "dropped to"),
+    ]
+
+    @pytest.mark.parametrize(
+        "current_price, previous_close, expected_text",
+        _STOCK_THRESHOLDS,
+        ids=[
+            "stock_5pct_increase",
+            "stock_10pct_increase",
+            "stock_15pct_increase",
+            "stock_20pct_increase",
+            "stock_5pct_decrease",
+            "stock_10pct_decrease",
+            "stock_15pct_decrease",
+            "stock_20pct_decrease",
+        ],
+    )
+    def test_stock_percentage_thresholds(self, current_price, previous_close, expected_text):
+        stock = open_stock_after_burn(
+            current_price=current_price,
+            previous_close_price=previous_close,
+            kind=InstrumentType.STOCK,
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any(expected_text in m for m in messages)
+
+    @pytest.mark.parametrize(
+        "current_price, previous_close, expected_text",
+        _DEFAULT_THRESHOLDS,
+        ids=[
+            "default_2.5pct_increase",
+            "default_5pct_increase",
+            "default_7.5pct_increase",
+            "default_10pct_increase",
+            "default_2.5pct_decrease",
+            "default_5pct_decrease",
+            "default_7.5pct_decrease",
+            "default_10pct_decrease",
+        ],
+    )
+    def test_default_percentage_thresholds(self, current_price, previous_close, expected_text):
+        stock = open_stock_after_burn(
+            current_price=current_price,
+            previous_close_price=previous_close,
+            kind=InstrumentType.ETF,
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any(expected_text in m for m in messages)
+
+    def test_none_kind_uses_default_thresholds(self):
+        stock = open_stock_after_burn(
+            current_price="102.60", previous_close_price="100.00", kind=None
+        )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
-    def test_generate_notifications_adds_fifteen_percent_increase(self):
-        stock = open_stock_after_burn(current_price="116.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("rose to" in m for m in messages)
-
-    def test_generate_notifications_adds_ten_percent_increase(self):
-        stock = open_stock_after_burn(current_price="111.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("rose to" in m for m in messages)
-
-    def test_generate_notifications_adds_five_percent_increase(self):
-        stock = open_stock_after_burn(current_price="106.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("rose to" in m for m in messages)
-
-    def test_generate_notifications_adds_twenty_percent_decrease(self):
-        stock = open_stock_after_burn(current_price="79.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("dropped to" in m for m in messages)
-
-    def test_generate_notifications_adds_fifteen_percent_decrease(self):
-        stock = open_stock_after_burn(current_price="84.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("dropped to" in m for m in messages)
-
-    def test_generate_notifications_adds_ten_percent_decrease(self):
-        stock = open_stock_after_burn(current_price="89.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("dropped to" in m for m in messages)
-
-    def test_generate_notifications_adds_five_percent_decrease(self):
-        stock = open_stock_after_burn(current_price="94.00", previous_close_price="100.00")
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        assert any("dropped to" in m for m in messages)
-
-    def test_generate_notifications_no_percentage_below_threshold(self):
-        stock = make_stock(current_price="104.00", previous_close_price="100.00")
+    def test_stock_no_percentage_below_threshold(self):
+        stock = make_stock(
+            current_price="104.00",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+        )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("opened at" in m for m in messages)
 
-    def test_generate_notifications_percentage_at_exact_threshold(self):
-        stock = open_stock_after_burn(current_price="105.00", previous_close_price="100.00")
+    def test_default_no_percentage_below_threshold(self):
+        stock = make_stock(
+            current_price="102.00",
+            previous_close_price="100.00",
+            kind=InstrumentType.ETF,
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("opened at" in m for m in messages)
+
+    def test_stock_percentage_at_exact_threshold(self):
+        stock = open_stock_after_burn(
+            current_price="105.00",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("rose to" in m for m in messages)
+
+    def test_default_percentage_at_exact_threshold(self):
+        stock = open_stock_after_burn(
+            current_price="102.50",
+            previous_close_price="100.00",
+            kind=InstrumentType.ETF,
+        )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)

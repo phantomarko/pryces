@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.application.dtos import StockDTO
-from pryces.domain.stocks import MarketState, Stock
+from pryces.domain.stocks import InstrumentType, MarketState, Stock
 
 
 def create_stock(
@@ -83,6 +83,7 @@ def make_stock(
     fifty_two_week_low: str | Decimal | None = None,
     market_state: MarketState | None = MarketState.OPEN,
     price_delay_in_minutes: int | None = None,
+    kind: InstrumentType | None = None,
 ) -> Stock:
     def d(v):
         return Decimal(v) if isinstance(v, str) else v
@@ -100,6 +101,7 @@ def make_stock(
         fifty_two_week_low=d(fifty_two_week_low),
         market_state=market_state,
         price_delay_in_minutes=price_delay_in_minutes,
+        kind=kind,
     )
 
 

@@ -67,17 +67,29 @@ class Stock:
 
     _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
 
-    _INCREASE_THRESHOLDS = (
-        (Decimal("20"), Notification.create_twenty_percent_increase),
-        (Decimal("15"), Notification.create_fifteen_percent_increase),
-        (Decimal("10"), Notification.create_ten_percent_increase),
-        (Decimal("5"), Notification.create_five_percent_increase),
+    _STOCK_INCREASE_THRESHOLDS = (
+        (Decimal("20"), NotificationType.LEVEL_4_INCREASE),
+        (Decimal("15"), NotificationType.LEVEL_3_INCREASE),
+        (Decimal("10"), NotificationType.LEVEL_2_INCREASE),
+        (Decimal("5"), NotificationType.LEVEL_1_INCREASE),
     )
-    _DECREASE_THRESHOLDS = (
-        (Decimal("-20"), Notification.create_twenty_percent_decrease),
-        (Decimal("-15"), Notification.create_fifteen_percent_decrease),
-        (Decimal("-10"), Notification.create_ten_percent_decrease),
-        (Decimal("-5"), Notification.create_five_percent_decrease),
+    _STOCK_DECREASE_THRESHOLDS = (
+        (Decimal("-20"), NotificationType.LEVEL_4_DECREASE),
+        (Decimal("-15"), NotificationType.LEVEL_3_DECREASE),
+        (Decimal("-10"), NotificationType.LEVEL_2_DECREASE),
+        (Decimal("-5"), NotificationType.LEVEL_1_DECREASE),
+    )
+    _DEFAULT_INCREASE_THRESHOLDS = (
+        (Decimal("10"), NotificationType.LEVEL_4_INCREASE),
+        (Decimal("7.5"), NotificationType.LEVEL_3_INCREASE),
+        (Decimal("5"), NotificationType.LEVEL_2_INCREASE),
+        (Decimal("2.5"), NotificationType.LEVEL_1_INCREASE),
+    )
+    _DEFAULT_DECREASE_THRESHOLDS = (
+        (Decimal("-10"), NotificationType.LEVEL_4_DECREASE),
+        (Decimal("-7.5"), NotificationType.LEVEL_3_DECREASE),
+        (Decimal("-5"), NotificationType.LEVEL_2_DECREASE),
+        (Decimal("-2.5"), NotificationType.LEVEL_1_DECREASE),
     )
 
     def __init__(
@@ -305,16 +317,25 @@ class Stock:
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
-        args = (self.symbol, self.current_price, change_percentage)
+        if self._kind == InstrumentType.STOCK:
+            inc = self._STOCK_INCREASE_THRESHOLDS
+            dec = self._STOCK_DECREASE_THRESHOLDS
+        else:
+            inc = self._DEFAULT_INCREASE_THRESHOLDS
+            dec = self._DEFAULT_DECREASE_THRESHOLDS
 
         if change_percentage > 0:
-            for threshold, factory in self._INCREASE_THRESHOLDS:
+            for threshold, notification_type in inc:
                 if change_percentage >= threshold:
-                    return factory(*args)
+                    return Notification.create_percentage_change(
+                        notification_type, self.symbol, self.current_price, change_percentage
+                    )
         elif change_percentage < 0:
-            for threshold, factory in self._DECREASE_THRESHOLDS:
+            for threshold, notification_type in dec:
                 if change_percentage <= threshold:
-                    return factory(*args)
+                    return Notification.create_percentage_change(
+                        notification_type, self.symbol, self.current_price, change_percentage
+                    )
 
         return None
 
@@ -426,19 +447,19 @@ class Stock:
 
     def _has_any_increase_percentage_notification(self) -> bool:
         increase_types = {
-            NotificationType.FIVE_PERCENT_INCREASE,
-            NotificationType.TEN_PERCENT_INCREASE,
-            NotificationType.FIFTEEN_PERCENT_INCREASE,
-            NotificationType.TWENTY_PERCENT_INCREASE,
+            NotificationType.LEVEL_1_INCREASE,
+            NotificationType.LEVEL_2_INCREASE,
+            NotificationType.LEVEL_3_INCREASE,
+            NotificationType.LEVEL_4_INCREASE,
         }
         return any(n.type in increase_types for n in self._notifications)
 
     def _has_any_decrease_percentage_notification(self) -> bool:
         decrease_types = {
-            NotificationType.FIVE_PERCENT_DECREASE,
-            NotificationType.TEN_PERCENT_DECREASE,
-            NotificationType.FIFTEEN_PERCENT_DECREASE,
-            NotificationType.TWENTY_PERCENT_DECREASE,
+            NotificationType.LEVEL_1_DECREASE,
+            NotificationType.LEVEL_2_DECREASE,
+            NotificationType.LEVEL_3_DECREASE,
+            NotificationType.LEVEL_4_DECREASE,
         }
         return any(n.type in decrease_types for n in self._notifications)
 
@@ -529,19 +550,19 @@ class Stock:
 
     def _reset_increase_percentage_notifications(self) -> None:
         increase_types = {
-            NotificationType.FIVE_PERCENT_INCREASE,
-            NotificationType.TEN_PERCENT_INCREASE,
-            NotificationType.FIFTEEN_PERCENT_INCREASE,
-            NotificationType.TWENTY_PERCENT_INCREASE,
+            NotificationType.LEVEL_1_INCREASE,
+            NotificationType.LEVEL_2_INCREASE,
+            NotificationType.LEVEL_3_INCREASE,
+            NotificationType.LEVEL_4_INCREASE,
         }
         self._notifications = [n for n in self._notifications if n.type not in increase_types]
 
     def _reset_decrease_percentage_notifications(self) -> None:
         decrease_types = {
-            NotificationType.FIVE_PERCENT_DECREASE,
-            NotificationType.TEN_PERCENT_DECREASE,
-            NotificationType.FIFTEEN_PERCENT_DECREASE,
-            NotificationType.TWENTY_PERCENT_DECREASE,
+            NotificationType.LEVEL_1_DECREASE,
+            NotificationType.LEVEL_2_DECREASE,
+            NotificationType.LEVEL_3_DECREASE,
+            NotificationType.LEVEL_4_DECREASE,
         }
         self._notifications = [n for n in self._notifications if n.type not in decrease_types]
 
