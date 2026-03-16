@@ -275,7 +275,7 @@ class Stock:
             header = self._build_consolidation_header(header_only)
             lines = [header]
             for m in milestones:
-                lines.append(f"-- {m.message}")
+                lines.append(m.message)
             messages.append("\n".join(lines))
         else:
             for n in header_only:

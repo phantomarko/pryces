@@ -51,7 +51,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SMA50_CROSSED,
-            f"crossed SMA50 at {average_price}",
+            f"⚠️ crossed SMA50 at {average_price}",
         )
 
     @staticmethod
@@ -59,7 +59,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SMA200_CROSSED,
-            f"crossed SMA200 at {average_price}",
+            f"⚠️ crossed SMA200 at {average_price}",
         )
 
     @staticmethod
@@ -70,7 +70,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.CLOSE_TO_SMA50,
-            f"{direction} SMA50 at {average_price}",
+            f"🔍 {direction} SMA50 at {average_price}",
         )
 
     @staticmethod
@@ -81,14 +81,14 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.CLOSE_TO_SMA200,
-            f"{direction} SMA200 at {average_price}",
+            f"🔍 {direction} SMA200 at {average_price}",
         )
 
     @staticmethod
     def create_regular_market_open(
         symbol: str, open_price: Decimal, last_close_price: Decimal | None
     ) -> "Notification":
-        message = f"{symbol} opened at {open_price}"
+        message = f"▶️ {symbol} opened at {open_price}"
         if last_close_price is not None:
             change_percentage = _calculate_percentage_change(open_price, last_close_price)
             message += f" ({change_percentage:+.2f}%)"
@@ -100,7 +100,7 @@ class Notification:
     def create_regular_market_closed(
         symbol: str, current_price: Decimal, last_close_price: Decimal | None
     ) -> "Notification":
-        message = f"{symbol} closed at {current_price}"
+        message = f"⏹️ {symbol} closed at {current_price}"
         if last_close_price is not None:
             change_percentage = _calculate_percentage_change(current_price, last_close_price)
             message += f" ({change_percentage:+.2f}%)"
@@ -123,7 +123,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SESSION_GAINS_ERASED,
-            "erased the session gains",
+            "🔴 erased the session gains",
         )
 
     @staticmethod
@@ -131,7 +131,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SESSION_LOSSES_ERASED,
-            "erased the session losses",
+            "🟢 erased the session losses",
         )
 
     @staticmethod
@@ -140,18 +140,21 @@ class Notification:
     ) -> str:
         if change_percentage > 0:
             union = "rose to"
+            emoji = "📈"
         elif change_percentage < 0:
             union = "dropped to"
+            emoji = "📉"
         else:
             union = "at"
-        return f"{symbol} {union} {current_price} ({change_percentage:+.2f}%)"
+            emoji = "➡️"
+        return f"{emoji} {symbol} {union} {current_price} ({change_percentage:+.2f}%)"
 
     @staticmethod
     def create_new_52_week_high() -> "Notification":
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.NEW_52_WEEK_HIGH,
-            "hit a new 52-week high",
+            "🏆 hit a new 52-week high",
         )
 
     @staticmethod
@@ -159,12 +162,12 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.NEW_52_WEEK_LOW,
-            "hit a new 52-week low",
+            "💀 hit a new 52-week low",
         )
 
     @staticmethod
     def create_target_price_reached(symbol: str, target_price: Decimal) -> "Notification":
-        message = f"{symbol} hit target of {target_price}"
+        message = f"🎯 {symbol} hit target of {target_price}"
         return Notification(
             Notification._CREATION_KEY, NotificationType.TARGET_PRICE_REACHED, message
         )

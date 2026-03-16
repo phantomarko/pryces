@@ -1424,7 +1424,7 @@ class TestConsolidatedNotifications:
         lines = messages[0].split("\n")
         assert len(lines) == 2
         assert "rose to 150.00" in lines[0]
-        assert lines[1] == "-- crossed SMA50 at 145.00"
+        assert lines[1] == "⚠️ crossed SMA50 at 145.00"
 
     def test_multiple_milestones_produce_single_consolidated_message(self):
         stock = open_stock_after_burn(
@@ -1438,8 +1438,8 @@ class TestConsolidatedNotifications:
         lines = messages[0].split("\n")
         assert len(lines) == 3
         assert "rose to 150.00" in lines[0]
-        assert "-- crossed SMA50" in lines[1]
-        assert "-- crossed SMA200" in lines[2]
+        assert "⚠️ crossed SMA50" in lines[1]
+        assert "⚠️ crossed SMA200" in lines[2]
 
     def test_percentage_suppressed_when_milestones_exist(self):
         stock = open_stock_after_burn(
