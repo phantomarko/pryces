@@ -50,7 +50,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 2
+        assert self.mock_sender.send_message.call_count == 1
 
     def test_handle_sends_milestone_notification_for_two_hundred_day_crossing(self):
         self._prime_stock_in_repo("GOOGL")
@@ -61,7 +61,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 2
+        assert self.mock_sender.send_message.call_count == 1
 
     def test_handle_sends_both_notifications_when_both_averages_crossed(self):
         self._prime_stock_in_repo("MSFT")
@@ -70,7 +70,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 3
+        assert self.mock_sender.send_message.call_count == 1
 
     def test_handle_sends_market_open_even_when_no_crossings(self):
         stock = create_stock_no_crossing("AAPL")
@@ -92,7 +92,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 2
+        assert self.mock_sender.send_message.call_count == 1
 
     def test_handle_sends_notifications_for_multiple_stocks_with_crossings(self):
         self._prime_stock_in_repo("AAPL")
@@ -105,7 +105,7 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        assert self.mock_sender.send_message.call_count == 4
+        assert self.mock_sender.send_message.call_count == 2
 
     def test_handle_does_nothing_for_empty_symbols(self):
         self.mock_provider.get_stocks.return_value = []

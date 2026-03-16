@@ -65,6 +65,43 @@ class Stock:
         "_fulfilled_targets",
     )
 
+    _STANDALONE_NOTIFICATION_TYPES = frozenset(
+        {
+            NotificationType.REGULAR_MARKET_OPEN,
+            NotificationType.REGULAR_MARKET_CLOSED,
+            NotificationType.TARGET_PRICE_REACHED,
+        }
+    )
+    _MILESTONE_NOTIFICATION_TYPES = frozenset(
+        {
+            NotificationType.SMA50_CROSSED,
+            NotificationType.SMA200_CROSSED,
+            NotificationType.CLOSE_TO_SMA50,
+            NotificationType.CLOSE_TO_SMA200,
+            NotificationType.NEW_52_WEEK_HIGH,
+            NotificationType.NEW_52_WEEK_LOW,
+            NotificationType.SESSION_GAINS_ERASED,
+            NotificationType.SESSION_LOSSES_ERASED,
+        }
+    )
+    _INCREASE_LEVEL_TYPES = frozenset(
+        {
+            NotificationType.LEVEL_1_INCREASE,
+            NotificationType.LEVEL_2_INCREASE,
+            NotificationType.LEVEL_3_INCREASE,
+            NotificationType.LEVEL_4_INCREASE,
+            NotificationType.LEVEL_5_INCREASE,
+        }
+    )
+    _DECREASE_LEVEL_TYPES = frozenset(
+        {
+            NotificationType.LEVEL_1_DECREASE,
+            NotificationType.LEVEL_2_DECREASE,
+            NotificationType.LEVEL_3_DECREASE,
+            NotificationType.LEVEL_4_DECREASE,
+            NotificationType.LEVEL_5_DECREASE,
+        }
+    )
     _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
 
     _STOCK_INCREASE_THRESHOLDS = (
@@ -220,7 +257,33 @@ class Stock:
         return fulfilled
 
     def drain_notifications(self) -> list[str]:
-        messages = [n.message for n in self._pending_notifications]
+        standalone: list[Notification] = []
+        milestones: list[Notification] = []
+        header_only: list[Notification] = []
+
+        for n in self._pending_notifications:
+            if n.type in self._STANDALONE_NOTIFICATION_TYPES:
+                standalone.append(n)
+            elif n.type in self._MILESTONE_NOTIFICATION_TYPES:
+                milestones.append(n)
+            else:
+                header_only.append(n)
+
+        messages: list[str] = []
+
+        if milestones:
+            header = self._build_consolidation_header(header_only)
+            lines = [header]
+            for m in milestones:
+                lines.append(f"-- {m.message}")
+            messages.append("\n".join(lines))
+        else:
+            for n in header_only:
+                messages.append(n.message)
+
+        for n in standalone:
+            messages.append(n.message)
+
         self._notifications.extend(self._pending_notifications)
         self._pending_notifications = []
         return messages
@@ -286,6 +349,16 @@ class Stock:
             market_state=self._market_state,
             price_delay_in_minutes=self._price_delay_in_minutes,
         )
+
+    def _build_consolidation_header(self, header_only: list[Notification]) -> str:
+        if header_only:
+            return header_only[0].message
+        change_pct = self._change_percentage_from_previous_close()
+        if change_pct is None:
+            return f"{self._symbol} at {self._current_price}"
+        return Notification.create_percentage_change(
+            NotificationType.LEVEL_1_INCREASE, self._symbol, self._current_price, change_pct
+        ).message
 
     def _has_notification_type(self, notification_type: NotificationType) -> bool:
         return any(n.type == notification_type for n in self._notifications) or any(
@@ -364,29 +437,21 @@ class Stock:
         if (
             self._snapshot is not None
             and self._snapshot.fifty_two_week_high is not None
+            and self.previous_close_price is not None
             and self.current_price > self._snapshot.fifty_two_week_high
             and not self._has_notification_type(NotificationType.NEW_52_WEEK_HIGH)
         ):
-            change_pct = self._change_percentage_from_previous_close()
-            if change_pct is None:
-                return
-            self._pending_notifications.append(
-                Notification.create_new_52_week_high(self.symbol, self.current_price, change_pct)
-            )
+            self._pending_notifications.append(Notification.create_new_52_week_high())
 
     def _generate_new_52_week_low_notification(self) -> None:
         if (
             self._snapshot is not None
             and self._snapshot.fifty_two_week_low is not None
+            and self.previous_close_price is not None
             and self.current_price < self._snapshot.fifty_two_week_low
             and not self._has_notification_type(NotificationType.NEW_52_WEEK_LOW)
         ):
-            change_pct = self._change_percentage_from_previous_close()
-            if change_pct is None:
-                return
-            self._pending_notifications.append(
-                Notification.create_new_52_week_low(self.symbol, self.current_price, change_pct)
-            )
+            self._pending_notifications.append(Notification.create_new_52_week_low())
 
     def _generate_regular_market_open_notification(self) -> None:
         if self._is_crypto() or self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN):
@@ -405,12 +470,9 @@ class Stock:
             and not self._has_notification_type(NotificationType.CLOSE_TO_SMA50)
             and not self._has_notification_type(NotificationType.SMA50_CROSSED)
         ):
-            change_pct = self._change_percentage_from_previous_close()
-            if change_pct is None:
-                return
             self._pending_notifications.append(
                 Notification.create_close_to_fifty_day_average(
-                    self.symbol, self.current_price, change_pct, self.fifty_day_average
+                    self.current_price, self.fifty_day_average
                 )
             )
 
@@ -418,13 +480,8 @@ class Stock:
         if self._has_crossed_sma(self.fifty_day_average) and not self._has_notification_type(
             NotificationType.SMA50_CROSSED
         ):
-            change_pct = self._change_percentage_from_previous_close()
-            if change_pct is None:
-                return
             self._pending_notifications.append(
-                Notification.create_fifty_day_average_crossed(
-                    self.symbol, self.current_price, change_pct, self.fifty_day_average
-                )
+                Notification.create_fifty_day_average_crossed(self.fifty_day_average)
             )
 
     def _generate_close_to_two_hundred_day_average_notification(self) -> None:
@@ -433,12 +490,9 @@ class Stock:
             and not self._has_notification_type(NotificationType.CLOSE_TO_SMA200)
             and not self._has_notification_type(NotificationType.SMA200_CROSSED)
         ):
-            change_pct = self._change_percentage_from_previous_close()
-            if change_pct is None:
-                return
             self._pending_notifications.append(
                 Notification.create_close_to_two_hundred_day_average(
-                    self.symbol, self.current_price, change_pct, self.two_hundred_day_average
+                    self.current_price, self.two_hundred_day_average
                 )
             )
 
@@ -446,13 +500,8 @@ class Stock:
         if self._has_crossed_sma(self.two_hundred_day_average) and not self._has_notification_type(
             NotificationType.SMA200_CROSSED
         ):
-            change_pct = self._change_percentage_from_previous_close()
-            if change_pct is None:
-                return
             self._pending_notifications.append(
-                Notification.create_two_hundred_day_average_crossed(
-                    self.symbol, self.current_price, change_pct, self.two_hundred_day_average
-                )
+                Notification.create_two_hundred_day_average_crossed(self.two_hundred_day_average)
             )
 
     def _generate_percentage_change_from_previous_close_notification(self) -> None:
@@ -461,30 +510,13 @@ class Stock:
             return
         notification = self._generate_percentage_change_notification(change_percentage)
         if notification is not None and not self._has_notification_type(notification.type):
-            if self._has_pending_sma_notification() or self._has_pending_52_week_notification():
-                self._notifications.append(notification)
-            else:
-                self._pending_notifications.append(notification)
+            self._pending_notifications.append(notification)
 
     def _has_any_increase_percentage_notification(self) -> bool:
-        increase_types = {
-            NotificationType.LEVEL_1_INCREASE,
-            NotificationType.LEVEL_2_INCREASE,
-            NotificationType.LEVEL_3_INCREASE,
-            NotificationType.LEVEL_4_INCREASE,
-            NotificationType.LEVEL_5_INCREASE,
-        }
-        return any(n.type in increase_types for n in self._notifications)
+        return any(n.type in self._INCREASE_LEVEL_TYPES for n in self._notifications)
 
     def _has_any_decrease_percentage_notification(self) -> bool:
-        decrease_types = {
-            NotificationType.LEVEL_1_DECREASE,
-            NotificationType.LEVEL_2_DECREASE,
-            NotificationType.LEVEL_3_DECREASE,
-            NotificationType.LEVEL_4_DECREASE,
-            NotificationType.LEVEL_5_DECREASE,
-        }
-        return any(n.type in decrease_types for n in self._notifications)
+        return any(n.type in self._DECREASE_LEVEL_TYPES for n in self._notifications)
 
     def _generate_session_gains_erased_notification(self) -> None:
         change_percentage = self._change_percentage_from_previous_close()
@@ -494,11 +526,7 @@ class Stock:
             and self._has_any_increase_percentage_notification()
             and not self._has_notification_type(NotificationType.SESSION_GAINS_ERASED)
         ):
-            self._pending_notifications.append(
-                Notification.create_session_gains_erased(
-                    self.symbol, self.current_price, change_percentage
-                )
-            )
+            self._pending_notifications.append(Notification.create_session_gains_erased())
             self._reset_increase_percentage_notifications()
 
     def _generate_session_losses_erased_notification(self) -> None:
@@ -509,28 +537,8 @@ class Stock:
             and self._has_any_decrease_percentage_notification()
             and not self._has_notification_type(NotificationType.SESSION_LOSSES_ERASED)
         ):
-            self._pending_notifications.append(
-                Notification.create_session_losses_erased(
-                    self.symbol, self.current_price, change_percentage
-                )
-            )
+            self._pending_notifications.append(Notification.create_session_losses_erased())
             self._reset_decrease_percentage_notifications()
-
-    def _has_pending_sma_notification(self) -> bool:
-        sma_types = {
-            NotificationType.SMA50_CROSSED,
-            NotificationType.SMA200_CROSSED,
-            NotificationType.CLOSE_TO_SMA50,
-            NotificationType.CLOSE_TO_SMA200,
-        }
-        return any(n.type in sma_types for n in self._pending_notifications)
-
-    def _has_pending_52_week_notification(self) -> bool:
-        week_types = {
-            NotificationType.NEW_52_WEEK_HIGH,
-            NotificationType.NEW_52_WEEK_LOW,
-        }
-        return any(n.type in week_types for n in self._pending_notifications)
 
     def _generate_target_price_notifications(self) -> None:
         remaining: list[TargetPrice] = []
@@ -570,24 +578,14 @@ class Stock:
         )
 
     def _reset_increase_percentage_notifications(self) -> None:
-        increase_types = {
-            NotificationType.LEVEL_1_INCREASE,
-            NotificationType.LEVEL_2_INCREASE,
-            NotificationType.LEVEL_3_INCREASE,
-            NotificationType.LEVEL_4_INCREASE,
-            NotificationType.LEVEL_5_INCREASE,
-        }
-        self._notifications = [n for n in self._notifications if n.type not in increase_types]
+        self._notifications = [
+            n for n in self._notifications if n.type not in self._INCREASE_LEVEL_TYPES
+        ]
 
     def _reset_decrease_percentage_notifications(self) -> None:
-        decrease_types = {
-            NotificationType.LEVEL_1_DECREASE,
-            NotificationType.LEVEL_2_DECREASE,
-            NotificationType.LEVEL_3_DECREASE,
-            NotificationType.LEVEL_4_DECREASE,
-            NotificationType.LEVEL_5_DECREASE,
-        }
-        self._notifications = [n for n in self._notifications if n.type not in decrease_types]
+        self._notifications = [
+            n for n in self._notifications if n.type not in self._DECREASE_LEVEL_TYPES
+        ]
 
     def _generate_market_closed_notifications(self) -> None:
         if self._is_crypto():

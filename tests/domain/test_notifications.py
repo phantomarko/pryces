@@ -11,74 +11,56 @@ def test_cannot_create_notification_directly():
 
 
 def test_create_fifty_day_average_crossed_sets_type():
-    notification = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("1.25"), Decimal("145.00")
-    )
+    notification = Notification.create_fifty_day_average_crossed(Decimal("145.00"))
 
     assert notification.type == NotificationType.SMA50_CROSSED
 
 
 def test_create_fifty_day_average_crossed_sets_message():
-    notification = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("1.25"), Decimal("145.00")
-    )
+    notification = Notification.create_fifty_day_average_crossed(Decimal("145.00"))
 
-    assert "AAPL rose to 150.00 (+1.25%)" in notification.message
-    assert "crossed SMA50 at 145.00" in notification.message
+    assert notification.message == "crossed SMA50 at 145.00"
 
 
 def test_create_two_hundred_day_average_crossed_sets_type():
-    notification = Notification.create_two_hundred_day_average_crossed(
-        "AAPL", Decimal("138.00"), Decimal("-1.50"), Decimal("140.00")
-    )
+    notification = Notification.create_two_hundred_day_average_crossed(Decimal("140.00"))
 
     assert notification.type == NotificationType.SMA200_CROSSED
 
 
 def test_create_two_hundred_day_average_crossed_sets_message():
-    notification = Notification.create_two_hundred_day_average_crossed(
-        "AAPL", Decimal("138.00"), Decimal("-1.50"), Decimal("140.00")
-    )
+    notification = Notification.create_two_hundred_day_average_crossed(Decimal("140.00"))
 
-    assert "AAPL dropped to 138.00 (-1.50%)" in notification.message
-    assert "crossed SMA200 at 140.00" in notification.message
+    assert notification.message == "crossed SMA200 at 140.00"
 
 
 def test_create_close_to_fifty_day_average_sets_type():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("100.00"), Decimal("10.00"), Decimal("103.00")
+        Decimal("100.00"), Decimal("103.00")
     )
 
     assert notification.type == NotificationType.CLOSE_TO_SMA50
 
 
-def test_create_fifty_day_average_crossed_sets_message_with_zero_change():
-    notification = Notification.create_fifty_day_average_crossed(
-        "AAPL", Decimal("150.00"), Decimal("0"), Decimal("150.00")
-    )
-
-    assert "AAPL at 150.00 (+0.00%)" in notification.message
-
-
 def test_create_close_to_fifty_day_average_sets_below_direction():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("100.00"), Decimal("10.00"), Decimal("103.00")
+        Decimal("100.00"), Decimal("103.00")
     )
 
-    assert "below SMA50 at" in notification.message
+    assert notification.message == "below SMA50 at 103.00"
 
 
 def test_create_close_to_fifty_day_average_sets_above_direction():
     notification = Notification.create_close_to_fifty_day_average(
-        "AAPL", Decimal("105.00"), Decimal("10.00"), Decimal("103.00")
+        Decimal("105.00"), Decimal("103.00")
     )
 
-    assert "above SMA50 at" in notification.message
+    assert notification.message == "above SMA50 at 103.00"
 
 
 def test_create_close_to_two_hundred_day_average_sets_type():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("100.00"), Decimal("-10.00"), Decimal("103.00")
+        Decimal("100.00"), Decimal("103.00")
     )
 
     assert notification.type == NotificationType.CLOSE_TO_SMA200
@@ -86,18 +68,18 @@ def test_create_close_to_two_hundred_day_average_sets_type():
 
 def test_create_close_to_two_hundred_day_average_sets_below_direction():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("100.00"), Decimal("-10.00"), Decimal("103.00")
+        Decimal("100.00"), Decimal("103.00")
     )
 
-    assert "below SMA200 at" in notification.message
+    assert notification.message == "below SMA200 at 103.00"
 
 
 def test_create_close_to_two_hundred_day_average_sets_above_direction():
     notification = Notification.create_close_to_two_hundred_day_average(
-        "AAPL", Decimal("105.00"), Decimal("-10.00"), Decimal("103.00")
+        Decimal("105.00"), Decimal("103.00")
     )
 
-    assert "above SMA200 at" in notification.message
+    assert notification.message == "above SMA200 at 103.00"
 
 
 def test_create_regular_market_open_sets_type():
@@ -213,27 +195,27 @@ def test_create_percentage_change_preserves_notification_type():
 
 
 def test_create_new_52_week_high_sets_type():
-    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"), Decimal("5.00"))
+    notification = Notification.create_new_52_week_high()
 
     assert notification.type == NotificationType.NEW_52_WEEK_HIGH
 
 
 def test_create_new_52_week_high_sets_message():
-    notification = Notification.create_new_52_week_high("AAPL", Decimal("225.50"), Decimal("5.00"))
+    notification = Notification.create_new_52_week_high()
 
-    assert notification.message == "AAPL rose to 225.50 (+5.00%), hit a new 52-week high"
+    assert notification.message == "hit a new 52-week high"
 
 
 def test_create_new_52_week_low_sets_type():
-    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"), Decimal("-3.50"))
+    notification = Notification.create_new_52_week_low()
 
     assert notification.type == NotificationType.NEW_52_WEEK_LOW
 
 
 def test_create_new_52_week_low_sets_message():
-    notification = Notification.create_new_52_week_low("AAPL", Decimal("142.30"), Decimal("-3.50"))
+    notification = Notification.create_new_52_week_low()
 
-    assert notification.message == "AAPL dropped to 142.30 (-3.50%), hit a new 52-week low"
+    assert notification.message == "hit a new 52-week low"
 
 
 def test_create_target_price_reached_sets_type():
@@ -251,29 +233,27 @@ def test_create_target_price_reached_sets_message():
 
 
 def test_create_session_gains_erased_sets_type():
-    notification = Notification.create_session_gains_erased("AAPL", Decimal("10"), Decimal("-1.54"))
+    notification = Notification.create_session_gains_erased()
 
     assert notification.type == NotificationType.SESSION_GAINS_ERASED
 
 
 def test_create_session_gains_erased_sets_message():
-    notification = Notification.create_session_gains_erased("AAPL", Decimal("10"), Decimal("-1.54"))
+    notification = Notification.create_session_gains_erased()
 
-    assert "AAPL dropped to 10 (-1.54%)" in notification.message
-    assert "erased the session gains" in notification.message
+    assert notification.message == "erased the session gains"
 
 
 def test_create_session_losses_erased_sets_type():
-    notification = Notification.create_session_losses_erased("AAPL", Decimal("10"), Decimal("0.54"))
+    notification = Notification.create_session_losses_erased()
 
     assert notification.type == NotificationType.SESSION_LOSSES_ERASED
 
 
 def test_create_session_losses_erased_sets_message():
-    notification = Notification.create_session_losses_erased("AAPL", Decimal("10"), Decimal("0.54"))
+    notification = Notification.create_session_losses_erased()
 
-    assert "AAPL rose to 10 (+0.54%)" in notification.message
-    assert "erased the session losses" in notification.message
+    assert notification.message == "erased the session losses"
 
 
 def test_notification_type_enum_has_expected_values():

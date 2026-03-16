@@ -51,6 +51,16 @@ The following events are detected and sent as Telegram messages during a monitor
 - Price set a new 52-week high or low (compared to the previous monitoring run)
 - Price reached a configured target level
 
+When multiple milestone events occur in the same cycle (e.g., SMA crossing + 52-week high), they are **consolidated into a single message** with a price-change header and bullet points:
+
+```
+AAPL rose to 150.00 (+7.14%)
+-- crossed SMA50 at 145.00
+-- hit a new 52-week high
+```
+
+Market open/close and target price notifications are always sent as separate messages.
+
 ## Getting Started
 
 ### Requirements

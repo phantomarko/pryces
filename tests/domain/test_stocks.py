@@ -338,9 +338,9 @@ class TestSMACrossingNotifications:
             two_hundred_day_average="140.00",
         )
         messages = generate_and_drain(stock)
-        assert len(messages) == 2
-        assert any("crossed SMA50" in m for m in messages)
-        assert any("crossed SMA200" in m for m in messages)
+        assert len(messages) == 1
+        assert "crossed SMA50" in messages[0]
+        assert "crossed SMA200" in messages[0]
 
     def test_generate_notifications_adds_no_notifications_when_no_crossing(self):
         stock = make_stock(
@@ -1410,3 +1410,84 @@ class TestCryptoNotifications:
         messages = generate_and_drain(stock)
 
         assert any("open" in m.lower() for m in messages)
+
+
+class TestConsolidatedNotifications:
+    def test_single_milestone_produces_header_with_bullet(self):
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        lines = messages[0].split("\n")
+        assert len(lines) == 2
+        assert "rose to 150.00" in lines[0]
+        assert lines[1] == "-- crossed SMA50 at 145.00"
+
+    def test_multiple_milestones_produce_single_consolidated_message(self):
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="130.00",
+            fifty_day_average="145.00",
+            two_hundred_day_average="140.00",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        lines = messages[0].split("\n")
+        assert len(lines) == 3
+        assert "rose to 150.00" in lines[0]
+        assert "-- crossed SMA50" in lines[1]
+        assert "-- crossed SMA200" in lines[2]
+
+    def test_percentage_suppressed_when_milestones_exist(self):
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        lines = messages[0].split("\n")
+        # Only header + milestone bullet, no separate percentage line
+        assert len(lines) == 2
+
+    def test_header_only_emitted_when_no_milestones(self):
+        stock = open_stock_after_burn(current_price="106.00", previous_close_price="100.00")
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert "\n" not in messages[0]
+        assert "rose to" in messages[0]
+
+    def test_standalone_messages_emitted_separately(self):
+        stock = make_stock(
+            current_price="150.00", open_price="149.75", previous_close_price="148.00"
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert "opened at" in messages[0]
+
+    def test_targets_emitted_separately_from_consolidated_milestones(self):
+        stock = open_stock_after_burn(
+            current_price="100.00",
+            previous_close_price="95.00",
+            fifty_day_average="102.00",
+        )
+        stock.sync_targets([Decimal("100.00")])
+        messages = generate_and_drain(stock)
+        consolidated = [m for m in messages if "\n" in m or "SMA50" in m]
+        targets = [m for m in messages if "hit target" in m]
+        assert len(consolidated) == 1
+        assert len(targets) == 1
+
+    def test_percentage_dedup_preserved_after_consolidation_suppression(self):
+        stock = open_stock_after_burn(
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
+        )
+        generate_and_drain(stock)
+        # Second cycle: percentage should not reappear (moved to historical during drain)
+        messages = generate_and_drain(stock)
+        assert not any("rose to" in m for m in messages)

@@ -47,50 +47,42 @@ class Notification:
         return self._message
 
     @staticmethod
-    def create_fifty_day_average_crossed(
-        symbol: str,
-        current_price: Decimal,
-        change_percentage: Decimal,
-        average_price: Decimal,
-    ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        message = f"{prefix}, crossed SMA50 at {average_price}"
-        return Notification(Notification._CREATION_KEY, NotificationType.SMA50_CROSSED, message)
+    def create_fifty_day_average_crossed(average_price: Decimal) -> "Notification":
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.SMA50_CROSSED,
+            f"crossed SMA50 at {average_price}",
+        )
 
     @staticmethod
-    def create_two_hundred_day_average_crossed(
-        symbol: str,
-        current_price: Decimal,
-        change_percentage: Decimal,
-        average_price: Decimal,
-    ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        message = f"{prefix}, crossed SMA200 at {average_price}"
-        return Notification(Notification._CREATION_KEY, NotificationType.SMA200_CROSSED, message)
+    def create_two_hundred_day_average_crossed(average_price: Decimal) -> "Notification":
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.SMA200_CROSSED,
+            f"crossed SMA200 at {average_price}",
+        )
 
     @staticmethod
     def create_close_to_fifty_day_average(
-        symbol: str,
-        current_price: Decimal,
-        change_percentage: Decimal,
-        average_price: Decimal,
+        current_price: Decimal, average_price: Decimal
     ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
         direction = "above" if current_price >= average_price else "below"
-        message = f"{prefix}, {direction} SMA50 at {average_price}"
-        return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA50, message)
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.CLOSE_TO_SMA50,
+            f"{direction} SMA50 at {average_price}",
+        )
 
     @staticmethod
     def create_close_to_two_hundred_day_average(
-        symbol: str,
-        current_price: Decimal,
-        change_percentage: Decimal,
-        average_price: Decimal,
+        current_price: Decimal, average_price: Decimal
     ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
         direction = "above" if current_price >= average_price else "below"
-        message = f"{prefix}, {direction} SMA200 at {average_price}"
-        return Notification(Notification._CREATION_KEY, NotificationType.CLOSE_TO_SMA200, message)
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.CLOSE_TO_SMA200,
+            f"{direction} SMA200 at {average_price}",
+        )
 
     @staticmethod
     def create_regular_market_open(
@@ -123,31 +115,23 @@ class Notification:
         current_price: Decimal,
         change_percentage: Decimal,
     ) -> "Notification":
-        return Notification._create_price_change(
-            notification_type,
-            symbol,
-            current_price,
-            change_percentage,
+        message = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
+        return Notification(Notification._CREATION_KEY, notification_type, message)
+
+    @staticmethod
+    def create_session_gains_erased() -> "Notification":
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.SESSION_GAINS_ERASED,
+            "erased the session gains",
         )
 
     @staticmethod
-    def create_session_gains_erased(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        message = f"{prefix}, erased the session gains"
+    def create_session_losses_erased() -> "Notification":
         return Notification(
-            Notification._CREATION_KEY, NotificationType.SESSION_GAINS_ERASED, message
-        )
-
-    @staticmethod
-    def create_session_losses_erased(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        message = f"{prefix}, erased the session losses"
-        return Notification(
-            Notification._CREATION_KEY, NotificationType.SESSION_LOSSES_ERASED, message
+            Notification._CREATION_KEY,
+            NotificationType.SESSION_LOSSES_ERASED,
+            "erased the session losses",
         )
 
     @staticmethod
@@ -163,30 +147,20 @@ class Notification:
         return f"{symbol} {union} {current_price} ({change_percentage:+.2f}%)"
 
     @staticmethod
-    def _create_price_change(
-        notification_type: NotificationType,
-        symbol: str,
-        current_price: Decimal,
-        change_percentage: Decimal,
-    ) -> "Notification":
-        message = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        return Notification(Notification._CREATION_KEY, notification_type, message)
+    def create_new_52_week_high() -> "Notification":
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.NEW_52_WEEK_HIGH,
+            "hit a new 52-week high",
+        )
 
     @staticmethod
-    def create_new_52_week_high(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        message = f"{prefix}, hit a new 52-week high"
-        return Notification(Notification._CREATION_KEY, NotificationType.NEW_52_WEEK_HIGH, message)
-
-    @staticmethod
-    def create_new_52_week_low(
-        symbol: str, current_price: Decimal, change_percentage: Decimal
-    ) -> "Notification":
-        prefix = Notification._format_price_change_prefix(symbol, current_price, change_percentage)
-        message = f"{prefix}, hit a new 52-week low"
-        return Notification(Notification._CREATION_KEY, NotificationType.NEW_52_WEEK_LOW, message)
+    def create_new_52_week_low() -> "Notification":
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.NEW_52_WEEK_LOW,
+            "hit a new 52-week low",
+        )
 
     @staticmethod
     def create_target_price_reached(symbol: str, target_price: Decimal) -> "Notification":
