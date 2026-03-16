@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.presentation.scripts.bot_commands import (
+    _MAX_MESSAGE_LENGTH,
     BotCommandDispatcher,
     ConfigsCommand,
     HelpCommand,
@@ -396,3 +397,83 @@ class TestBotCommandDispatcher:
         result = dispatcher.dispatch("/HELP")
 
         assert "/targets" in result
+
+    def test_ignores_message_exceeding_max_length(self):
+        dispatcher = self._make_dispatcher()
+
+        result = dispatcher.dispatch("/help" + " " * _MAX_MESSAGE_LENGTH)
+
+        assert result == ""
+
+    def test_dispatches_command_at_boundary_length(self):
+        dispatcher = self._make_dispatcher()
+        text = "/help"
+        padding = " " * (_MAX_MESSAGE_LENGTH - len(text))
+
+        result = dispatcher.dispatch(text + padding)
+
+        assert "/targets" in result
+
+
+class TestTargetAddCommandValidation:
+
+    @pytest.fixture()
+    def cmd(self, tmp_path):
+        return TargetAddCommand(make_find_config(tmp_path))
+
+    def test_rejects_too_many_integer_digits(self, cmd):
+        result = cmd.execute(["AAPL", "12345678"])
+
+        assert result == "Invalid price"
+
+    def test_rejects_too_many_decimal_digits(self, cmd):
+        result = cmd.execute(["AAPL", "1.123456789"])
+
+        assert result == "Invalid price"
+
+    def test_accepts_max_integer_digits(self, cmd):
+        result = cmd.execute(["AAPL", "1234567"])
+
+        assert "Added" in result
+
+    def test_accepts_max_decimal_digits(self, cmd):
+        result = cmd.execute(["AAPL", "1.12345678"])
+
+        assert "Added" in result
+
+    def test_rejects_negative_price(self, cmd):
+        result = cmd.execute(["AAPL", "-100"])
+
+        assert result == "Invalid price"
+
+    def test_rejects_zero_price(self, cmd):
+        result = cmd.execute(["AAPL", "0"])
+
+        assert result == "Invalid price"
+
+    def test_rejects_scientific_notation(self, cmd):
+        result = cmd.execute(["AAPL", "1e5"])
+
+        assert result == "Invalid price"
+
+
+class TestTargetRemoveCommandValidation:
+
+    @pytest.fixture()
+    def cmd(self, tmp_path):
+        return TargetRemoveCommand(make_find_config(tmp_path))
+
+    def test_rejects_too_many_integer_digits(self, cmd):
+        result = cmd.execute(["AAPL", "12345678"])
+
+        assert result == "Invalid price"
+
+    def test_rejects_negative_price(self, cmd):
+        result = cmd.execute(["AAPL", "-100"])
+
+        assert result == "Invalid price"
+
+    def test_rejects_zero_price(self, cmd):
+        result = cmd.execute(["AAPL", "0"])
+
+        assert result == "Invalid price"

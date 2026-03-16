@@ -2,11 +2,35 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 
 from ...application.interfaces import LoggerFactory
 from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
+
+_MAX_MESSAGE_LENGTH = 256
+_MAX_INTEGER_DIGITS = 7
+_MAX_DECIMAL_DIGITS = 8
+
+
+def _validate_price(raw: str) -> Decimal | str:
+    if not raw or raw[0] == "-":
+        return "Invalid price"
+    parts = raw.split(".")
+    if len(parts) > 2:
+        return "Invalid price"
+    if not all(part.isdigit() for part in parts if part):
+        return "Invalid price"
+    integer_part = parts[0] or "0"
+    decimal_part = parts[1] if len(parts) == 2 else ""
+    if len(integer_part) > _MAX_INTEGER_DIGITS:
+        return "Invalid price"
+    if len(decimal_part) > _MAX_DECIMAL_DIGITS:
+        return "Invalid price"
+    value = Decimal(raw)
+    if value <= 0:
+        return "Invalid price"
+    return value
 
 
 class BotCommand(ABC):
@@ -136,16 +160,16 @@ class TargetAddCommand(BotCommand):
 
     def execute(self, args: list[str]) -> str:
         symbol = args[0].upper()
-        try:
-            price = Decimal(args[1])
-        except InvalidOperation:
-            return f"Invalid price: {args[1]}"
+        result = _validate_price(args[1])
+        if isinstance(result, str):
+            return result
+        price = result
 
         try:
-            result = _find_symbol_config(self._find_config, symbol)
-            if isinstance(result, str):
-                return result
-            path, config, sc = result
+            config_result = _find_symbol_config(self._find_config, symbol)
+            if isinstance(config_result, str):
+                return config_result
+            path, config, sc = config_result
             if price in sc.prices:
                 return f"{symbol} already has target {price}"
             _update_symbol_prices(path, config, symbol, sc.prices + [price])
@@ -176,16 +200,16 @@ class TargetRemoveCommand(BotCommand):
 
     def execute(self, args: list[str]) -> str:
         symbol = args[0].upper()
-        try:
-            price = Decimal(args[1])
-        except InvalidOperation:
-            return f"Invalid price: {args[1]}"
+        result = _validate_price(args[1])
+        if isinstance(result, str):
+            return result
+        price = result
 
         try:
-            result = _find_symbol_config(self._find_config, symbol)
-            if isinstance(result, str):
-                return result
-            path, config, sc = result
+            config_result = _find_symbol_config(self._find_config, symbol)
+            if isinstance(config_result, str):
+                return config_result
+            path, config, sc = config_result
             if price not in sc.prices:
                 return f"{symbol} does not have target {price}"
             _update_symbol_prices(path, config, symbol, [p for p in sc.prices if p != price])
@@ -350,6 +374,8 @@ class BotCommandDispatcher:
         self._logger = logger_factory.get_logger(__name__)
 
     def dispatch(self, text: str) -> str:
+        if len(text) > _MAX_MESSAGE_LENGTH:
+            return ""
         tokens = text.strip().split()
         if not tokens or not tokens[0].startswith("/"):
             return ""
