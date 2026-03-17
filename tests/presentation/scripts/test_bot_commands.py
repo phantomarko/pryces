@@ -79,7 +79,7 @@ class TestTargetsCommand:
 
         result = cmd.execute(["AAPL"])
 
-        assert "AAPL targets: none" == result
+        assert "🎯 AAPL targets: none" == result
 
     def test_reports_symbol_not_found(self, tmp_path):
         find_config = make_find_config(tmp_path)
@@ -310,14 +310,14 @@ class TestSymbolsCommand:
 
         result = cmd.execute([])
 
-        assert result == "AAPL, GOOGL, MSFT"
+        assert result == "📋 AAPL, GOOGL, MSFT"
 
     def test_returns_no_symbols_message_when_empty(self):
         cmd = SymbolsCommand(lambda: [])
 
         result = cmd.execute([])
 
-        assert result == "No symbols tracked"
+        assert result == "📋 No symbols tracked"
 
 
 class TestConfigsCommand:
@@ -325,12 +325,12 @@ class TestConfigsCommand:
     def test_lists_config_names(self):
         cmd = ConfigsCommand(lambda: ["alpha", "beta"])
         result = cmd.execute([])
-        assert result == "alpha, beta"
+        assert result == "🗂️ alpha, beta"
 
     def test_returns_no_configs_message_when_empty(self):
         cmd = ConfigsCommand(lambda: [])
         result = cmd.execute([])
-        assert result == "No configs found"
+        assert result == "🗂️ No configs found"
 
 
 class TestHelpCommand:
@@ -424,12 +424,12 @@ class TestTargetAddCommandValidation:
     def test_rejects_too_many_integer_digits(self, cmd):
         result = cmd.execute(["AAPL", "12345678"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
     def test_rejects_too_many_decimal_digits(self, cmd):
         result = cmd.execute(["AAPL", "1.123456789"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
     def test_accepts_max_integer_digits(self, cmd):
         result = cmd.execute(["AAPL", "1234567"])
@@ -444,17 +444,17 @@ class TestTargetAddCommandValidation:
     def test_rejects_negative_price(self, cmd):
         result = cmd.execute(["AAPL", "-100"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
     def test_rejects_zero_price(self, cmd):
         result = cmd.execute(["AAPL", "0"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
     def test_rejects_scientific_notation(self, cmd):
         result = cmd.execute(["AAPL", "1e5"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
 
 class TestTargetRemoveCommandValidation:
@@ -466,14 +466,14 @@ class TestTargetRemoveCommandValidation:
     def test_rejects_too_many_integer_digits(self, cmd):
         result = cmd.execute(["AAPL", "12345678"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
     def test_rejects_negative_price(self, cmd):
         result = cmd.execute(["AAPL", "-100"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"
 
     def test_rejects_zero_price(self, cmd):
         result = cmd.execute(["AAPL", "0"])
 
-        assert result == "Invalid price"
+        assert result == "❌ Invalid price"

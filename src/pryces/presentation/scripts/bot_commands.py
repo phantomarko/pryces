@@ -15,21 +15,21 @@ _MAX_DECIMAL_DIGITS = 8
 
 def _validate_price(raw: str) -> Decimal | str:
     if not raw or raw[0] == "-":
-        return "Invalid price"
+        return "❌ Invalid price"
     parts = raw.split(".")
     if len(parts) > 2:
-        return "Invalid price"
+        return "❌ Invalid price"
     if not all(part.isdigit() for part in parts if part):
-        return "Invalid price"
+        return "❌ Invalid price"
     integer_part = parts[0] or "0"
     decimal_part = parts[1] if len(parts) == 2 else ""
     if len(integer_part) > _MAX_INTEGER_DIGITS:
-        return "Invalid price"
+        return "❌ Invalid price"
     if len(decimal_part) > _MAX_DECIMAL_DIGITS:
-        return "Invalid price"
+        return "❌ Invalid price"
     value = Decimal(raw)
     if value <= 0:
-        return "Invalid price"
+        return "❌ Invalid price"
     return value
 
 
@@ -70,7 +70,7 @@ def _find_symbol_config(
 ) -> tuple[Path, MonitorStocksConfig, SymbolConfig] | str:
     result = find_config(symbol)
     if result is None:
-        return f"{symbol} is not tracked"
+        return f"❌ {symbol} is not tracked"
     path, config = result
     for sc in config.symbols:
         if sc.symbol == symbol:
@@ -131,11 +131,11 @@ class TargetsCommand(BotCommand):
                 return result
             _, _, sc = result
             if not sc.prices:
-                return f"{symbol} targets: none"
+                return f"🎯 {symbol} targets: none"
             prices_str = ", ".join(str(p) for p in sc.prices)
-            return f"{symbol} targets: {prices_str}"
+            return f"🎯 {symbol} targets: {prices_str}"
         except Exception as e:
-            return f"Error: {e}"
+            return f"❌ Error: {e}"
 
 
 class TargetAddCommand(BotCommand):
@@ -171,11 +171,11 @@ class TargetAddCommand(BotCommand):
                 return config_result
             path, config, sc = config_result
             if price in sc.prices:
-                return f"{symbol} already has target {price}"
+                return f"ℹ️ {symbol} already has target {price}"
             _update_symbol_prices(path, config, symbol, sc.prices + [price])
-            return f"Added target {price} to {symbol}"
+            return f"✅ Added target {price} to {symbol}"
         except Exception as e:
-            return f"Error: {e}"
+            return f"❌ Error: {e}"
 
 
 class TargetRemoveCommand(BotCommand):
@@ -211,11 +211,11 @@ class TargetRemoveCommand(BotCommand):
                 return config_result
             path, config, sc = config_result
             if price not in sc.prices:
-                return f"{symbol} does not have target {price}"
+                return f"ℹ️ {symbol} does not have target {price}"
             _update_symbol_prices(path, config, symbol, [p for p in sc.prices if p != price])
-            return f"Removed target {price} from {symbol}"
+            return f"✅ Removed target {price} from {symbol}"
         except Exception as e:
-            return f"Error: {e}"
+            return f"❌ Error: {e}"
 
 
 class SymbolAddCommand(BotCommand):
@@ -244,14 +244,14 @@ class SymbolAddCommand(BotCommand):
         try:
             result = self._find_config_by_name(config_name)
             if result is None:
-                return f"Config {config_name} not found"
+                return f"❌ Config {config_name} not found"
             path, config = result
             if any(sc.symbol == symbol for sc in config.symbols):
-                return f"{symbol} is already in {config_name}"
+                return f"ℹ️ {symbol} is already in {config_name}"
             _add_symbol_to_config(path, config, symbol)
-            return f"Added {symbol} to {config_name}"
+            return f"✅ Added {symbol} to {config_name}"
         except Exception as e:
-            return f"Error: {e}"
+            return f"❌ Error: {e}"
 
 
 class SymbolRemoveCommand(BotCommand):
@@ -279,14 +279,14 @@ class SymbolRemoveCommand(BotCommand):
         try:
             result = self._find_config(symbol)
             if result is None:
-                return f"{symbol} is not tracked"
+                return f"❌ {symbol} is not tracked"
             path, config = result
             if len(config.symbols) == 1:
-                return "Cannot remove the last symbol from a config"
+                return "⚠️ Cannot remove the last symbol from a config"
             _remove_symbol_from_config(path, config, symbol)
-            return f"Removed {symbol} from config"
+            return f"✅ Removed {symbol} from config"
         except Exception as e:
-            return f"Error: {e}"
+            return f"❌ Error: {e}"
 
 
 class SymbolsCommand(BotCommand):
@@ -312,8 +312,8 @@ class SymbolsCommand(BotCommand):
     def execute(self, args: list[str]) -> str:
         symbols = self._get_all_symbols()
         if not symbols:
-            return "No symbols tracked"
-        return ", ".join(symbols)
+            return "📋 No symbols tracked"
+        return f"📋 {', '.join(symbols)}"
 
 
 class ConfigsCommand(BotCommand):
@@ -339,8 +339,8 @@ class ConfigsCommand(BotCommand):
     def execute(self, args: list[str]) -> str:
         names = self._get_config_names()
         if not names:
-            return "No configs found"
-        return ", ".join(names)
+            return "🗂️ No configs found"
+        return f"🗂️ {', '.join(names)}"
 
 
 class HelpCommand(BotCommand):
@@ -364,7 +364,8 @@ class HelpCommand(BotCommand):
         return 0
 
     def execute(self, args: list[str]) -> str:
-        lines = [f"{cmd.usage} — {cmd.description}" for cmd in self._commands]
+        lines = ["📖 Commands:"]
+        lines.extend(f"{cmd.usage} — {cmd.description}" for cmd in self._commands)
         return "\n".join(lines)
 
 
@@ -382,8 +383,8 @@ class BotCommandDispatcher:
         name, args = tokens[0].lower(), tokens[1:]
         cmd = self._commands.get(name)
         if cmd is None:
-            return "Unknown command, use /help"
+            return "❓ Unknown command, use /help"
         if len(args) != cmd.arg_count:
-            return f"Usage: {cmd.usage}"
+            return f"❓ Usage: {cmd.usage}"
         self._logger.info(f"Executing {name} with args {args}")
         return cmd.execute(args)

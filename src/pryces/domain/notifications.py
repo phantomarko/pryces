@@ -51,7 +51,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SMA50_CROSSED,
-            f"⚠️ crossed SMA50 at {average_price}",
+            f"⚠️ Crossed SMA50 at {average_price}",
         )
 
     @staticmethod
@@ -59,29 +59,29 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SMA200_CROSSED,
-            f"⚠️ crossed SMA200 at {average_price}",
+            f"⚠️ Crossed SMA200 at {average_price}",
         )
 
     @staticmethod
     def create_close_to_fifty_day_average(
         current_price: Decimal, average_price: Decimal
     ) -> "Notification":
-        direction = "above" if current_price >= average_price else "below"
+        direction = "Above" if current_price >= average_price else "Below"
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.CLOSE_TO_SMA50,
-            f"🔍 {direction} SMA50 at {average_price}",
+            f"🔎 {direction} SMA50 at {average_price}",
         )
 
     @staticmethod
     def create_close_to_two_hundred_day_average(
         current_price: Decimal, average_price: Decimal
     ) -> "Notification":
-        direction = "above" if current_price >= average_price else "below"
+        direction = "Above" if current_price >= average_price else "Below"
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.CLOSE_TO_SMA200,
-            f"🔍 {direction} SMA200 at {average_price}",
+            f"🔎 {direction} SMA200 at {average_price}",
         )
 
     @staticmethod
@@ -123,7 +123,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SESSION_GAINS_ERASED,
-            "🔴 erased the session gains",
+            "🔴 Erased session gains",
         )
 
     @staticmethod
@@ -131,7 +131,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.SESSION_LOSSES_ERASED,
-            "🟢 erased the session losses",
+            "🟢 Erased session losses",
         )
 
     @staticmethod
@@ -154,7 +154,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.NEW_52_WEEK_HIGH,
-            "🏆 hit a new 52-week high",
+            "🏆 Hit a new 52-week high",
         )
 
     @staticmethod
@@ -162,7 +162,7 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY,
             NotificationType.NEW_52_WEEK_LOW,
-            "💀 hit a new 52-week low",
+            "💀 Hit a new 52-week low",
         )
 
     @staticmethod
