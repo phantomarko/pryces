@@ -106,6 +106,13 @@ Never consider an implementation task complete without a passing test suite.
 
 **Never**: Try to install the Python environment from scratch or install packages globally. The virtual environment already exists and contains all required dependencies.
 
+### Creating GitHub Issues
+**IMPORTANT**: When asked to create GitHub issues, follow these rules:
+
+- **Labels**: Use `bug` for bug fixes, `enhancement` for everything else (features, improvements, refactors, etc.)
+- **Assignee**: Always assign to `phantomarko`
+- **Command**: Use `gh issue create --title "..." --body "..." --label <label> --assignee phantomarko`
+
 ## Architecture Overview
 
 Pryces is a stock price CLI tool using **Ports & Adapters** (hexagonal) architecture. External dependencies: `yfinance`, `python-dotenv`.
