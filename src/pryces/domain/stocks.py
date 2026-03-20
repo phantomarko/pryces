@@ -41,6 +41,42 @@ class InstrumentType(str, Enum):
     INDEX = "INDEX"
 
 
+_INCREASE_LEVELS = (
+    NotificationType.LEVEL_1_INCREASE,
+    NotificationType.LEVEL_2_INCREASE,
+    NotificationType.LEVEL_3_INCREASE,
+    NotificationType.LEVEL_4_INCREASE,
+    NotificationType.LEVEL_5_INCREASE,
+)
+_DECREASE_LEVELS = (
+    NotificationType.LEVEL_1_DECREASE,
+    NotificationType.LEVEL_2_DECREASE,
+    NotificationType.LEVEL_3_DECREASE,
+    NotificationType.LEVEL_4_DECREASE,
+    NotificationType.LEVEL_5_DECREASE,
+)
+
+_ThresholdTuple = tuple[tuple[Decimal, NotificationType], ...]
+
+
+def _build_thresholds(start: Decimal, step: Decimal) -> tuple[_ThresholdTuple, _ThresholdTuple]:
+    last = len(_INCREASE_LEVELS) - 1
+    inc = tuple((start + step * (last - i), level) for i, level in enumerate(_INCREASE_LEVELS))
+    dec = tuple((-(start + step * (last - i)), level) for i, level in enumerate(_DECREASE_LEVELS))
+    return inc, dec
+
+
+_LEVEL_1_INCREASE_THRESHOLDS, _LEVEL_1_DECREASE_THRESHOLDS = _build_thresholds(
+    Decimal("1"), Decimal("0.875")
+)
+_LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS = _build_thresholds(
+    Decimal("2"), Decimal("1.75")
+)
+_LEVEL_3_INCREASE_THRESHOLDS, _LEVEL_3_DECREASE_THRESHOLDS = _build_thresholds(
+    Decimal("4"), Decimal("3.5")
+)
+
+
 class Stock:
     __slots__ = (
         "_symbol",
@@ -84,68 +120,17 @@ class Stock:
             NotificationType.SESSION_LOSSES_ERASED,
         }
     )
-    _INCREASE_LEVEL_TYPES = frozenset(
-        {
-            NotificationType.LEVEL_1_INCREASE,
-            NotificationType.LEVEL_2_INCREASE,
-            NotificationType.LEVEL_3_INCREASE,
-            NotificationType.LEVEL_4_INCREASE,
-            NotificationType.LEVEL_5_INCREASE,
-        }
-    )
-    _DECREASE_LEVEL_TYPES = frozenset(
-        {
-            NotificationType.LEVEL_1_DECREASE,
-            NotificationType.LEVEL_2_DECREASE,
-            NotificationType.LEVEL_3_DECREASE,
-            NotificationType.LEVEL_4_DECREASE,
-            NotificationType.LEVEL_5_DECREASE,
-        }
-    )
+    _INCREASE_LEVEL_TYPES = frozenset(_INCREASE_LEVELS)
+    _DECREASE_LEVEL_TYPES = frozenset(_DECREASE_LEVELS)
     _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
 
-    _STOCK_INCREASE_THRESHOLDS = (
-        (Decimal("20"), NotificationType.LEVEL_5_INCREASE),
-        (Decimal("16"), NotificationType.LEVEL_4_INCREASE),
-        (Decimal("12"), NotificationType.LEVEL_3_INCREASE),
-        (Decimal("8"), NotificationType.LEVEL_2_INCREASE),
-        (Decimal("4"), NotificationType.LEVEL_1_INCREASE),
-    )
-    _STOCK_DECREASE_THRESHOLDS = (
-        (Decimal("-20"), NotificationType.LEVEL_5_DECREASE),
-        (Decimal("-16"), NotificationType.LEVEL_4_DECREASE),
-        (Decimal("-12"), NotificationType.LEVEL_3_DECREASE),
-        (Decimal("-8"), NotificationType.LEVEL_2_DECREASE),
-        (Decimal("-4"), NotificationType.LEVEL_1_DECREASE),
-    )
-    _CRYPTO_INCREASE_THRESHOLDS = (
-        (Decimal("10"), NotificationType.LEVEL_5_INCREASE),
-        (Decimal("8"), NotificationType.LEVEL_4_INCREASE),
-        (Decimal("6"), NotificationType.LEVEL_3_INCREASE),
-        (Decimal("4"), NotificationType.LEVEL_2_INCREASE),
-        (Decimal("2"), NotificationType.LEVEL_1_INCREASE),
-    )
-    _CRYPTO_DECREASE_THRESHOLDS = (
-        (Decimal("-10"), NotificationType.LEVEL_5_DECREASE),
-        (Decimal("-8"), NotificationType.LEVEL_4_DECREASE),
-        (Decimal("-6"), NotificationType.LEVEL_3_DECREASE),
-        (Decimal("-4"), NotificationType.LEVEL_2_DECREASE),
-        (Decimal("-2"), NotificationType.LEVEL_1_DECREASE),
-    )
-    _DEFAULT_INCREASE_THRESHOLDS = (
-        (Decimal("3.75"), NotificationType.LEVEL_5_INCREASE),
-        (Decimal("3"), NotificationType.LEVEL_4_INCREASE),
-        (Decimal("2.25"), NotificationType.LEVEL_3_INCREASE),
-        (Decimal("1.5"), NotificationType.LEVEL_2_INCREASE),
-        (Decimal("0.75"), NotificationType.LEVEL_1_INCREASE),
-    )
-    _DEFAULT_DECREASE_THRESHOLDS = (
-        (Decimal("-3.75"), NotificationType.LEVEL_5_DECREASE),
-        (Decimal("-3"), NotificationType.LEVEL_4_DECREASE),
-        (Decimal("-2.25"), NotificationType.LEVEL_3_DECREASE),
-        (Decimal("-1.5"), NotificationType.LEVEL_2_DECREASE),
-        (Decimal("-0.75"), NotificationType.LEVEL_1_DECREASE),
-    )
+    _INSTRUMENT_THRESHOLDS: dict[InstrumentType | None, tuple[_ThresholdTuple, _ThresholdTuple]] = {
+        InstrumentType.STOCK: (_LEVEL_3_INCREASE_THRESHOLDS, _LEVEL_3_DECREASE_THRESHOLDS),
+        InstrumentType.CRYPTO: (_LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS),
+        InstrumentType.ETF: (_LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS),
+        InstrumentType.INDEX: (_LEVEL_1_INCREASE_THRESHOLDS, _LEVEL_1_DECREASE_THRESHOLDS),
+        None: (_LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS),
+    }
 
     def __init__(
         self,
@@ -408,15 +393,7 @@ class Stock:
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
-        if self._kind == InstrumentType.STOCK:
-            inc = self._STOCK_INCREASE_THRESHOLDS
-            dec = self._STOCK_DECREASE_THRESHOLDS
-        elif self._kind == InstrumentType.CRYPTO:
-            inc = self._CRYPTO_INCREASE_THRESHOLDS
-            dec = self._CRYPTO_DECREASE_THRESHOLDS
-        else:
-            inc = self._DEFAULT_INCREASE_THRESHOLDS
-            dec = self._DEFAULT_DECREASE_THRESHOLDS
+        inc, dec = self._INSTRUMENT_THRESHOLDS[self._kind]
 
         if change_percentage > 0:
             for threshold, notification_type in inc:

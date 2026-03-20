@@ -43,9 +43,9 @@ The following events are detected and sent as Telegram messages during a monitor
 - Price is close to crossing the 50-day or 200-day moving average (within 2.5%)
 - Price crossed the 50-day or 200-day moving average
 - Price moved beyond a percentage threshold from the previous close (up or down). Thresholds are instrument-type-aware:
-  - **STOCK**: ±4%, ±8%, ±12%, ±16%, ±20%
-  - **CRYPTO**: ±2%, ±4%, ±6%, ±8%, ±10%
-  - **ETF / INDEX / others** (default): ±0.75%, ±1.5%, ±2.25%, ±3%, ±3.75%
+  - **STOCK**: ±4%, ±7.5%, ±11%, ±14.5%, ±18%
+  - **CRYPTO / ETF / others** (default): ±2%, ±3.75%, ±5.5%, ±7.25%, ±9%
+  - **INDEX**: ±1%, ±1.875%, ±2.75%, ±3.625%, ±4.5%
 - Session gains erased (price crossed back below 0% after a positive percentage threshold)
 - Session losses erased (price crossed back above 0% after a negative percentage threshold)
 - Price set a new 52-week high or low (compared to the previous monitoring run)
