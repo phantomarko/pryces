@@ -345,7 +345,7 @@ class Stock:
     def _compute_cap_size(self) -> CapSize | None:
         if (
             self._kind != InstrumentType.STOCK
-            or self._currency != "USD"
+            or self._currency not in ("USD", "EUR")
             or self._market_cap is None
         ):
             return None

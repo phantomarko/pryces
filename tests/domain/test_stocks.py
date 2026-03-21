@@ -1527,8 +1527,20 @@ class TestCapSize:
         stock = make_stock(currency="USD", market_cap="50000000000")
         assert stock.cap_size is None
 
-    def test_none_when_currency_is_not_usd(self):
-        stock = make_stock(kind=InstrumentType.STOCK, currency="EUR", market_cap="50000000000")
+    def test_large_cap_eur(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="EUR", market_cap="10000000000")
+        assert stock.cap_size == CapSize.LARGE
+
+    def test_mid_cap_eur(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="EUR", market_cap="5000000000")
+        assert stock.cap_size == CapSize.MID
+
+    def test_small_cap_eur(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="EUR", market_cap="1999999999")
+        assert stock.cap_size == CapSize.SMALL
+
+    def test_none_when_currency_is_unsupported(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="GBP", market_cap="50000000000")
         assert stock.cap_size is None
 
     def test_none_when_currency_is_none(self):
