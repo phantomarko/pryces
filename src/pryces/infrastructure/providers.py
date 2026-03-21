@@ -5,7 +5,7 @@ from decimal import Decimal
 import yfinance as yf
 
 from ..application.interfaces import LoggerFactory, StockProvider
-from ..domain.stocks import InstrumentType, MarketState, Stock
+from ..domain.stocks import Currency, InstrumentType, MarketState, Stock
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +48,7 @@ class YahooFinanceMapper:
         fifty_two_week_low = info.get("fiftyTwoWeekLow")
         market_cap = info.get("marketCap")
         company_name = info.get("longName") or info.get("shortName")
-        currency = info.get("currency")
+        currency = self._map_currency(info.get("currency"))
         market_state = self._map_market_state(info.get("marketState"))
         exchange_delay = info.get("exchangeDataDelayedBy") or 0
         price_delay_in_minutes = exchange_delay + self._extra_delay_in_minutes
@@ -91,6 +91,20 @@ class YahooFinanceMapper:
         if value is None:
             return None
         return mapping.get(value)
+
+    _CURRENCY_ALIASES: dict[str, Currency] = {
+        "GBp": Currency.GBP,  # yfinance reports pence for LSE stocks
+    }
+
+    def _map_currency(self, value: str | None) -> Currency | None:
+        if value is None:
+            return None
+        if value in self._CURRENCY_ALIASES:
+            return self._CURRENCY_ALIASES[value]
+        try:
+            return Currency(value)
+        except ValueError:
+            return None
 
     def _map_market_state(self, value: str | None) -> MarketState | None:
         match value:

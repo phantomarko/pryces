@@ -21,6 +21,7 @@ from pryces.presentation.console.utils import (
     validate_symbols_with_targets,
 )
 from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.domain.stocks import Currency
 from tests.fixtures.factories import create_stock_dto
 
 
@@ -255,7 +256,7 @@ class TestFormatStock:
             "AAPL",
             Decimal("150.25"),
             name="Apple Inc.",
-            currency="USD",
+            currency=Currency.USD,
             previous_close_price=Decimal("148.50"),
             open_price=Decimal("149.00"),
             day_high=Decimal("151.00"),

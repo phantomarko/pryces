@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from pryces.domain.stocks import InstrumentType, MarketState
+from pryces.domain.stocks import Currency, InstrumentType, MarketState
 from pryces.infrastructure.providers import YahooFinanceMapper
 
 
@@ -41,7 +41,7 @@ class TestYahooFinanceMapper:
         assert stock.symbol == "AAPL"
         assert stock.current_price == Decimal("150.25")
         assert stock.name == "Test Company Inc."
-        assert stock.currency == "USD"
+        assert stock.currency == Currency.USD
         assert stock.previous_close_price == Decimal("148.5")
         assert stock.open_price == Decimal("149.0")
         assert stock.day_high == Decimal("151.0")
@@ -214,3 +214,28 @@ class TestYahooFinanceMapper:
 
         assert stock is not None
         assert stock.kind == expected_kind
+
+    @pytest.mark.parametrize(
+        "raw_currency, expected_currency",
+        [
+            ("USD", Currency.USD),
+            ("EUR", Currency.EUR),
+            ("GBP", Currency.GBP),
+            ("GBp", Currency.GBP),  # yfinance returns pence for LSE stocks
+            ("JPY", Currency.JPY),
+            ("KRW", Currency.KRW),
+            ("HKD", Currency.HKD),
+            ("CAD", Currency.CAD),
+            ("AUD", Currency.AUD),
+            ("TWD", None),  # unsupported currency maps to None
+            (None, None),
+        ],
+    )
+    def test_maps_currencies(self, raw_currency, expected_currency):
+        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+        info = _build_full_info(currency=raw_currency)
+
+        stock = mapper.map("AAPL", info)
+
+        assert stock is not None
+        assert stock.currency == expected_currency

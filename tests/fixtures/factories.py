@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pryces.application.dtos import StockDTO
-from pryces.domain.stocks import InstrumentType, MarketState, Stock
+from pryces.domain.stocks import Currency, InstrumentType, MarketState, Stock
 
 
 def create_stock(
@@ -9,7 +9,7 @@ def create_stock(
 ) -> Stock:
     defaults = {
         "name": f"{symbol} Inc.",
-        "currency": "USD",
+        "currency": Currency.USD,
         "previous_close_price": current_price * Decimal("0.99"),
         "open_price": current_price * Decimal("0.995"),
         "day_high": current_price * Decimal("1.01"),
@@ -82,7 +82,7 @@ def make_stock(
     two_hundred_day_average: str | Decimal | None = None,
     fifty_two_week_high: str | Decimal | None = None,
     fifty_two_week_low: str | Decimal | None = None,
-    currency: str | None = None,
+    currency: Currency | None = None,
     market_cap: str | Decimal | None = None,
     market_state: MarketState | None = MarketState.OPEN,
     price_delay_in_minutes: int | None = None,

@@ -16,7 +16,7 @@ class TestStockDTO:
         assert result.symbol == stock.symbol
         assert result.current_price == stock.current_price
         assert result.name == stock.name
-        assert result.currency == stock.currency
+        assert result.currency == "USD"
         assert result.previous_close_price == stock.previous_close_price
         assert result.open_price == stock.open_price
         assert result.day_high == stock.day_high

@@ -32,7 +32,7 @@ class StockDTO:
             symbol=stock.symbol,
             current_price=stock.current_price,
             name=stock.name,
-            currency=stock.currency,
+            currency=stock.currency.value if stock.currency is not None else None,
             previous_close_price=stock.previous_close_price,
             open_price=stock.open_price,
             day_high=stock.day_high,

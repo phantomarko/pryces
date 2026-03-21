@@ -41,6 +41,17 @@ class InstrumentType(str, Enum):
     INDEX = "INDEX"
 
 
+class Currency(str, Enum):
+    EUR = "EUR"
+    USD = "USD"
+    GBP = "GBP"
+    JPY = "JPY"
+    KRW = "KRW"
+    HKD = "HKD"
+    CAD = "CAD"
+    AUD = "AUD"
+
+
 class CapSize(str, Enum):
     LARGE = "LARGE"
     MID = "MID"
@@ -149,7 +160,7 @@ class Stock:
         symbol: str,
         current_price: Decimal,
         name: str | None = None,
-        currency: str | None = None,
+        currency: Currency | None = None,
         previous_close_price: Decimal | None = None,
         open_price: Decimal | None = None,
         day_high: Decimal | None = None,
@@ -198,7 +209,7 @@ class Stock:
         return self._name
 
     @property
-    def currency(self) -> str | None:
+    def currency(self) -> Currency | None:
         return self._currency
 
     @property
@@ -345,7 +356,7 @@ class Stock:
     def _compute_cap_size(self) -> CapSize | None:
         if (
             self._kind != InstrumentType.STOCK
-            or self._currency not in ("USD", "EUR")
+            or self._currency not in (Currency.USD, Currency.EUR)
             or self._market_cap is None
         ):
             return None
