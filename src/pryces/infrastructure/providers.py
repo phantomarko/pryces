@@ -46,6 +46,7 @@ class YahooFinanceMapper:
         two_hundred_day_avg = info.get("twoHundredDayAverage")
         fifty_two_week_high = info.get("fiftyTwoWeekHigh")
         fifty_two_week_low = info.get("fiftyTwoWeekLow")
+        market_cap = info.get("marketCap")
         company_name = info.get("longName") or info.get("shortName")
         currency = info.get("currency")
         market_state = self._map_market_state(info.get("marketState"))
@@ -74,6 +75,7 @@ class YahooFinanceMapper:
             fifty_two_week_low=(
                 Decimal(str(fifty_two_week_low)) if fifty_two_week_low is not None else None
             ),
+            market_cap=Decimal(str(market_cap)) if market_cap is not None else None,
             market_state=market_state,
             price_delay_in_minutes=price_delay_in_minutes,
             kind=kind,

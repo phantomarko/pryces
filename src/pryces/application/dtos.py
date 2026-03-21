@@ -20,6 +20,7 @@ class StockDTO:
     two_hundred_day_average: Decimal | None = None
     fifty_two_week_high: Decimal | None = None
     fifty_two_week_low: Decimal | None = None
+    market_cap: Decimal | None = None
     market_state: str | None = None
     price_delay_in_minutes: int | None = None
     kind: str | None = None
@@ -39,6 +40,7 @@ class StockDTO:
             two_hundred_day_average=stock.two_hundred_day_average,
             fifty_two_week_high=stock.fifty_two_week_high,
             fifty_two_week_low=stock.fifty_two_week_low,
+            market_cap=stock.market_cap,
             market_state=stock.market_state.value if stock.market_state else None,
             price_delay_in_minutes=stock.price_delay_in_minutes,
             kind=stock.kind.value if stock.kind else None,

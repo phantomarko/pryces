@@ -183,12 +183,25 @@ FIELD_LABELS = [
     ("two_hundred_day_average", "200-Day Average"),
     ("fifty_two_week_high", "52-Week High"),
     ("fifty_two_week_low", "52-Week Low"),
+    ("market_cap", "Market Cap"),
     ("price_delay_in_minutes", "Price delay (min)"),
 ]
 
 LABEL_WIDTH = max(len(label) for _, label in FIELD_LABELS)
 SEPARATOR = "-" * 60
 DOUBLE_SEPARATOR = "=" * 60
+
+
+def _format_european_number(value: Decimal) -> str:
+    integer_part = int(value)
+    decimal_part = value % 1
+
+    formatted_integer = f"{integer_part:_}".replace("_", ".")
+
+    if decimal_part:
+        decimal_str = str(decimal_part)[2:]
+        return f"{formatted_integer},{decimal_str}"
+    return formatted_integer
 
 
 def format_stock(dto: StockDTO) -> str:
@@ -204,7 +217,8 @@ def format_stock(dto: StockDTO) -> str:
     for attr, label in FIELD_LABELS:
         value = getattr(dto, attr)
         if value is not None:
-            parts.append(f"  {label + ':':<{LABEL_WIDTH + 1}}  {value}")
+            display_value = _format_european_number(value) if isinstance(value, Decimal) else value
+            parts.append(f"  {label + ':':<{LABEL_WIDTH + 1}}  {display_value}")
 
     return "\n".join(parts)
 

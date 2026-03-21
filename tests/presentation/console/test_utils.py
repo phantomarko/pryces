@@ -270,23 +270,23 @@ class TestFormatStock:
 
         assert "AAPL - Apple Inc. (USD)" in result
         assert "Current Price:" in result
-        assert "150.25" in result
+        assert "150,25" in result
         assert "Previous Close:" in result
-        assert "148.50" in result
+        assert "148,50" in result
         assert "Open:" in result
-        assert "149.00" in result
+        assert "149" in result
         assert "Day High:" in result
-        assert "151.00" in result
+        assert "151" in result
         assert "Day Low:" in result
-        assert "148.00" in result
+        assert "148" in result
         assert "50-Day Average:" in result
-        assert "145.50" in result
+        assert "145,50" in result
         assert "200-Day Average:" in result
-        assert "140.00" in result
+        assert "140" in result
         assert "52-Week High:" in result
-        assert "180.00" in result
+        assert "180" in result
         assert "52-Week Low:" in result
-        assert "120.00" in result
+        assert "120" in result
 
     def test_formats_stock_with_minimal_fields(self):
         dto = create_stock_dto(
@@ -308,7 +308,7 @@ class TestFormatStock:
 
         assert result.startswith("AAPL\n")
         assert "Current Price:" in result
-        assert "150.25" in result
+        assert "150,25" in result
         assert "Previous Close:" not in result
         assert "Open:" not in result
 
@@ -376,7 +376,7 @@ class TestFormatStock:
 
         result = format_stock(dto)
 
-        assert "2847.123456789" in result
+        assert "2.847,123456789" in result
 
 
 class TestFormatStockList:

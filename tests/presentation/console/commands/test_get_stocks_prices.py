@@ -62,7 +62,7 @@ class TestGetStocksPricesCommand:
 
         result = self.command.execute(symbols)
 
-        assert "2847.123456789" in result.message
+        assert "2.847,123456789" in result.message
 
     def test_execute_returns_error_on_unexpected_exception(self):
         symbols = "AAPL GOOGL"
@@ -137,21 +137,21 @@ class TestGetStocksPricesCommand:
 
         assert "AAPL - Apple Inc. (USD)" in result.message
         assert "Previous Close:" in result.message
-        assert "148.50" in result.message
+        assert "148,50" in result.message
         assert "Open:" in result.message
-        assert "149.00" in result.message
+        assert "149" in result.message
         assert "Day High:" in result.message
-        assert "151.00" in result.message
+        assert "151" in result.message
         assert "Day Low:" in result.message
-        assert "148.00" in result.message
+        assert "148" in result.message
         assert "50-Day Average:" in result.message
-        assert "145.50" in result.message
+        assert "145,50" in result.message
         assert "200-Day Average:" in result.message
-        assert "140.00" in result.message
+        assert "140" in result.message
         assert "52-Week High:" in result.message
-        assert "180.00" in result.message
+        assert "180" in result.message
         assert "52-Week Low:" in result.message
-        assert "120.00" in result.message
+        assert "120" in result.message
 
     def test_get_metadata_returns_correct_metadata(self):
         metadata = self.command.get_metadata()

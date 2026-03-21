@@ -783,6 +783,7 @@ class TestUpdate:
             two_hundred_day_average=Decimal("140.00"),
             fifty_two_week_high=Decimal("170.00"),
             fifty_two_week_low=Decimal("120.00"),
+            market_cap=Decimal("2500000000000"),
             market_state=MarketState.OPEN,
             price_delay_in_minutes=15,
         )
@@ -800,6 +801,7 @@ class TestUpdate:
         assert stock.two_hundred_day_average == Decimal("140.00")
         assert stock.fifty_two_week_high == Decimal("170.00")
         assert stock.fifty_two_week_low == Decimal("120.00")
+        assert stock.market_cap == Decimal("2500000000000")
         assert stock.market_state == MarketState.OPEN
         assert stock.price_delay_in_minutes == 15
 

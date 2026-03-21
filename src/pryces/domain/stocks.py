@@ -91,6 +91,7 @@ class Stock:
         "_two_hundred_day_average",
         "_fifty_two_week_high",
         "_fifty_two_week_low",
+        "_market_cap",
         "_market_state",
         "_price_delay_in_minutes",
         "_kind",
@@ -147,6 +148,7 @@ class Stock:
         two_hundred_day_average: Decimal | None = None,
         fifty_two_week_high: Decimal | None = None,
         fifty_two_week_low: Decimal | None = None,
+        market_cap: Decimal | None = None,
         market_state: MarketState | None = None,
         price_delay_in_minutes: int | None = None,
         kind: InstrumentType | None = None,
@@ -163,6 +165,7 @@ class Stock:
         self._two_hundred_day_average = two_hundred_day_average
         self._fifty_two_week_high = fifty_two_week_high
         self._fifty_two_week_low = fifty_two_week_low
+        self._market_cap = market_cap
         self._market_state = market_state
         self._price_delay_in_minutes = price_delay_in_minutes
         self._kind = kind
@@ -219,6 +222,10 @@ class Stock:
     @property
     def fifty_two_week_low(self) -> Decimal | None:
         return self._fifty_two_week_low
+
+    @property
+    def market_cap(self) -> Decimal | None:
+        return self._market_cap
 
     @property
     def market_state(self) -> MarketState | None:
@@ -303,6 +310,7 @@ class Stock:
         self._two_hundred_day_average = source._two_hundred_day_average
         self._fifty_two_week_high = source._fifty_two_week_high
         self._fifty_two_week_low = source._fifty_two_week_low
+        self._market_cap = source._market_cap
         self._market_state = source._market_state
         self._price_delay_in_minutes = source._price_delay_in_minutes
         self._kind = source._kind

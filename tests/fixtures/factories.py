@@ -18,6 +18,7 @@ def create_stock(
         "two_hundred_day_average": current_price * Decimal("0.93"),
         "fifty_two_week_high": current_price * Decimal("1.20"),
         "fifty_two_week_low": current_price * Decimal("0.80"),
+        "market_cap": Decimal("2500000000000"),
         "market_state": MarketState.OPEN,
         "price_delay_in_minutes": 0,
     }
@@ -81,6 +82,7 @@ def make_stock(
     two_hundred_day_average: str | Decimal | None = None,
     fifty_two_week_high: str | Decimal | None = None,
     fifty_two_week_low: str | Decimal | None = None,
+    market_cap: str | Decimal | None = None,
     market_state: MarketState | None = MarketState.OPEN,
     price_delay_in_minutes: int | None = None,
     kind: InstrumentType | None = None,
@@ -99,6 +101,7 @@ def make_stock(
         two_hundred_day_average=d(two_hundred_day_average),
         fifty_two_week_high=d(fifty_two_week_high),
         fifty_two_week_low=d(fifty_two_week_low),
+        market_cap=d(market_cap),
         market_state=market_state,
         price_delay_in_minutes=price_delay_in_minutes,
         kind=kind,

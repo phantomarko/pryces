@@ -25,6 +25,7 @@ class TestStockDTO:
         assert result.two_hundred_day_average == stock.two_hundred_day_average
         assert result.fifty_two_week_high == stock.fifty_two_week_high
         assert result.fifty_two_week_low == stock.fifty_two_week_low
+        assert result.market_cap == stock.market_cap
         assert result.price_delay_in_minutes == stock.price_delay_in_minutes
 
     def test_from_stock_with_minimal_fields(self):

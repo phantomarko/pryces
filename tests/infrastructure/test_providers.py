@@ -19,6 +19,7 @@ def _build_full_info(**overrides) -> dict:
         "twoHundredDayAverage": 140.00,
         "fiftyTwoWeekHigh": 160.00,
         "fiftyTwoWeekLow": 120.00,
+        "marketCap": 2500000000000,
         "longName": "Test Company Inc.",
         "shortName": "Test Co",
         "currency": "USD",
@@ -49,6 +50,7 @@ class TestYahooFinanceMapper:
         assert stock.two_hundred_day_average == Decimal("140.0")
         assert stock.fifty_two_week_high == Decimal("160.0")
         assert stock.fifty_two_week_low == Decimal("120.0")
+        assert stock.market_cap == Decimal("2500000000000")
         assert stock.market_state == MarketState.OPEN
         assert stock.price_delay_in_minutes == 0
         assert stock.kind == InstrumentType.STOCK
@@ -179,6 +181,7 @@ class TestYahooFinanceMapper:
         assert stock.two_hundred_day_average is None
         assert stock.fifty_two_week_high is None
         assert stock.fifty_two_week_low is None
+        assert stock.market_cap is None
         assert stock.market_state is None
         assert stock.price_delay_in_minutes == 0
 

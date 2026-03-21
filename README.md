@@ -373,15 +373,16 @@ Example output for a single symbol:
 AAPL - Apple Inc. (USD)
 
   Market State:       OPEN
-  Current Price:      269.48
-  Previous Close:     269.955
-  Open:               269.13
-  Day High:           271.875
-  Day Low:            267.61
-  50-Day Average:     268.3466
-  200-Day Average:    236.9913
-  52-Week High:       288.62
-  52-Week Low:        169.21
+  Current Price:      269,48
+  Previous Close:     269,955
+  Open:               269,13
+  Day High:           271,875
+  Day Low:            267,61
+  50-Day Average:     268,3466
+  200-Day Average:    236,9913
+  52-Week High:       288,62
+  52-Week Low:        169,21
+  Market Cap:         3.468.320.000.000
   Price delay (min):  0
 ```
 
