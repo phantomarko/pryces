@@ -41,6 +41,16 @@ class InstrumentType(str, Enum):
     INDEX = "INDEX"
 
 
+class CapSize(str, Enum):
+    LARGE = "LARGE"
+    MID = "MID"
+    SMALL = "SMALL"
+
+
+_LARGE_CAP_THRESHOLD = Decimal("10_000_000_000")
+_MID_CAP_THRESHOLD = Decimal("2_000_000_000")
+
+
 _INCREASE_LEVELS = (
     NotificationType.LEVEL_1_INCREASE,
     NotificationType.LEVEL_2_INCREASE,
@@ -240,6 +250,10 @@ class Stock:
         return self._kind
 
     @property
+    def cap_size(self) -> "CapSize | None":
+        return self._compute_cap_size()
+
+    @property
     def snapshot(self) -> StockSnapshot | None:
         return self._snapshot
 
@@ -327,6 +341,19 @@ class Stock:
             self._generate_market_open_notifications()
         elif self._is_market_state_post():
             self._generate_market_closed_notifications()
+
+    def _compute_cap_size(self) -> CapSize | None:
+        if (
+            self._kind != InstrumentType.STOCK
+            or self._currency != "USD"
+            or self._market_cap is None
+        ):
+            return None
+        if self._market_cap >= _LARGE_CAP_THRESHOLD:
+            return CapSize.LARGE
+        if self._market_cap >= _MID_CAP_THRESHOLD:
+            return CapSize.MID
+        return CapSize.SMALL
 
     def _capture_snapshot(self) -> StockSnapshot:
         return StockSnapshot(

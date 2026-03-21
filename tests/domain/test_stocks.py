@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from pryces.domain.stocks import InstrumentType, MarketState, Stock, StockSnapshot
+from pryces.domain.stocks import CapSize, InstrumentType, MarketState, Stock, StockSnapshot
 from tests.fixtures.factories import (
     generate_and_drain,
     make_stock,
@@ -1480,3 +1480,77 @@ class TestConsolidatedNotifications:
         # Second cycle: percentage should not reappear (moved to historical during drain)
         messages = generate_and_drain(stock)
         assert not any("rose to" in m for m in messages)
+
+
+class TestCapSize:
+    def test_large_cap(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="10000000000")
+        assert stock.cap_size == CapSize.LARGE
+
+    def test_large_cap_above_threshold(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="500000000000")
+        assert stock.cap_size == CapSize.LARGE
+
+    def test_mid_cap(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="2000000000")
+        assert stock.cap_size == CapSize.MID
+
+    def test_mid_cap_between_thresholds(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="5000000000")
+        assert stock.cap_size == CapSize.MID
+
+    def test_mid_cap_just_below_large(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="9999999999")
+        assert stock.cap_size == CapSize.MID
+
+    def test_small_cap(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="1999999999")
+        assert stock.cap_size == CapSize.SMALL
+
+    def test_small_cap_low_value(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="100000000")
+        assert stock.cap_size == CapSize.SMALL
+
+    def test_none_when_kind_is_etf(self):
+        stock = make_stock(kind=InstrumentType.ETF, currency="USD", market_cap="50000000000")
+        assert stock.cap_size is None
+
+    def test_none_when_kind_is_crypto(self):
+        stock = make_stock(kind=InstrumentType.CRYPTO, currency="USD", market_cap="50000000000")
+        assert stock.cap_size is None
+
+    def test_none_when_kind_is_index(self):
+        stock = make_stock(kind=InstrumentType.INDEX, currency="USD", market_cap="50000000000")
+        assert stock.cap_size is None
+
+    def test_none_when_kind_is_none(self):
+        stock = make_stock(currency="USD", market_cap="50000000000")
+        assert stock.cap_size is None
+
+    def test_none_when_currency_is_not_usd(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="EUR", market_cap="50000000000")
+        assert stock.cap_size is None
+
+    def test_none_when_currency_is_none(self):
+        stock = make_stock(kind=InstrumentType.STOCK, market_cap="50000000000")
+        assert stock.cap_size is None
+
+    def test_none_when_market_cap_is_none(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD")
+        assert stock.cap_size is None
+
+    def test_recomputed_after_update(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="1000000000")
+        assert stock.cap_size == CapSize.SMALL
+
+        updated = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="15000000000")
+        stock.update(updated)
+        assert stock.cap_size == CapSize.LARGE
+
+    def test_recomputed_to_none_after_update_changes_kind(self):
+        stock = make_stock(kind=InstrumentType.STOCK, currency="USD", market_cap="15000000000")
+        assert stock.cap_size == CapSize.LARGE
+
+        updated = make_stock(kind=InstrumentType.ETF, currency="USD", market_cap="15000000000")
+        stock.update(updated)
+        assert stock.cap_size is None

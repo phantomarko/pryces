@@ -82,6 +82,7 @@ def make_stock(
     two_hundred_day_average: str | Decimal | None = None,
     fifty_two_week_high: str | Decimal | None = None,
     fifty_two_week_low: str | Decimal | None = None,
+    currency: str | None = None,
     market_cap: str | Decimal | None = None,
     market_state: MarketState | None = MarketState.OPEN,
     price_delay_in_minutes: int | None = None,
@@ -93,6 +94,7 @@ def make_stock(
     return Stock(
         symbol=symbol,
         current_price=d(current_price),
+        currency=currency,
         previous_close_price=d(previous_close_price),
         open_price=d(open_price),
         day_high=d(day_high),

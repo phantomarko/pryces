@@ -373,6 +373,8 @@ Example output for a single symbol:
 AAPL - Apple Inc. (USD)
 
   Market State:       OPEN
+  Type:               STOCK
+  Cap Size:           LARGE
   Current Price:      269,48
   Previous Close:     269,955
   Open:               269,13
