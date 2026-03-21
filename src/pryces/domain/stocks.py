@@ -436,10 +436,15 @@ class Stock:
     def _is_crypto(self) -> bool:
         return self._kind == InstrumentType.CRYPTO
 
+    def _get_percentage_thresholds(self) -> tuple[_ThresholdTuple, _ThresholdTuple]:
+        if self._kind == InstrumentType.STOCK and self.cap_size == CapSize.LARGE:
+            return _LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS
+        return self._INSTRUMENT_THRESHOLDS[self._kind]
+
     def _generate_percentage_change_notification(
         self, change_percentage: Decimal
     ) -> Notification | None:
-        inc, dec = self._INSTRUMENT_THRESHOLDS[self._kind]
+        inc, dec = self._get_percentage_thresholds()
 
         if change_percentage > 0:
             for threshold, notification_type in inc:

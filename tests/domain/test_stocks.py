@@ -571,6 +571,76 @@ class TestPercentageChangeNotifications:
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
+    def test_large_cap_stock_uses_level_2_thresholds(self):
+        stock = open_stock_after_burn(
+            current_price="102.10",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+            currency=Currency.USD,
+            market_cap="15000000000",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("rose to" in m for m in messages)
+
+    def test_large_cap_stock_no_notification_below_level_2_threshold(self):
+        stock = make_stock(
+            current_price="101.90",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+            currency=Currency.USD,
+            market_cap="15000000000",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("opened at" in m for m in messages)
+
+    def test_large_cap_stock_at_exact_level_2_threshold(self):
+        stock = open_stock_after_burn(
+            current_price="102.00",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+            currency=Currency.USD,
+            market_cap="15000000000",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("rose to" in m for m in messages)
+
+    def test_mid_cap_stock_still_uses_level_3_thresholds(self):
+        stock = make_stock(
+            current_price="102.10",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+            currency=Currency.USD,
+            market_cap="5000000000",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("opened at" in m for m in messages)
+
+    def test_small_cap_stock_still_uses_level_3_thresholds(self):
+        stock = make_stock(
+            current_price="102.10",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+            currency=Currency.USD,
+            market_cap="1000000000",
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("opened at" in m for m in messages)
+
+    def test_stock_with_unknown_cap_still_uses_level_3_thresholds(self):
+        stock = make_stock(
+            current_price="102.10",
+            previous_close_price="100.00",
+            kind=InstrumentType.STOCK,
+        )
+        messages = generate_and_drain(stock)
+        assert len(messages) == 1
+        assert any("opened at" in m for m in messages)
+
     def test_stock_no_percentage_below_threshold(self):
         stock = make_stock(
             current_price="103.90",
