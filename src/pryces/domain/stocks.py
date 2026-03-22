@@ -116,6 +116,7 @@ class Stock:
         "_market_state",
         "_price_delay_in_minutes",
         "_kind",
+        "_cap_size",
         "_snapshot",
         "_notifications",
         "_pending_notifications",
@@ -190,6 +191,7 @@ class Stock:
         self._market_state = market_state
         self._price_delay_in_minutes = price_delay_in_minutes
         self._kind = kind
+        self._cap_size: CapSize | None = self._compute_cap_size()
         self._snapshot: StockSnapshot | None = None
         self._notifications: list[Notification] = []
         self._pending_notifications: list[Notification] = []
@@ -262,7 +264,7 @@ class Stock:
 
     @property
     def cap_size(self) -> "CapSize | None":
-        return self._compute_cap_size()
+        return self._cap_size
 
     @property
     def snapshot(self) -> StockSnapshot | None:
@@ -339,6 +341,7 @@ class Stock:
         self._market_state = source._market_state
         self._price_delay_in_minutes = source._price_delay_in_minutes
         self._kind = source._kind
+        self._cap_size = self._compute_cap_size()
 
     def is_market_state_transition(self) -> bool:
         return (
