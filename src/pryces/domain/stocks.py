@@ -318,8 +318,7 @@ class Stock:
             if existing is not None:
                 synced.append(existing)
             else:
-                target = TargetPrice(value)
-                target.set_entry_price(self)
+                target = TargetPrice(target=value, entry_price=self.current_price)
                 synced.append(target)
 
         self._targets = synced
