@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender, StockProvider
+from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
 from pryces.application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import (
@@ -192,12 +193,13 @@ class TestNotificationService:
         self.mock_sender = Mock(spec=MessageSender)
         self.mock_checker = Mock(spec=DelayWindowChecker)
         self.mock_checker.is_in_delay_window.return_value = False
-        self.service = NotificationService(self.mock_sender, self.mock_checker)
+        self.formatter = ConsolidatingNotificationFormatter()
+        self.service = NotificationService(self.mock_sender, self.mock_checker, self.formatter)
 
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(self.formatter)
 
         self.service.send_stock_notifications(stock)
 
@@ -208,10 +210,10 @@ class TestNotificationService:
     def test_handles_multiple_stocks_independently(self):
         stock1 = create_stock_crossing_fifty_day("AAPL")
         stock1.generate_notifications()
-        stock1.drain_notifications()
+        stock1.drain_notifications(self.formatter)
         stock2 = create_stock_crossing_fifty_day("GOOGL")
         stock2.generate_notifications()
-        stock2.drain_notifications()
+        stock2.drain_notifications(self.formatter)
 
         self.service.send_stock_notifications(stock1)
         self.service.send_stock_notifications(stock2)
@@ -233,7 +235,7 @@ class TestNotificationService:
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(self.formatter)
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -256,7 +258,7 @@ class TestNotificationService:
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(self.formatter)
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("100.00"),
@@ -278,7 +280,7 @@ class TestNotificationService:
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(self.formatter)
         stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
@@ -366,8 +368,9 @@ class TestStockSynchronizer:
         result = self.synchronizer.fetch_and_sync(["AAPL"], {"AAPL": [Decimal("200.00")]})
 
         synced_stock = result[0]
+        formatter = ConsolidatingNotificationFormatter()
         synced_stock.generate_notifications()
-        synced_stock.drain_notifications()
+        synced_stock.drain_notifications(formatter)
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -376,7 +379,7 @@ class TestStockSynchronizer:
         )
         synced_stock.update(source)
         synced_stock.generate_notifications()
-        synced_stock.drain_notifications()
+        synced_stock.drain_notifications(formatter)
         assert synced_stock.drain_fulfilled_targets() == [Decimal("200.00")]
 
     def test_fetch_and_sync_with_empty_symbols_returns_empty(self):

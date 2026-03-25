@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import (
     CapSize,
     Currency,
@@ -16,6 +17,8 @@ from tests.fixtures.factories import (
     open_stock_after_burn,
     open_stock_ready_for_target,
 )
+
+_formatter = ConsolidatingNotificationFormatter()
 
 
 class TestStockCreation:
@@ -971,14 +974,14 @@ class TestDeduplication:
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
-        result1 = stock.drain_notifications()
+        result1 = stock.drain_notifications(_formatter)
         assert len(result1) > 0
         stock.generate_notifications()
-        result2 = stock.drain_notifications()
+        result2 = stock.drain_notifications(_formatter)
         assert len(result2) > 0
 
         stock.generate_notifications()
-        result3 = stock.drain_notifications()
+        result3 = stock.drain_notifications(_formatter)
 
         assert result3 == []
 
@@ -1209,7 +1212,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(_formatter)
         # Cycle 2: +10% threshold fires
         source = Stock(
             symbol="AAPL",
@@ -1219,7 +1222,7 @@ class TestSessionGainsLossesErased:
         )
         stock.update(source)
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(_formatter)
         # Cycle 3: drops to -1% → gains erased fires
         source = Stock(
             symbol="AAPL",
@@ -1229,7 +1232,7 @@ class TestSessionGainsLossesErased:
         )
         stock.update(source)
         stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = stock.drain_notifications(_formatter)
         assert any("Erased session gains" in m for m in messages)
         # Cycle 4: recovers to +5% → should fire again
         source = Stock(
@@ -1240,7 +1243,7 @@ class TestSessionGainsLossesErased:
         )
         stock.update(source)
         stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = stock.drain_notifications(_formatter)
 
         assert any("+5.00%" in m for m in messages)
 
@@ -1253,7 +1256,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(_formatter)
         # Cycle 2: -10% threshold fires
         source = Stock(
             symbol="AAPL",
@@ -1263,7 +1266,7 @@ class TestSessionGainsLossesErased:
         )
         stock.update(source)
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(_formatter)
         # Cycle 3: rises to +1% → losses erased fires
         source = Stock(
             symbol="AAPL",
@@ -1273,7 +1276,7 @@ class TestSessionGainsLossesErased:
         )
         stock.update(source)
         stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = stock.drain_notifications(_formatter)
         assert any("Erased session losses" in m for m in messages)
         # Cycle 4: drops to -5% → should fire again
         source = Stock(
@@ -1284,7 +1287,7 @@ class TestSessionGainsLossesErased:
         )
         stock.update(source)
         stock.generate_notifications()
-        messages = stock.drain_notifications()
+        messages = stock.drain_notifications(_formatter)
 
         assert any("-5.00%" in m for m in messages)
 
@@ -1346,14 +1349,14 @@ class TestTargetPriceNotifications:
         source1 = make_stock(current_price="200.00", previous_close_price="195.00")
         stock.update(source1)
         stock.generate_notifications()
-        result1 = stock.drain_notifications()
+        result1 = stock.drain_notifications(_formatter)
         assert any("hit target" in m for m in result1)
 
         stock.sync_targets([Decimal("250.00")])
         source2 = make_stock(current_price="250.00", previous_close_price="195.00")
         stock.update(source2)
         stock.generate_notifications()
-        result2 = stock.drain_notifications()
+        result2 = stock.drain_notifications(_formatter)
         assert any("hit target" in m for m in result2)
 
 

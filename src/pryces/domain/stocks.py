@@ -5,6 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from pryces.domain.notification_formatter import NotificationFormatter, StockContext
 from pryces.domain.notifications import Notification, NotificationType
 from pryces.domain.utils import _calculate_percentage_change
 
@@ -124,25 +125,6 @@ class Stock:
         "_fulfilled_targets",
     )
 
-    _STANDALONE_NOTIFICATION_TYPES = frozenset(
-        {
-            NotificationType.REGULAR_MARKET_OPEN,
-            NotificationType.REGULAR_MARKET_CLOSED,
-            NotificationType.TARGET_PRICE_REACHED,
-        }
-    )
-    _MILESTONE_NOTIFICATION_TYPES = frozenset(
-        {
-            NotificationType.SMA50_CROSSED,
-            NotificationType.SMA200_CROSSED,
-            NotificationType.CLOSE_TO_SMA50,
-            NotificationType.CLOSE_TO_SMA200,
-            NotificationType.NEW_52_WEEK_HIGH,
-            NotificationType.NEW_52_WEEK_LOW,
-            NotificationType.SESSION_GAINS_ERASED,
-            NotificationType.SESSION_LOSSES_ERASED,
-        }
-    )
     _INCREASE_LEVEL_TYPES = frozenset(_INCREASE_LEVELS)
     _DECREASE_LEVEL_TYPES = frozenset(_DECREASE_LEVELS)
     _CLOSE_TO_SMA_THRESHOLD = Decimal("2.5")
@@ -275,37 +257,12 @@ class Stock:
         self._fulfilled_targets = []
         return fulfilled
 
-    def drain_notifications(self) -> list[str]:
-        standalone: list[Notification] = []
-        milestones: list[Notification] = []
-        header_only: list[Notification] = []
-
-        for n in self._pending_notifications:
-            if n.type in self._STANDALONE_NOTIFICATION_TYPES:
-                standalone.append(n)
-            elif n.type in self._MILESTONE_NOTIFICATION_TYPES:
-                milestones.append(n)
-            else:
-                header_only.append(n)
-
-        messages: list[str] = []
-
-        if milestones:
-            header = self._build_consolidation_header(header_only)
-            lines = [header]
-            for m in milestones:
-                lines.append(m.message)
-            messages.append("\n".join(lines))
-        else:
-            for n in header_only:
-                messages.append(n.message)
-
-        for n in standalone:
-            messages.append(n.message)
-
+    def drain_notifications(self, formatter: NotificationFormatter) -> list[str]:
+        context = StockContext(self._symbol, self._current_price, self._previous_close_price)
+        result = formatter.format(list(self._pending_notifications), context)
         self._notifications.extend(self._pending_notifications)
         self._pending_notifications = []
-        return messages
+        return result
 
     def sync_targets(self, target_values: list[Decimal]) -> None:
         from pryces.domain.target_prices import TargetPrice
@@ -382,16 +339,6 @@ class Stock:
             market_state=self._market_state,
             price_delay_in_minutes=self._price_delay_in_minutes,
         )
-
-    def _build_consolidation_header(self, header_only: list[Notification]) -> str:
-        if header_only:
-            return header_only[0].message
-        change_pct = self._change_percentage_from_previous_close()
-        if change_pct is None:
-            return f"{self._symbol} at {self._current_price}"
-        return Notification.create_percentage_change(
-            NotificationType.LEVEL_1_INCREASE, self._symbol, self._current_price, change_pct
-        ).message
 
     def _has_notification_type(self, notification_type: NotificationType) -> bool:
         return any(n.type == notification_type for n in self._notifications) or any(

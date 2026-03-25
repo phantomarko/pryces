@@ -1,7 +1,10 @@
 from decimal import Decimal
 
 from pryces.application.dtos import StockDTO
+from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import Currency, InstrumentType, MarketState, Stock
+
+_formatter = ConsolidatingNotificationFormatter()
 
 
 def create_stock(
@@ -114,13 +117,13 @@ def open_stock_after_burn(**kwargs) -> Stock:
     """Constructs a stock and burns the market-open notification cycle."""
     stock = make_stock(**kwargs)
     stock.generate_notifications()
-    stock.drain_notifications()
+    stock.drain_notifications(_formatter)
     return stock
 
 
 def generate_and_drain(stock: Stock) -> list[str]:
     stock.generate_notifications()
-    return stock.drain_notifications()
+    return stock.drain_notifications(_formatter)
 
 
 def open_stock_ready_for_target(entry_price: str, target: str, hit_price: str) -> Stock:

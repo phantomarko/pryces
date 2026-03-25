@@ -171,3 +171,24 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY, NotificationType.TARGET_PRICE_REACHED, message
         )
+
+
+STANDALONE_NOTIFICATION_TYPES = frozenset(
+    {
+        NotificationType.REGULAR_MARKET_OPEN,
+        NotificationType.REGULAR_MARKET_CLOSED,
+        NotificationType.TARGET_PRICE_REACHED,
+    }
+)
+MILESTONE_NOTIFICATION_TYPES = frozenset(
+    {
+        NotificationType.SMA50_CROSSED,
+        NotificationType.SMA200_CROSSED,
+        NotificationType.CLOSE_TO_SMA50,
+        NotificationType.CLOSE_TO_SMA200,
+        NotificationType.NEW_52_WEEK_HIGH,
+        NotificationType.NEW_52_WEEK_LOW,
+        NotificationType.SESSION_GAINS_ERASED,
+        NotificationType.SESSION_LOSSES_ERASED,
+    }
+)

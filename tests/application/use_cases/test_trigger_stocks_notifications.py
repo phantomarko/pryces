@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.interfaces import MessageSender, StockProvider
+from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
 from pryces.application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import InMemoryStockRepository
@@ -26,7 +27,10 @@ class TestTriggerStocksNotifications:
         self.mock_sender = Mock(spec=MessageSender)
         self.mock_checker = Mock(spec=DelayWindowChecker)
         self.mock_checker.is_in_delay_window.return_value = False
-        self.notification_service = NotificationService(self.mock_sender, self.mock_checker)
+        self.formatter = ConsolidatingNotificationFormatter()
+        self.notification_service = NotificationService(
+            self.mock_sender, self.mock_checker, self.formatter
+        )
         self.stock_repository = InMemoryStockRepository()
         self.stock_synchronizer = StockSynchronizer(
             provider=self.mock_provider,
@@ -40,7 +44,7 @@ class TestTriggerStocksNotifications:
     def _prime_stock_in_repo(self, symbol: str) -> None:
         stock = create_stock(symbol)
         stock.generate_notifications()
-        stock.drain_notifications()
+        stock.drain_notifications(self.formatter)
         self.stock_repository.save_batch([stock])
 
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):
@@ -132,7 +136,7 @@ class TestTriggerStocksNotifications:
             market_state=MarketState.OPEN,
         )
         past_stock.generate_notifications()
-        past_stock.drain_notifications()
+        past_stock.drain_notifications(self.formatter)
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
             symbol="AAPL",
@@ -199,7 +203,7 @@ class TestTriggerStocksNotifications:
             market_state=MarketState.OPEN,
         )
         past_stock.generate_notifications()
-        past_stock.drain_notifications()
+        past_stock.drain_notifications(self.formatter)
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
             symbol="AAPL",

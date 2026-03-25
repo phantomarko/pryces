@@ -6,6 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
+from ...domain.notification_formatter import ConsolidatingNotificationFormatter
 from ...application.services import DelayWindowChecker, NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
@@ -95,7 +96,8 @@ def _create_script(
     message_sender = FireAndForgetMessageSender(inner=retry_sender, logger_factory=logger_factory)
     transition_repository = InMemoryMarketTransitionRepository()
     delay_window_checker = DelayWindowChecker(transition_repository)
-    notification_service = NotificationService(message_sender, delay_window_checker)
+    formatter = ConsolidatingNotificationFormatter()
+    notification_service = NotificationService(message_sender, delay_window_checker, formatter)
     stock_repository = InMemoryStockRepository()
     stock_synchronizer = StockSynchronizer(provider=provider, stock_repository=stock_repository)
     trigger_notifications = TriggerStocksNotifications(
