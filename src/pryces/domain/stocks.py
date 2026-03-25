@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from pryces.domain.notification_formatter import NotificationFormatter, StockContext
 from pryces.domain.notifications import Notification, NotificationType
@@ -135,6 +135,11 @@ class Stock:
         InstrumentType.ETF: (_LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS),
         InstrumentType.INDEX: (_LEVEL_1_INCREASE_THRESHOLDS, _LEVEL_1_DECREASE_THRESHOLDS),
         None: (_LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS),
+    }
+
+    _CROSS_TYPE_SUPPRESSIONS: ClassVar[dict[NotificationType, NotificationType]] = {
+        NotificationType.CLOSE_TO_SMA50: NotificationType.SMA50_CROSSED,
+        NotificationType.CLOSE_TO_SMA200: NotificationType.SMA200_CROSSED,
     }
 
     def __init__(
@@ -340,11 +345,6 @@ class Stock:
             price_delay_in_minutes=self._price_delay_in_minutes,
         )
 
-    def _has_notification_type(self, notification_type: NotificationType) -> bool:
-        return any(n.type == notification_type for n in self._notifications) or any(
-            n.type == notification_type for n in self._pending_notifications
-        )
-
     def _is_close_to_sma(self, sma: Decimal | None) -> bool:
         if sma is None or self.previous_close_price is None:
             return False
@@ -410,84 +410,64 @@ class Stock:
 
         return None
 
-    def _generate_new_52_week_high_notification(self) -> None:
+    def _generate_new_52_week_high_notification(self) -> Notification | None:
         if (
             self._snapshot is not None
             and self._snapshot.fifty_two_week_high is not None
             and self.previous_close_price is not None
             and self.current_price > self._snapshot.fifty_two_week_high
-            and not self._has_notification_type(NotificationType.NEW_52_WEEK_HIGH)
         ):
-            self._pending_notifications.append(Notification.create_new_52_week_high())
+            return Notification.create_new_52_week_high()
+        return None
 
-    def _generate_new_52_week_low_notification(self) -> None:
+    def _generate_new_52_week_low_notification(self) -> Notification | None:
         if (
             self._snapshot is not None
             and self._snapshot.fifty_two_week_low is not None
             and self.previous_close_price is not None
             and self.current_price < self._snapshot.fifty_two_week_low
-            and not self._has_notification_type(NotificationType.NEW_52_WEEK_LOW)
         ):
-            self._pending_notifications.append(Notification.create_new_52_week_low())
+            return Notification.create_new_52_week_low()
+        return None
 
-    def _generate_regular_market_open_notification(self) -> None:
-        if self._is_crypto() or self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN):
-            return
-        self._pending_notifications.append(
-            Notification.create_regular_market_open(
-                self.symbol,
-                self.open_price if self.open_price is not None else self.current_price,
-                self.previous_close_price,
-            )
+    def _generate_regular_market_open_notification(self) -> Notification | None:
+        if self._is_crypto():
+            return None
+        return Notification.create_regular_market_open(
+            self.symbol,
+            self.open_price if self.open_price is not None else self.current_price,
+            self.previous_close_price,
         )
 
-    def _generate_close_to_fifty_day_average_notification(self) -> None:
-        if (
-            self._is_close_to_sma(self.fifty_day_average)
-            and not self._has_notification_type(NotificationType.CLOSE_TO_SMA50)
-            and not self._has_notification_type(NotificationType.SMA50_CROSSED)
-        ):
-            self._pending_notifications.append(
-                Notification.create_close_to_fifty_day_average(
-                    self.current_price, self.fifty_day_average
-                )
+    def _generate_close_to_fifty_day_average_notification(self) -> Notification | None:
+        if self._is_close_to_sma(self.fifty_day_average):
+            return Notification.create_close_to_fifty_day_average(
+                self.current_price, self.fifty_day_average
             )
+        return None
 
-    def _generate_fifty_day_average_crossed_notification(self) -> None:
-        if self._has_crossed_sma(self.fifty_day_average) and not self._has_notification_type(
-            NotificationType.SMA50_CROSSED
-        ):
-            self._pending_notifications.append(
-                Notification.create_fifty_day_average_crossed(self.fifty_day_average)
+    def _generate_fifty_day_average_crossed_notification(self) -> Notification | None:
+        if self._has_crossed_sma(self.fifty_day_average):
+            return Notification.create_fifty_day_average_crossed(self.fifty_day_average)
+        return None
+
+    def _generate_close_to_two_hundred_day_average_notification(self) -> Notification | None:
+        if self._is_close_to_sma(self.two_hundred_day_average):
+            return Notification.create_close_to_two_hundred_day_average(
+                self.current_price, self.two_hundred_day_average
             )
+        return None
 
-    def _generate_close_to_two_hundred_day_average_notification(self) -> None:
-        if (
-            self._is_close_to_sma(self.two_hundred_day_average)
-            and not self._has_notification_type(NotificationType.CLOSE_TO_SMA200)
-            and not self._has_notification_type(NotificationType.SMA200_CROSSED)
-        ):
-            self._pending_notifications.append(
-                Notification.create_close_to_two_hundred_day_average(
-                    self.current_price, self.two_hundred_day_average
-                )
-            )
+    def _generate_two_hundred_day_average_crossed_notification(self) -> Notification | None:
+        if self._has_crossed_sma(self.two_hundred_day_average):
+            return Notification.create_two_hundred_day_average_crossed(self.two_hundred_day_average)
+        return None
 
-    def _generate_two_hundred_day_average_crossed_notification(self) -> None:
-        if self._has_crossed_sma(self.two_hundred_day_average) and not self._has_notification_type(
-            NotificationType.SMA200_CROSSED
-        ):
-            self._pending_notifications.append(
-                Notification.create_two_hundred_day_average_crossed(self.two_hundred_day_average)
-            )
-
-    def _generate_percentage_change_from_previous_close_notification(self) -> None:
+    def _generate_percentage_change_from_previous_close_notification(self) -> Notification | None:
         change_percentage = self._change_percentage_from_previous_close()
         if change_percentage is None:
-            return
-        notification = self._generate_percentage_change_notification(change_percentage)
-        if notification is not None and not self._has_notification_type(notification.type):
-            self._pending_notifications.append(notification)
+            return None
+        return self._generate_percentage_change_notification(change_percentage)
 
     def _has_any_increase_percentage_notification(self) -> bool:
         return any(n.type in self._INCREASE_LEVEL_TYPES for n in self._notifications)
@@ -495,63 +475,110 @@ class Stock:
     def _has_any_decrease_percentage_notification(self) -> bool:
         return any(n.type in self._DECREASE_LEVEL_TYPES for n in self._notifications)
 
-    def _generate_session_gains_erased_notification(self) -> None:
+    def _generate_session_gains_erased_notification(self) -> Notification | None:
         change_percentage = self._change_percentage_from_previous_close()
         if (
             change_percentage is not None
             and change_percentage < 0
             and self._has_any_increase_percentage_notification()
-            and not self._has_notification_type(NotificationType.SESSION_GAINS_ERASED)
         ):
-            self._pending_notifications.append(Notification.create_session_gains_erased())
-            self._reset_increase_percentage_notifications()
+            return Notification.create_session_gains_erased()
+        return None
 
-    def _generate_session_losses_erased_notification(self) -> None:
+    def _generate_session_losses_erased_notification(self) -> Notification | None:
         change_percentage = self._change_percentage_from_previous_close()
         if (
             change_percentage is not None
             and change_percentage > 0
             and self._has_any_decrease_percentage_notification()
-            and not self._has_notification_type(NotificationType.SESSION_LOSSES_ERASED)
         ):
-            self._pending_notifications.append(Notification.create_session_losses_erased())
-            self._reset_decrease_percentage_notifications()
+            return Notification.create_session_losses_erased()
+        return None
 
-    def _generate_target_price_notifications(self) -> None:
+    def _generate_target_price_notifications(self) -> list[Notification]:
+        notifications: list[Notification] = []
         remaining: list[TargetPrice] = []
         for target in self._targets:
             if target.is_reached(self):
-                self._pending_notifications.append(
+                notifications.append(
                     Notification.create_target_price_reached(self._symbol, target.target)
                 )
                 self._fulfilled_targets.append(target)
             else:
                 remaining.append(target)
         self._targets = remaining
+        return notifications
+
+    def _collect_market_open_candidates(self) -> list[Notification]:
+        candidates = [
+            n
+            for n in (
+                self._generate_fifty_day_average_crossed_notification(),
+                self._generate_close_to_fifty_day_average_notification(),
+                self._generate_two_hundred_day_average_crossed_notification(),
+                self._generate_close_to_two_hundred_day_average_notification(),
+                self._generate_new_52_week_high_notification(),
+                self._generate_new_52_week_low_notification(),
+                self._generate_percentage_change_from_previous_close_notification(),
+                self._generate_session_gains_erased_notification(),
+                self._generate_session_losses_erased_notification(),
+            )
+            if n is not None
+        ]
+        candidates.extend(self._generate_target_price_notifications())
+        return candidates
+
+    def _deduplicate(self, candidates: list[Notification]) -> list[Notification]:
+        accepted: list[Notification] = []
+        accepted_types: set[NotificationType] = set()
+        historical_types = {n.type for n in self._notifications}
+
+        for candidate in candidates:
+            if candidate.type == NotificationType.TARGET_PRICE_REACHED:
+                accepted.append(candidate)
+                continue
+
+            if candidate.type in historical_types or candidate.type in accepted_types:
+                continue
+
+            suppressor = self._CROSS_TYPE_SUPPRESSIONS.get(candidate.type)
+            if suppressor is not None and (
+                suppressor in historical_types or suppressor in accepted_types
+            ):
+                continue
+
+            accepted.append(candidate)
+            accepted_types.add(candidate.type)
+
+            if candidate.type == NotificationType.SESSION_GAINS_ERASED:
+                self._reset_increase_percentage_notifications()
+                historical_types -= self._INCREASE_LEVEL_TYPES
+            elif candidate.type == NotificationType.SESSION_LOSSES_ERASED:
+                self._reset_decrease_percentage_notifications()
+                historical_types -= self._DECREASE_LEVEL_TYPES
+
+        return accepted
 
     def _generate_market_open_notifications(self) -> None:
-        had_market_open = self._has_notification_type(NotificationType.REGULAR_MARKET_OPEN)
-        self._generate_regular_market_open_notification()
-        if not had_market_open and not self._is_crypto():
-            return
-        self._generate_fifty_day_average_crossed_notification()
-        self._generate_close_to_fifty_day_average_notification()
-        self._generate_two_hundred_day_average_crossed_notification()
-        self._generate_close_to_two_hundred_day_average_notification()
-        self._generate_new_52_week_high_notification()
-        self._generate_new_52_week_low_notification()
-        self._generate_percentage_change_from_previous_close_notification()
-        self._generate_session_gains_erased_notification()
-        self._generate_session_losses_erased_notification()
-        self._generate_target_price_notifications()
+        had_market_open = any(
+            n.type == NotificationType.REGULAR_MARKET_OPEN for n in self._notifications
+        )
 
-    def _generate_regular_market_closed_notification(self) -> None:
-        if self._has_notification_type(NotificationType.REGULAR_MARKET_CLOSED):
-            return
-        self._pending_notifications.append(
-            Notification.create_regular_market_closed(
-                self.symbol, self.current_price, self.previous_close_price
-            )
+        candidates: list[Notification] = []
+        market_open = self._generate_regular_market_open_notification()
+        if market_open is not None:
+            candidates.append(market_open)
+
+        if had_market_open or self._is_crypto():
+            candidates.extend(self._collect_market_open_candidates())
+
+        self._pending_notifications.extend(self._deduplicate(candidates))
+
+    def _generate_regular_market_closed_notification(self) -> Notification | None:
+        if self._is_crypto():
+            return None
+        return Notification.create_regular_market_closed(
+            self.symbol, self.current_price, self.previous_close_price
         )
 
     def _reset_increase_percentage_notifications(self) -> None:
@@ -565,6 +592,7 @@ class Stock:
         ]
 
     def _generate_market_closed_notifications(self) -> None:
-        if self._is_crypto():
+        notification = self._generate_regular_market_closed_notification()
+        if notification is None:
             return
-        self._generate_regular_market_closed_notification()
+        self._pending_notifications.extend(self._deduplicate([notification]))
