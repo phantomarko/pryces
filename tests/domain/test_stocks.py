@@ -1158,6 +1158,63 @@ class TestNotificationSuppressionRules:
         messages = generate_and_drain(stock)
         assert not any("rose to" in m and "52-week" not in m for m in messages)
 
+    # --- Rule: percentage change suppressed by market open (same threshold, transient) ---
+
+    def test_percentage_suppressed_when_same_level_as_market_open(self):
+        stock = make_stock(
+            current_price="106.00",
+            previous_close_price="100.00",
+            open_price="106.00",
+        )
+        messages = generate_and_drain(stock)
+        assert any("opened at" in m for m in messages)
+        assert not any("rose to" in m for m in messages)
+
+    def test_percentage_not_suppressed_when_different_level_from_market_open(self):
+        stock = make_stock(
+            current_price="120.00",
+            previous_close_price="100.00",
+            open_price="101.00",
+        )
+        messages = generate_and_drain(stock)
+        assert any("opened at" in m for m in messages)
+        assert any("rose to" in m for m in messages)
+
+    def test_percentage_not_suppressed_when_no_market_open(self):
+        stock = make_stock(
+            current_price="106.00",
+            previous_close_price="100.00",
+            open_price="106.00",
+            kind=InstrumentType.CRYPTO,
+        )
+        messages = generate_and_drain(stock)
+        assert any("rose to" in m for m in messages)
+
+    def test_percentage_not_suppressed_in_next_cycle_after_transient_suppression(self):
+        stock = make_stock(
+            current_price="106.00",
+            previous_close_price="100.00",
+            open_price="106.00",
+        )
+        messages1 = generate_and_drain(stock)
+        assert any("opened at" in m for m in messages1)
+        assert not any("rose to" in m for m in messages1)
+
+        stock.update(
+            make_stock(current_price="106.00", previous_close_price="100.00", open_price="106.00")
+        )
+        messages2 = generate_and_drain(stock)
+        assert any("rose to" in m for m in messages2)
+
+    def test_percentage_not_suppressed_when_open_price_is_none(self):
+        stock = make_stock(
+            current_price="106.00",
+            previous_close_price="100.00",
+        )
+        messages = generate_and_drain(stock)
+        assert any("opened at" in m for m in messages)
+        assert any("rose to" in m for m in messages)
+
     # --- Rule: session gains/losses erased is never suppressed ---
 
     def test_gains_erased_not_suppressed_by_sma(self):

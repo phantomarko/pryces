@@ -390,25 +390,33 @@ class Stock:
             return _LEVEL_2_INCREASE_THRESHOLDS, _LEVEL_2_DECREASE_THRESHOLDS
         return self._INSTRUMENT_THRESHOLDS[self._kind]
 
-    def _generate_percentage_change_notification(
-        self, change_percentage: Decimal
-    ) -> Notification | None:
+    def _resolve_percentage_level(self, change_percentage: Decimal) -> NotificationType | None:
         inc, dec = self._get_percentage_thresholds()
-
         if change_percentage > 0:
             for threshold, notification_type in inc:
                 if change_percentage >= threshold:
-                    return Notification.create_percentage_change(
-                        notification_type, self.symbol, self.current_price, change_percentage
-                    )
+                    return notification_type
         elif change_percentage < 0:
             for threshold, notification_type in dec:
                 if change_percentage <= threshold:
-                    return Notification.create_percentage_change(
-                        notification_type, self.symbol, self.current_price, change_percentage
-                    )
-
+                    return notification_type
         return None
+
+    def _compute_market_open_percentage_level(self) -> NotificationType | None:
+        if self._open_price is None or self._previous_close_price is None:
+            return None
+        change = _calculate_percentage_change(self._open_price, self._previous_close_price)
+        return self._resolve_percentage_level(change)
+
+    def _generate_percentage_change_notification(
+        self, change_percentage: Decimal
+    ) -> Notification | None:
+        notification_type = self._resolve_percentage_level(change_percentage)
+        if notification_type is None:
+            return None
+        return Notification.create_percentage_change(
+            notification_type, self.symbol, self.current_price, change_percentage
+        )
 
     def _generate_new_52_week_high_notification(self) -> Notification | None:
         if (
@@ -533,6 +541,7 @@ class Stock:
         accepted: list[Notification] = []
         accepted_types: set[NotificationType] = set()
         historical_types = {n.type for n in self._notifications}
+        market_open_percentage_level: NotificationType | None = None
 
         for candidate in candidates:
             if candidate.type == NotificationType.TARGET_PRICE_REACHED:
@@ -548,8 +557,17 @@ class Stock:
             ):
                 continue
 
+            if (
+                market_open_percentage_level is not None
+                and candidate.type == market_open_percentage_level
+            ):
+                continue
+
             accepted.append(candidate)
             accepted_types.add(candidate.type)
+
+            if candidate.type == NotificationType.REGULAR_MARKET_OPEN:
+                market_open_percentage_level = self._compute_market_open_percentage_level()
 
             if candidate.type == NotificationType.SESSION_GAINS_ERASED:
                 self._reset_increase_percentage_notifications()
