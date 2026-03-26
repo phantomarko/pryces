@@ -198,8 +198,6 @@ class TestNotificationService:
 
     def test_sends_notifications_via_message_sender(self):
         stock = create_stock_crossing_fifty_day("AAPL")
-        stock.generate_notifications()
-        stock.drain_notifications(self.formatter)
 
         self.service.send_stock_notifications(stock)
 
@@ -209,11 +207,7 @@ class TestNotificationService:
 
     def test_handles_multiple_stocks_independently(self):
         stock1 = create_stock_crossing_fifty_day("AAPL")
-        stock1.generate_notifications()
-        stock1.drain_notifications(self.formatter)
         stock2 = create_stock_crossing_fifty_day("GOOGL")
-        stock2.generate_notifications()
-        stock2.drain_notifications(self.formatter)
 
         self.service.send_stock_notifications(stock1)
         self.service.send_stock_notifications(stock2)

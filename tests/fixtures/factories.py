@@ -114,7 +114,7 @@ def make_stock(
 
 
 def open_stock_after_burn(**kwargs) -> Stock:
-    """Constructs a stock and burns the market-open notification cycle."""
+    """Constructs a stock and pre-seeds notification history by running one full cycle."""
     stock = make_stock(**kwargs)
     stock.generate_notifications()
     stock.drain_notifications(_formatter)
@@ -127,7 +127,7 @@ def generate_and_drain(stock: Stock) -> list[str]:
 
 
 def open_stock_ready_for_target(entry_price: str, target: str, hit_price: str) -> Stock:
-    """Stock that has been market-open burned, target set, and updated to hit price."""
+    """Stock with pre-seeded history, target set, and updated to hit price."""
     stock = open_stock_after_burn(current_price=entry_price, previous_close_price="195.00")
     stock.sync_targets([Decimal(target)])
     stock.update(make_stock(current_price=hit_price, previous_close_price="195.00"))

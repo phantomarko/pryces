@@ -49,7 +49,7 @@ class TestConsolidatingNotificationFormatter:
 
         assert result == [header.message]
 
-    def test_standalone_notifications_emitted_separately(self):
+    def test_market_open_emitted_individually_when_no_milestones(self):
         market_open = Notification.create_regular_market_open(
             "AAPL", Decimal("150.00"), Decimal("148.50")
         )
@@ -57,6 +57,50 @@ class TestConsolidatingNotificationFormatter:
         result = self.formatter.format([market_open], self.context)
 
         assert result == [market_open.message]
+
+    def test_market_open_as_header_when_milestones_present(self):
+        market_open = Notification.create_regular_market_open(
+            "AAPL", Decimal("150.00"), Decimal("148.50")
+        )
+        milestone = Notification.create_fifty_day_average_crossed(Decimal("145.00"))
+
+        result = self.formatter.format([market_open, milestone], self.context)
+
+        assert len(result) == 1
+        assert market_open.message in result[0]
+        assert milestone.message in result[0]
+
+    def test_market_open_takes_header_priority_over_percentage(self):
+        market_open = Notification.create_regular_market_open(
+            "AAPL", Decimal("150.00"), Decimal("148.50")
+        )
+        percentage = Notification.create_percentage_change(
+            NotificationType.LEVEL_1_INCREASE, "AAPL", Decimal("150.00"), Decimal("1.01")
+        )
+        milestone = Notification.create_fifty_day_average_crossed(Decimal("145.00"))
+
+        result = self.formatter.format([market_open, percentage, milestone], self.context)
+
+        assert len(result) == 1
+        lines = result[0].split("\n")
+        assert market_open.message == lines[0]
+        assert percentage.message in lines
+        assert milestone.message in lines
+
+    def test_market_open_as_header_with_percentage_when_no_milestones(self):
+        market_open = Notification.create_regular_market_open(
+            "AAPL", Decimal("150.00"), Decimal("148.50")
+        )
+        percentage = Notification.create_percentage_change(
+            NotificationType.LEVEL_1_INCREASE, "AAPL", Decimal("150.00"), Decimal("1.01")
+        )
+
+        result = self.formatter.format([market_open, percentage], self.context)
+
+        assert len(result) == 1
+        lines = result[0].split("\n")
+        assert market_open.message == lines[0]
+        assert percentage.message == lines[1]
 
     def test_standalone_emitted_separately_from_consolidated_milestones(self):
         header = Notification.create_percentage_change(

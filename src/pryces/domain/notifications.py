@@ -166,6 +166,14 @@ class Notification:
         )
 
     @staticmethod
+    def create_plain_header(symbol: str, current_price: Decimal) -> "Notification":
+        return Notification(
+            Notification._CREATION_KEY,
+            NotificationType.LEVEL_1_INCREASE,
+            f"{symbol} at {current_price}",
+        )
+
+    @staticmethod
     def create_target_price_reached(symbol: str, target_price: Decimal) -> "Notification":
         message = f"🎯 {symbol} hit target of {target_price}"
         return Notification(
@@ -175,7 +183,6 @@ class Notification:
 
 STANDALONE_NOTIFICATION_TYPES = frozenset(
     {
-        NotificationType.REGULAR_MARKET_OPEN,
         NotificationType.REGULAR_MARKET_CLOSED,
         NotificationType.TARGET_PRICE_REACHED,
     }

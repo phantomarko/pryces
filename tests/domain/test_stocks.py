@@ -98,7 +98,7 @@ class TestHasCrossedSMA:
         assert not any("Crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_above(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="150.00",
             previous_close_price="140.00",
             fifty_day_average="145.00",
@@ -107,7 +107,7 @@ class TestHasCrossedSMA:
         assert any("Crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_below(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="140.00",
             previous_close_price="150.00",
             fifty_day_average="145.00",
@@ -129,7 +129,7 @@ class TestHasCrossedSMA:
         assert not any("Crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_above_when_current_equals_average(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="145.00",
             previous_close_price="140.00",
             fifty_day_average="145.00",
@@ -138,7 +138,7 @@ class TestHasCrossedSMA:
         assert any("Crossed SMA50" in m for m in messages)
 
     def test_has_crossed_sma_detects_crossing_below_when_current_equals_average(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="145.00",
             previous_close_price="150.00",
             fifty_day_average="145.00",
@@ -241,14 +241,14 @@ class TestIsCloseToSMA:
 
 class TestCloseToSMA50Notifications:
     def test_generate_notifications_adds_close_to_sma50_when_approaching_from_below(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="100.00", previous_close_price="95.00", fifty_day_average="102.00"
         )
         messages = generate_and_drain(stock)
         assert any("Below SMA50 at" in m for m in messages)
 
     def test_generate_notifications_adds_close_to_sma50_when_approaching_from_above(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="100.00", previous_close_price="105.00", fifty_day_average="98.00"
         )
         messages = generate_and_drain(stock)
@@ -273,7 +273,7 @@ class TestCloseToSMA50Notifications:
 
 class TestCloseToSMA200Notifications:
     def test_generate_notifications_adds_close_to_sma200_when_approaching_from_below(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="100.00",
             previous_close_price="95.00",
             two_hundred_day_average="102.00",
@@ -282,7 +282,7 @@ class TestCloseToSMA200Notifications:
         assert any("Below SMA200 at" in m for m in messages)
 
     def test_generate_notifications_adds_close_to_sma200_when_approaching_from_above(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="100.00",
             previous_close_price="105.00",
             two_hundred_day_average="98.00",
@@ -313,12 +313,16 @@ class TestCloseToSMA200Notifications:
 
 class TestPercentageFromPreviousClose:
     def test_generate_notifications_rises_when_positive_percentage(self):
-        stock = open_stock_after_burn(current_price="150.00", previous_close_price="100.00")
+        stock = make_stock(current_price="100.00", previous_close_price="100.00")
+        generate_and_drain(stock)
+        stock.update(make_stock(current_price="150.00", previous_close_price="100.00"))
         messages = generate_and_drain(stock)
         assert any("rose to" in m for m in messages)
 
     def test_generate_notifications_drops_when_negative_percentage(self):
-        stock = open_stock_after_burn(current_price="90.00", previous_close_price="100.00")
+        stock = make_stock(current_price="100.00", previous_close_price="100.00")
+        generate_and_drain(stock)
+        stock.update(make_stock(current_price="90.00", previous_close_price="100.00"))
         messages = generate_and_drain(stock)
         assert any("dropped to" in m for m in messages)
 
@@ -341,7 +345,7 @@ class TestSMACrossingNotifications:
         assert any("Crossed SMA200" in m for m in messages)
 
     def test_generate_notifications_adds_both_notifications(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="150.00",
             previous_close_price="130.00",
             fifty_day_average="145.00",
@@ -397,39 +401,39 @@ class TestRegularMarketOpenNotifications:
         assert messages == []
 
 
-class TestMarketOpenDeferral:
-    def test_first_call_returns_only_market_open_notification(self):
+class TestMarketOpenWithOtherNotifications:
+    def test_market_open_generates_all_notifications_on_first_call(self):
         stock = make_stock(
-            current_price="106.00", previous_close_price="100.00", fifty_day_average="103.00"
+            current_price="150.00",
+            previous_close_price="140.00",
+            fifty_day_average="145.00",
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert "opened at" in messages[0]
+        assert "Crossed SMA50" in messages[0]
 
-    def test_second_call_returns_deferred_notifications(self):
-        stock = open_stock_after_burn(
+    def test_market_open_as_header_with_milestones(self):
+        stock = make_stock(
             current_price="150.00",
             previous_close_price="140.00",
             fifty_day_average="145.00",
         )
+        messages = generate_and_drain(stock)
+        lines = messages[0].split("\n")
+        assert "opened at" in lines[0]
+        assert any("Crossed SMA50" in l for l in lines)
+
+    def test_market_open_alone_when_no_milestones(self):
+        stock = make_stock(current_price="150.00", previous_close_price="148.00")
+        messages = generate_and_drain(stock)
+        assert any("opened at" in m for m in messages)
+
+    def test_market_open_absorbs_percentage_into_single_message(self):
+        stock = make_stock(current_price="106.00", previous_close_price="100.00")
         messages = generate_and_drain(stock)
         assert len(messages) == 1
-        assert any("Crossed SMA50" in m for m in messages)
-
-    def test_non_first_open_generates_all_notifications_together(self):
-        stock = make_stock(current_price="150.00", previous_close_price="148.00")
-        generate_and_drain(stock)
-        source = make_stock(
-            current_price="150.00",
-            previous_close_price="140.00",
-            fifty_day_average="145.00",
-        )
-        stock.update(source)
-
-        messages = generate_and_drain(stock)
-
-        assert any("Crossed SMA50" in m for m in messages)
-        assert any("rose to" in m for m in messages)
+        assert "opened at" in messages[0]
 
 
 class TestMarketStatePost:
@@ -497,10 +501,18 @@ class TestPercentageChangeNotifications:
         ],
     )
     def test_stock_percentage_thresholds(self, current_price, previous_close, expected_text):
-        stock = open_stock_after_burn(
-            current_price=current_price,
+        stock = make_stock(
+            current_price=previous_close,
             previous_close_price=previous_close,
             kind=InstrumentType.STOCK,
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price=current_price,
+                previous_close_price=previous_close,
+                kind=InstrumentType.STOCK,
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
@@ -523,10 +535,18 @@ class TestPercentageChangeNotifications:
         ],
     )
     def test_default_percentage_thresholds(self, current_price, previous_close, expected_text):
-        stock = open_stock_after_burn(
-            current_price=current_price,
+        stock = make_stock(
+            current_price=previous_close,
             previous_close_price=previous_close,
             kind=InstrumentType.ETF,
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price=current_price,
+                previous_close_price=previous_close,
+                kind=InstrumentType.ETF,
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
@@ -559,28 +579,44 @@ class TestPercentageChangeNotifications:
         assert any(expected_text in m for m in messages)
 
     def test_index_percentage_thresholds(self):
-        stock = open_stock_after_burn(
-            current_price="101.10", previous_close_price="100.00", kind=InstrumentType.INDEX
+        stock = make_stock(
+            current_price="100.00", previous_close_price="100.00", kind=InstrumentType.INDEX
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price="101.10", previous_close_price="100.00", kind=InstrumentType.INDEX
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_none_kind_uses_default_thresholds(self):
-        stock = open_stock_after_burn(
-            current_price="102.10", previous_close_price="100.00", kind=None
-        )
+        stock = make_stock(current_price="100.00", previous_close_price="100.00", kind=None)
+        generate_and_drain(stock)
+        stock.update(make_stock(current_price="102.10", previous_close_price="100.00", kind=None))
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_large_cap_stock_uses_level_2_thresholds(self):
-        stock = open_stock_after_burn(
-            current_price="102.10",
+        stock = make_stock(
+            current_price="100.00",
             previous_close_price="100.00",
             kind=InstrumentType.STOCK,
             currency=Currency.USD,
             market_cap="15000000000",
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price="102.10",
+                previous_close_price="100.00",
+                kind=InstrumentType.STOCK,
+                currency=Currency.USD,
+                market_cap="15000000000",
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
@@ -599,12 +635,22 @@ class TestPercentageChangeNotifications:
         assert any("opened at" in m for m in messages)
 
     def test_large_cap_stock_at_exact_level_2_threshold(self):
-        stock = open_stock_after_burn(
-            current_price="102.00",
+        stock = make_stock(
+            current_price="100.00",
             previous_close_price="100.00",
             kind=InstrumentType.STOCK,
             currency=Currency.USD,
             market_cap="15000000000",
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price="102.00",
+                previous_close_price="100.00",
+                kind=InstrumentType.STOCK,
+                currency=Currency.USD,
+                market_cap="15000000000",
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
@@ -665,20 +711,36 @@ class TestPercentageChangeNotifications:
         assert any("opened at" in m for m in messages)
 
     def test_stock_percentage_at_exact_threshold(self):
-        stock = open_stock_after_burn(
-            current_price="104.00",
+        stock = make_stock(
+            current_price="100.00",
             previous_close_price="100.00",
             kind=InstrumentType.STOCK,
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price="104.00",
+                previous_close_price="100.00",
+                kind=InstrumentType.STOCK,
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
 
     def test_default_percentage_at_exact_threshold(self):
-        stock = open_stock_after_burn(
-            current_price="102.00",
+        stock = make_stock(
+            current_price="100.00",
             previous_close_price="100.00",
             kind=InstrumentType.ETF,
+        )
+        generate_and_drain(stock)
+        stock.update(
+            make_stock(
+                current_price="102.00",
+                previous_close_price="100.00",
+                kind=InstrumentType.ETF,
+            )
         )
         messages = generate_and_drain(stock)
         assert len(messages) == 1
@@ -976,21 +1038,18 @@ class TestDeduplication:
         stock.generate_notifications()
         result1 = stock.drain_notifications(_formatter)
         assert len(result1) > 0
+
         stock.generate_notifications()
         result2 = stock.drain_notifications(_formatter)
-        assert len(result2) > 0
 
-        stock.generate_notifications()
-        result3 = stock.drain_notifications(_formatter)
-
-        assert result3 == []
+        assert result2 == []
 
 
 class TestNotificationSuppressionRules:
     # --- Rule: close-to-SMA suppressed by same SMA crossing ---
 
     def test_close_to_sma50_suppressed_by_sma50_crossing(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="101.00", previous_close_price="99.00", fifty_day_average="100.00"
         )
         first_messages = generate_and_drain(stock)
@@ -1005,7 +1064,7 @@ class TestNotificationSuppressionRules:
         assert not any("SMA50 at" in m for m in messages)
 
     def test_close_to_sma200_suppressed_by_sma200_crossing(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="101.00", previous_close_price="99.00", two_hundred_day_average="100.00"
         )
         first_messages = generate_and_drain(stock)
@@ -1022,14 +1081,14 @@ class TestNotificationSuppressionRules:
         assert not any("SMA200 at" in m for m in messages)
 
     def test_close_to_sma50_not_suppressed_when_no_crossing(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="98.00", previous_close_price="95.00", fifty_day_average="100.00"
         )
         messages = generate_and_drain(stock)
         assert any("Below SMA50 at" in m for m in messages)
 
     def test_close_to_sma200_not_suppressed_when_no_crossing(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="98.00", previous_close_price="95.00", two_hundred_day_average="100.00"
         )
         messages = generate_and_drain(stock)
@@ -1058,7 +1117,9 @@ class TestNotificationSuppressionRules:
         assert not any("rose to 100" in m and "SMA" not in m for m in messages)
 
     def test_percentage_not_suppressed_without_sma(self):
-        stock = open_stock_after_burn(current_price="106.00", previous_close_price="100.00")
+        stock = make_stock(current_price="100.00", previous_close_price="100.00")
+        generate_and_drain(stock)
+        stock.update(make_stock(current_price="106.00", previous_close_price="100.00"))
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert any("rose to" in m for m in messages)
@@ -1104,7 +1165,6 @@ class TestNotificationSuppressionRules:
             current_price="121.00", previous_close_price="100.00", fifty_day_average="110.00"
         )
         generate_and_drain(stock)
-        generate_and_drain(stock)
         source = make_stock(
             current_price="99.00", previous_close_price="100.00", fifty_day_average="100.50"
         )
@@ -1115,16 +1175,12 @@ class TestNotificationSuppressionRules:
 
 class TestSessionGainsLossesErased:
     def _create_stock_with_percentage_history(self, initial_price, previous_close, final_price):
-        """Creates a stock that has gone through: market open → percentage threshold → price change."""
+        """Creates a stock that has gone through a percentage threshold, then price change."""
         stock = make_stock(
             current_price=str(initial_price),
             previous_close_price=str(previous_close),
         )
-        # Cycle 1: market open
         generate_and_drain(stock)
-        # Cycle 2: percentage threshold fires
-        generate_and_drain(stock)
-        # Update to final price
         source = make_stock(
             current_price=str(final_price),
             previous_close_price=str(previous_close),
@@ -1149,7 +1205,7 @@ class TestSessionGainsLossesErased:
         assert any("Erased session losses" in m for m in messages)
 
     def test_gains_erased_does_not_fire_without_prior_percentage_threshold(self):
-        stock = make_stock(current_price="103.00", previous_close_price="100.00")
+        stock = make_stock(current_price="101.90", previous_close_price="100.00")
         generate_and_drain(stock)
         # Price drops below 0% but no percentage threshold was ever recorded
         source = make_stock(current_price="99.00", previous_close_price="100.00")
@@ -1158,7 +1214,7 @@ class TestSessionGainsLossesErased:
         assert not any("Erased session" in m for m in messages)
 
     def test_losses_erased_does_not_fire_without_prior_percentage_threshold(self):
-        stock = make_stock(current_price="97.00", previous_close_price="100.00")
+        stock = make_stock(current_price="98.10", previous_close_price="100.00")
         generate_and_drain(stock)
         # Price rises above 0% but no percentage threshold was ever recorded
         source = make_stock(current_price="101.00", previous_close_price="100.00")
@@ -1483,7 +1539,7 @@ class TestCryptoNotifications:
 
 class TestConsolidatedNotifications:
     def test_single_milestone_produces_header_with_bullet(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="150.00",
             previous_close_price="140.00",
             fifty_day_average="145.00",
@@ -1491,12 +1547,12 @@ class TestConsolidatedNotifications:
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         lines = messages[0].split("\n")
-        assert len(lines) == 2
-        assert "rose to 150.00" in lines[0]
-        assert lines[1] == "⚠️ Crossed SMA50 at 145.00"
+        assert "opened at" in lines[0]
+        assert "⚠️ Crossed SMA50 at 145.00" in lines
+        assert "rose to" in messages[0]
 
     def test_multiple_milestones_produce_single_consolidated_message(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="150.00",
             previous_close_price="130.00",
             fifty_day_average="145.00",
@@ -1505,31 +1561,21 @@ class TestConsolidatedNotifications:
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         lines = messages[0].split("\n")
-        assert len(lines) == 3
-        assert "rose to 150.00" in lines[0]
-        assert "⚠️ Crossed SMA50" in lines[1]
-        assert "⚠️ Crossed SMA200" in lines[2]
-
-    def test_percentage_suppressed_when_milestones_exist(self):
-        stock = open_stock_after_burn(
-            current_price="150.00",
-            previous_close_price="140.00",
-            fifty_day_average="145.00",
-        )
-        messages = generate_and_drain(stock)
-        assert len(messages) == 1
-        lines = messages[0].split("\n")
-        # Only header + milestone bullet, no separate percentage line
-        assert len(lines) == 2
+        assert "opened at" in lines[0]
+        assert any("⚠️ Crossed SMA50" in l for l in lines)
+        assert any("⚠️ Crossed SMA200" in l for l in lines)
+        assert any("rose to" in l for l in lines)
 
     def test_header_only_emitted_when_no_milestones(self):
-        stock = open_stock_after_burn(current_price="106.00", previous_close_price="100.00")
+        stock = make_stock(current_price="100.00", previous_close_price="100.00")
+        generate_and_drain(stock)
+        stock.update(make_stock(current_price="106.00", previous_close_price="100.00"))
         messages = generate_and_drain(stock)
         assert len(messages) == 1
         assert "\n" not in messages[0]
         assert "rose to" in messages[0]
 
-    def test_standalone_messages_emitted_separately(self):
+    def test_market_open_emitted_individually_when_no_milestones(self):
         stock = make_stock(
             current_price="150.00", open_price="149.75", previous_close_price="148.00"
         )
@@ -1538,7 +1584,7 @@ class TestConsolidatedNotifications:
         assert "opened at" in messages[0]
 
     def test_targets_emitted_separately_from_consolidated_milestones(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="100.00",
             previous_close_price="95.00",
             fifty_day_average="102.00",
@@ -1551,7 +1597,7 @@ class TestConsolidatedNotifications:
         assert len(targets) == 1
 
     def test_percentage_dedup_preserved_after_consolidation_suppression(self):
-        stock = open_stock_after_burn(
+        stock = make_stock(
             current_price="150.00",
             previous_close_price="140.00",
             fifty_day_average="145.00",

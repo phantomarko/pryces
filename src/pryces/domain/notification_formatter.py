@@ -27,41 +27,44 @@ class NotificationFormatter(ABC):
 class ConsolidatingNotificationFormatter(NotificationFormatter):
     def format(self, notifications: list[Notification], context: StockContext) -> list[str]:
         standalone: list[Notification] = []
-        milestones: list[Notification] = []
-        header_only: list[Notification] = []
+        consolidatable: list[Notification] = []
 
         for n in notifications:
             if n.type in STANDALONE_NOTIFICATION_TYPES:
                 standalone.append(n)
-            elif n.type in MILESTONE_NOTIFICATION_TYPES:
-                milestones.append(n)
             else:
-                header_only.append(n)
+                consolidatable.append(n)
 
         messages: list[str] = []
 
-        if milestones:
-            header = self._build_consolidation_header(header_only, context)
-            lines = [header]
-            for m in milestones:
-                lines.append(m.message)
+        if consolidatable:
+            header = self._pick_header(consolidatable, context)
+            body = [n.message for n in consolidatable if n is not header]
+            lines = [header.message] + body
             messages.append("\n".join(lines))
-        else:
-            for n in header_only:
-                messages.append(n.message)
 
         for n in standalone:
             messages.append(n.message)
 
         return messages
 
-    def _build_consolidation_header(
-        self, header_only: list[Notification], context: StockContext
-    ) -> str:
-        for n in header_only:
-            return n.message
+    def _pick_header(
+        self, consolidatable: list[Notification], context: StockContext
+    ) -> Notification:
+        for n in consolidatable:
+            if n.type == NotificationType.REGULAR_MARKET_OPEN:
+                return n
+        for n in consolidatable:
+            if (
+                n.type != NotificationType.REGULAR_MARKET_OPEN
+                and n.type not in MILESTONE_NOTIFICATION_TYPES
+            ):
+                return n
+        return self._generate_fallback_header(context)
+
+    def _generate_fallback_header(self, context: StockContext) -> Notification:
         if context.previous_close_price is None:
-            return f"{context.symbol} at {context.current_price}"
+            return Notification.create_plain_header(context.symbol, context.current_price)
         change_pct = _calculate_percentage_change(
             context.current_price, context.previous_close_price
         )
@@ -70,4 +73,4 @@ class ConsolidatingNotificationFormatter(NotificationFormatter):
             context.symbol,
             context.current_price,
             change_pct,
-        ).message
+        )

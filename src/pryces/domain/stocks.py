@@ -513,13 +513,14 @@ class Stock:
         candidates = [
             n
             for n in (
+                self._generate_regular_market_open_notification(),
+                self._generate_percentage_change_from_previous_close_notification(),
                 self._generate_fifty_day_average_crossed_notification(),
                 self._generate_close_to_fifty_day_average_notification(),
                 self._generate_two_hundred_day_average_crossed_notification(),
                 self._generate_close_to_two_hundred_day_average_notification(),
                 self._generate_new_52_week_high_notification(),
                 self._generate_new_52_week_low_notification(),
-                self._generate_percentage_change_from_previous_close_notification(),
                 self._generate_session_gains_erased_notification(),
                 self._generate_session_losses_erased_notification(),
             )
@@ -560,18 +561,7 @@ class Stock:
         return accepted
 
     def _generate_market_open_notifications(self) -> None:
-        had_market_open = any(
-            n.type == NotificationType.REGULAR_MARKET_OPEN for n in self._notifications
-        )
-
-        candidates: list[Notification] = []
-        market_open = self._generate_regular_market_open_notification()
-        if market_open is not None:
-            candidates.append(market_open)
-
-        if had_market_open or self._is_crypto():
-            candidates.extend(self._collect_market_open_candidates())
-
+        candidates = self._collect_market_open_candidates()
         self._pending_notifications.extend(self._deduplicate(candidates))
 
     def _generate_regular_market_closed_notification(self) -> Notification | None:
