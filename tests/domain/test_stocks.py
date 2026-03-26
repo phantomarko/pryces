@@ -1190,7 +1190,7 @@ class TestNotificationSuppressionRules:
         messages = generate_and_drain(stock)
         assert any("rose to" in m for m in messages)
 
-    def test_percentage_not_suppressed_in_next_cycle_after_transient_suppression(self):
+    def test_percentage_stays_suppressed_in_next_cycle_after_market_open_suppression(self):
         stock = make_stock(
             current_price="106.00",
             previous_close_price="100.00",
@@ -1204,7 +1204,25 @@ class TestNotificationSuppressionRules:
             make_stock(current_price="106.00", previous_close_price="100.00", open_price="106.00")
         )
         messages2 = generate_and_drain(stock)
-        assert any("rose to" in m for m in messages2)
+        assert not any("rose to" in m for m in messages2)
+
+    def test_percentage_suppressed_by_market_open_fires_after_session_erased(self):
+        stock = make_stock(
+            current_price="106.00",
+            previous_close_price="100.00",
+            open_price="106.00",
+        )
+        generate_and_drain(stock)
+
+        stock.update(make_stock(current_price="99.00", previous_close_price="100.00"))
+        messages_erased = generate_and_drain(stock)
+        assert any("Erased session gains" in m for m in messages_erased)
+
+        stock.update(
+            make_stock(current_price="106.00", previous_close_price="100.00", open_price="106.00")
+        )
+        messages_after = generate_and_drain(stock)
+        assert any("rose to" in m for m in messages_after)
 
     def test_percentage_not_suppressed_when_open_price_is_none(self):
         stock = make_stock(

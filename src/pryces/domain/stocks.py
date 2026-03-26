@@ -561,6 +561,8 @@ class Stock:
                 market_open_percentage_level is not None
                 and candidate.type == market_open_percentage_level
             ):
+                self._notifications.append(candidate)
+                historical_types.add(candidate.type)
                 continue
 
             accepted.append(candidate)
