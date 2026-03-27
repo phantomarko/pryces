@@ -305,12 +305,20 @@ class TestSymbolRemoveCommand:
 
 class TestSymbolsCommand:
 
-    def test_lists_all_symbols(self):
-        cmd = SymbolsCommand(lambda: ["AAPL", "GOOGL", "MSFT"])
+    def test_lists_all_symbols_with_targets(self):
+        cmd = SymbolsCommand(
+            lambda: [
+                ("AAPL", [Decimal("150"), Decimal("200.50")]),
+                ("GOOGL", []),
+                ("MSFT", [Decimal("300")]),
+            ]
+        )
 
         result = cmd.execute([])
 
-        assert result == "📋 AAPL, GOOGL, MSFT"
+        assert result == (
+            "📋 Symbols & targets:\n" "1) AAPL — 🎯 150, 200.50\n" "2) GOOGL\n" "3) MSFT — 🎯 300"
+        )
 
     def test_returns_no_symbols_message_when_empty(self):
         cmd = SymbolsCommand(lambda: [])

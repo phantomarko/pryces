@@ -23,7 +23,7 @@ from .bot_commands import (
 from .config import (
     find_config_by_name,
     find_config_for_symbol,
-    get_all_tracked_symbols,
+    get_all_tracked_symbols_with_targets,
     get_config_names,
 )
 
@@ -70,7 +70,7 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     targets_cmd = TargetsCommand(find_config_for_symbol)
     target_add_cmd = TargetAddCommand(find_config_for_symbol)
     target_remove_cmd = TargetRemoveCommand(find_config_for_symbol)
-    symbols_cmd = SymbolsCommand(get_all_tracked_symbols)
+    symbols_cmd = SymbolsCommand(get_all_tracked_symbols_with_targets)
     configs_cmd = ConfigsCommand(get_config_names)
     symbol_add_cmd = SymbolAddCommand(find_config_by_name)
     symbol_remove_cmd = SymbolRemoveCommand(find_config_for_symbol)

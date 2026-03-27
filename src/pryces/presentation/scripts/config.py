@@ -168,3 +168,18 @@ def get_all_tracked_symbols() -> list[str]:
         except ConfigLoadingFailed:
             continue
     return sorted(symbols)
+
+
+def get_all_tracked_symbols_with_targets() -> list[tuple[str, list[Decimal]]]:
+    if not CONFIGS_DIR.exists():
+        return []
+    symbols: dict[str, list[Decimal]] = {}
+    for path in sorted(CONFIGS_DIR.glob("*.json")):
+        try:
+            config = ConfigManager(path).read_monitor_stocks_config()
+            for sc in config.symbols:
+                if sc.symbol not in symbols:
+                    symbols[sc.symbol] = sc.prices
+        except ConfigLoadingFailed:
+            continue
+    return [(s, symbols[s]) for s in sorted(symbols)]

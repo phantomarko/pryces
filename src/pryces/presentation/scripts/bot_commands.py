@@ -62,6 +62,7 @@ class BotCommand(ABC):
 _FindConfigFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _FindConfigByNameFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _GetAllSymbolsFn = Callable[[], list[str]]
+_GetAllSymbolsWithTargetsFn = Callable[[], list[tuple[str, list[Decimal]]]]
 _GetConfigNamesFn = Callable[[], list[str]]
 
 
@@ -290,8 +291,8 @@ class SymbolRemoveCommand(BotCommand):
 
 
 class SymbolsCommand(BotCommand):
-    def __init__(self, get_all_symbols: _GetAllSymbolsFn) -> None:
-        self._get_all_symbols = get_all_symbols
+    def __init__(self, get_all_symbols_with_targets: _GetAllSymbolsWithTargetsFn) -> None:
+        self._get_all_symbols_with_targets = get_all_symbols_with_targets
 
     @property
     def name(self) -> str:
@@ -303,17 +304,24 @@ class SymbolsCommand(BotCommand):
 
     @property
     def description(self) -> str:
-        return "List all tracked symbols"
+        return "List all tracked symbols and their targets"
 
     @property
     def arg_count(self) -> int:
         return 0
 
     def execute(self, args: list[str]) -> str:
-        symbols = self._get_all_symbols()
+        symbols = self._get_all_symbols_with_targets()
         if not symbols:
             return "📋 No symbols tracked"
-        return f"📋 {', '.join(symbols)}"
+        lines = ["📋 Symbols & targets:"]
+        for i, (symbol, prices) in enumerate(symbols, start=1):
+            if prices:
+                prices_str = ", ".join(str(p) for p in prices)
+                lines.append(f"{i}) {symbol} — 🎯 {prices_str}")
+            else:
+                lines.append(f"{i}) {symbol}")
+        return "\n".join(lines)
 
 
 class ConfigsCommand(BotCommand):

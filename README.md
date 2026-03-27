@@ -194,7 +194,7 @@ python -m pryces.presentation.scripts.telegram_bot --verbose
 | Command | Description |
 |---|---|
 | `/configs` | List all config files |
-| `/symbols` | List all tracked symbols across configs |
+| `/symbols` | List all tracked symbols and their targets |
 | `/symbol_add <symbol> <config>` | Add a symbol to a config |
 | `/symbol_remove <symbol>` | Remove a symbol from its config |
 | `/targets <symbol>` | List all target prices for a symbol |
