@@ -1,10 +1,11 @@
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.interfaces import MessageSender, StockProvider
 from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
-from pryces.application.services import DelayWindowChecker, NotificationService, StockSynchronizer
+from pryces.application.services import NotificationService, StockSynchronizer
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import InMemoryStockRepository
 from pryces.application.use_cases.trigger_stocks_notifications import (
@@ -19,17 +20,18 @@ from tests.fixtures.factories import (
     create_stock_no_crossing,
 )
 
+_NOW = datetime(2024, 1, 1, 12, 0, 0)
+
 
 class TestTriggerStocksNotifications:
 
     def setup_method(self):
         self.mock_provider = Mock(spec=StockProvider)
         self.mock_sender = Mock(spec=MessageSender)
-        self.mock_checker = Mock(spec=DelayWindowChecker)
-        self.mock_checker.is_in_delay_window.return_value = False
         self.formatter = ConsolidatingNotificationFormatter()
+        self.clock = Mock(return_value=_NOW)
         self.notification_service = NotificationService(
-            self.mock_sender, self.mock_checker, self.formatter
+            self.mock_sender, self.formatter, self.clock
         )
         self.stock_repository = InMemoryStockRepository()
         self.stock_synchronizer = StockSynchronizer(
@@ -43,7 +45,7 @@ class TestTriggerStocksNotifications:
 
     def _prime_stock_in_repo(self, symbol: str) -> None:
         stock = create_stock(symbol)
-        stock.generate_notifications()
+        stock.generate_notifications(_NOW)
         stock.drain_notifications(self.formatter)
         self.stock_repository.save_batch([stock])
 
@@ -135,7 +137,7 @@ class TestTriggerStocksNotifications:
             fifty_two_week_high=Decimal("190.00"),
             market_state=MarketState.OPEN,
         )
-        past_stock.generate_notifications()
+        past_stock.generate_notifications(_NOW)
         past_stock.drain_notifications(self.formatter)
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
@@ -202,7 +204,7 @@ class TestTriggerStocksNotifications:
             fifty_two_week_low=Decimal("110.00"),
             market_state=MarketState.OPEN,
         )
-        past_stock.generate_notifications()
+        past_stock.generate_notifications(_NOW)
         past_stock.drain_notifications(self.formatter)
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(

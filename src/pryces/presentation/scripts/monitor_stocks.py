@@ -7,17 +7,14 @@ from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
 from ...domain.notification_formatter import ConsolidatingNotificationFormatter
-from ...application.services import DelayWindowChecker, NotificationService, StockSynchronizer
+from ...application.services import NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,
     TriggerStocksNotificationsRequest,
 )
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.providers import YahooFinanceProvider
-from ...infrastructure.repositories import (
-    InMemoryMarketTransitionRepository,
-    InMemoryStockRepository,
-)
+from ...infrastructure.repositories import InMemoryStockRepository
 from ...infrastructure.senders import (
     FireAndForgetMessageSender,
     RetryMessageSender,
@@ -94,10 +91,8 @@ def _create_script(
         logger_factory=logger_factory,
     )
     message_sender = FireAndForgetMessageSender(inner=retry_sender, logger_factory=logger_factory)
-    transition_repository = InMemoryMarketTransitionRepository()
-    delay_window_checker = DelayWindowChecker(transition_repository)
     formatter = ConsolidatingNotificationFormatter()
-    notification_service = NotificationService(message_sender, delay_window_checker, formatter)
+    notification_service = NotificationService(message_sender, formatter)
     stock_repository = InMemoryStockRepository()
     stock_synchronizer = StockSynchronizer(provider=provider, stock_repository=stock_repository)
     trigger_notifications = TriggerStocksNotifications(

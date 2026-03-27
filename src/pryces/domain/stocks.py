@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
@@ -119,6 +120,7 @@ class Stock:
         "_kind",
         "_cap_size",
         "_snapshot",
+        "_transition_time",
         "_notifications",
         "_pending_notifications",
         "_targets",
@@ -180,6 +182,7 @@ class Stock:
         self._kind = kind
         self._cap_size: CapSize | None = self._compute_cap_size()
         self._snapshot: StockSnapshot | None = None
+        self._transition_time: datetime | None = None
         self._notifications: list[Notification] = []
         self._pending_notifications: list[Notification] = []
         self._targets: list[TargetPrice] = []
@@ -311,7 +314,9 @@ class Stock:
             and self._market_state in (MarketState.OPEN, MarketState.POST)
         )
 
-    def generate_notifications(self) -> None:
+    def generate_notifications(self, now: datetime) -> None:
+        if self._is_in_delay_window(now):
+            return
         if self._is_market_state_open():
             self._generate_market_open_notifications()
         elif self._is_market_state_post():
@@ -384,6 +389,20 @@ class Stock:
 
     def _is_crypto(self) -> bool:
         return self._kind == InstrumentType.CRYPTO
+
+    def _is_in_delay_window(self, now: datetime) -> bool:
+        if not self._price_delay_in_minutes:
+            return False
+        if self.is_market_state_transition():
+            self._transition_time = now
+            return True
+        if self._transition_time is None:
+            return False
+        elapsed_minutes = (now - self._transition_time).total_seconds() / 60
+        if elapsed_minutes < self._price_delay_in_minutes:
+            return True
+        self._transition_time = None
+        return False
 
     def _get_percentage_thresholds(self) -> tuple[_ThresholdTuple, _ThresholdTuple]:
         if self._kind == InstrumentType.STOCK and self.cap_size == CapSize.LARGE:

@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -12,6 +13,7 @@ from pryces.domain.stocks import (
     StockSnapshot,
 )
 from tests.fixtures.factories import (
+    _DEFAULT_NOW,
     generate_and_drain,
     make_stock,
     open_stock_after_burn,
@@ -1035,11 +1037,11 @@ class TestDeduplication:
             two_hundred_day_average=Decimal("80.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         result1 = stock.drain_notifications(_formatter)
         assert len(result1) > 0
 
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         result2 = stock.drain_notifications(_formatter)
 
         assert result2 == []
@@ -1342,7 +1344,7 @@ class TestSessionGainsLossesErased:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         stock.drain_notifications(_formatter)
         # Cycle 2: +10% threshold fires
         source = Stock(
@@ -1352,7 +1354,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         stock.drain_notifications(_formatter)
         # Cycle 3: drops to -1% → gains erased fires
         source = Stock(
@@ -1362,7 +1364,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         messages = stock.drain_notifications(_formatter)
         assert any("Erased session gains" in m for m in messages)
         # Cycle 4: recovers to +5% → should fire again
@@ -1373,7 +1375,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         messages = stock.drain_notifications(_formatter)
 
         assert any("+5.00%" in m for m in messages)
@@ -1386,7 +1388,7 @@ class TestSessionGainsLossesErased:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         stock.drain_notifications(_formatter)
         # Cycle 2: -10% threshold fires
         source = Stock(
@@ -1396,7 +1398,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         stock.drain_notifications(_formatter)
         # Cycle 3: rises to +1% → losses erased fires
         source = Stock(
@@ -1406,7 +1408,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         messages = stock.drain_notifications(_formatter)
         assert any("Erased session losses" in m for m in messages)
         # Cycle 4: drops to -5% → should fire again
@@ -1417,7 +1419,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         messages = stock.drain_notifications(_formatter)
 
         assert any("-5.00%" in m for m in messages)
@@ -1479,14 +1481,14 @@ class TestTargetPriceNotifications:
         stock.sync_targets([Decimal("200.00")])
         source1 = make_stock(current_price="200.00", previous_close_price="195.00")
         stock.update(source1)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         result1 = stock.drain_notifications(_formatter)
         assert any("hit target" in m for m in result1)
 
         stock.sync_targets([Decimal("250.00")])
         source2 = make_stock(current_price="250.00", previous_close_price="195.00")
         stock.update(source2)
-        stock.generate_notifications()
+        stock.generate_notifications(_DEFAULT_NOW)
         result2 = stock.drain_notifications(_formatter)
         assert any("hit target" in m for m in result2)
 
@@ -1799,3 +1801,193 @@ class TestCapSize:
         )
         stock.update(updated)
         assert stock.cap_size is None
+
+
+class TestDelayWindow:
+
+    def test_no_delay_when_price_delay_is_none(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=None,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=None,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source)
+
+        messages = generate_and_drain(stock)
+
+        assert len(messages) > 0
+
+    def test_no_delay_when_price_delay_is_zero(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=0,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=0,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source)
+
+        messages = generate_and_drain(stock)
+
+        assert len(messages) > 0
+
+    def test_suppresses_on_transition_cycle_when_delay_positive(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source)
+        now = datetime(2024, 1, 1, 9, 0, 0)
+
+        messages = generate_and_drain(stock, now=now)
+
+        assert messages == []
+
+    def test_suppresses_during_delay_window(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        source_transition = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source_transition)
+        generate_and_drain(stock, now=datetime(2024, 1, 1, 9, 0, 0))
+
+        source_same = Stock(
+            symbol="AAPL",
+            current_price=Decimal("151.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source_same)
+
+        messages = generate_and_drain(stock, now=datetime(2024, 1, 1, 9, 5, 0))
+
+        assert messages == []
+
+    def test_generates_notifications_after_delay_elapsed(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("145.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        source_transition = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source_transition)
+        generate_and_drain(stock, now=datetime(2024, 1, 1, 9, 0, 0))
+
+        source_same = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        stock.update(source_same)
+
+        messages = generate_and_drain(stock, now=datetime(2024, 1, 1, 9, 16, 0))
+
+        assert len(messages) > 0
+
+    def test_no_suppression_when_no_snapshot(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+
+        messages = generate_and_drain(stock)
+
+        assert len(messages) > 0
+
+    def test_non_open_post_transitions_not_treated_as_delay_triggers(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("148.00"),
+            open_price=Decimal("149.00"),
+        )
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("150.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        stock.update(source)
+
+        messages = generate_and_drain(stock)
+
+        assert messages == []
+
+    def test_suppresses_target_notifications_during_delay_window(self):
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            market_state=MarketState.PRE,
+            price_delay_in_minutes=15,
+        )
+        stock.sync_targets([Decimal("200.00")])
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            market_state=MarketState.OPEN,
+            price_delay_in_minutes=15,
+            previous_close_price=Decimal("195.00"),
+            open_price=Decimal("198.00"),
+        )
+        stock.update(source)
+        now = datetime(2024, 1, 1, 9, 0, 0)
+
+        messages = generate_and_drain(stock, now=now)
+
+        assert messages == []
+        assert stock.drain_fulfilled_targets() == []
