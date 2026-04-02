@@ -45,8 +45,7 @@ class TestTriggerStocksNotifications:
 
     def _prime_stock_in_repo(self, symbol: str) -> None:
         stock = create_stock(symbol)
-        stock.generate_notifications(_NOW)
-        stock.drain_notifications(self.formatter)
+        stock.generate_notifications(_NOW, self.formatter)
         self.stock_repository.save_batch([stock])
 
     def test_handle_sends_milestone_notification_for_fifty_day_crossing(self):
@@ -137,8 +136,7 @@ class TestTriggerStocksNotifications:
             fifty_two_week_high=Decimal("190.00"),
             market_state=MarketState.OPEN,
         )
-        past_stock.generate_notifications(_NOW)
-        past_stock.drain_notifications(self.formatter)
+        past_stock.generate_notifications(_NOW, self.formatter)
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
             symbol="AAPL",
@@ -204,8 +202,7 @@ class TestTriggerStocksNotifications:
             fifty_two_week_low=Decimal("110.00"),
             market_state=MarketState.OPEN,
         )
-        past_stock.generate_notifications(_NOW)
-        past_stock.drain_notifications(self.formatter)
+        past_stock.generate_notifications(_NOW, self.formatter)
         self.stock_repository.save_batch([past_stock])
         current_stock = Stock(
             symbol="AAPL",

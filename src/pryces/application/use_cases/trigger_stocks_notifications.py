@@ -25,8 +25,8 @@ class TriggerStocksNotifications:
 
         fulfilled: list[TargetPriceDTO] = []
         for stock in stocks:
-            self._notification_service.send_stock_notifications(stock)
-            for target_value in stock.drain_fulfilled_targets():
+            fulfilled_targets = self._notification_service.send_stock_notifications(stock)
+            for target_value in fulfilled_targets:
                 fulfilled.append(TargetPriceDTO(symbol=stock.symbol, target=target_value))
 
         self._stock_synchronizer.persist(stocks)

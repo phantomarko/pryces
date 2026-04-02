@@ -1037,12 +1037,10 @@ class TestDeduplication:
             two_hundred_day_average=Decimal("80.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications(_DEFAULT_NOW)
-        result1 = stock.drain_notifications(_formatter)
+        result1 = stock.generate_notifications(_DEFAULT_NOW, _formatter).messages
         assert len(result1) > 0
 
-        stock.generate_notifications(_DEFAULT_NOW)
-        result2 = stock.drain_notifications(_formatter)
+        result2 = stock.generate_notifications(_DEFAULT_NOW, _formatter).messages
 
         assert result2 == []
 
@@ -1344,8 +1342,7 @@ class TestSessionGainsLossesErased:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications(_DEFAULT_NOW)
-        stock.drain_notifications(_formatter)
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
         # Cycle 2: +10% threshold fires
         source = Stock(
             symbol="AAPL",
@@ -1354,8 +1351,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications(_DEFAULT_NOW)
-        stock.drain_notifications(_formatter)
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
         # Cycle 3: drops to -1% → gains erased fires
         source = Stock(
             symbol="AAPL",
@@ -1364,8 +1360,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications(_DEFAULT_NOW)
-        messages = stock.drain_notifications(_formatter)
+        messages = stock.generate_notifications(_DEFAULT_NOW, _formatter).messages
         assert any("Erased session gains" in m for m in messages)
         # Cycle 4: recovers to +5% → should fire again
         source = Stock(
@@ -1375,8 +1370,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications(_DEFAULT_NOW)
-        messages = stock.drain_notifications(_formatter)
+        messages = stock.generate_notifications(_DEFAULT_NOW, _formatter).messages
 
         assert any("+5.00%" in m for m in messages)
 
@@ -1388,8 +1382,7 @@ class TestSessionGainsLossesErased:
             previous_close_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications(_DEFAULT_NOW)
-        stock.drain_notifications(_formatter)
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
         # Cycle 2: -10% threshold fires
         source = Stock(
             symbol="AAPL",
@@ -1398,8 +1391,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications(_DEFAULT_NOW)
-        stock.drain_notifications(_formatter)
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
         # Cycle 3: rises to +1% → losses erased fires
         source = Stock(
             symbol="AAPL",
@@ -1408,8 +1400,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications(_DEFAULT_NOW)
-        messages = stock.drain_notifications(_formatter)
+        messages = stock.generate_notifications(_DEFAULT_NOW, _formatter).messages
         assert any("Erased session losses" in m for m in messages)
         # Cycle 4: drops to -5% → should fire again
         source = Stock(
@@ -1419,8 +1410,7 @@ class TestSessionGainsLossesErased:
             market_state=MarketState.OPEN,
         )
         stock.update(source)
-        stock.generate_notifications(_DEFAULT_NOW)
-        messages = stock.drain_notifications(_formatter)
+        messages = stock.generate_notifications(_DEFAULT_NOW, _formatter).messages
 
         assert any("-5.00%" in m for m in messages)
 
@@ -1433,17 +1423,17 @@ class TestTargetPriceNotifications:
 
     def test_generate_notifications_removes_triggered_targets_from_stock(self):
         stock = open_stock_ready_for_target("100.00", "200.00", "200.00")
-        generate_and_drain(stock)
-        assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert result.fulfilled_targets == [Decimal("200.00")]
 
     def test_generate_notifications_does_not_include_unreached_target(self):
         stock = make_stock(current_price="100.00", previous_close_price="148.00")
         stock.sync_targets([Decimal("200.00")])
         source = make_stock(current_price="150.00", previous_close_price="148.00")
         stock.update(source)
-        messages = generate_and_drain(stock)
-        assert not any("hit target" in m for m in messages)
-        assert stock.drain_fulfilled_targets() == []
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert not any("hit target" in m for m in result.messages)
+        assert result.fulfilled_targets == []
 
     def test_generate_notifications_target_notification_message_contains_symbol_and_target(self):
         stock = open_stock_ready_for_target("100.00", "200.00", "200.00")
@@ -1462,35 +1452,33 @@ class TestTargetPriceNotifications:
             current_price="200.00", previous_close_price="195.00", market_state=MarketState.POST
         )
         stock.update(source)
-        messages = generate_and_drain(stock)
-        assert not any("hit target" in m for m in messages)
-        assert stock.drain_fulfilled_targets() == []
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert not any("hit target" in m for m in result.messages)
+        assert result.fulfilled_targets == []
 
     def test_generate_notifications_removes_multiple_triggered_targets(self):
         stock = open_stock_after_burn(current_price="100.00", previous_close_price="295.00")
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
         source = make_stock(current_price="300.00", previous_close_price="295.00")
         stock.update(source)
-        messages = generate_and_drain(stock)
-        target_messages = [m for m in messages if "hit target" in m]
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        target_messages = [m for m in result.messages if "hit target" in m]
         assert len(target_messages) == 2
-        assert set(stock.drain_fulfilled_targets()) == {Decimal("200.00"), Decimal("250.00")}
+        assert set(result.fulfilled_targets) == {Decimal("200.00"), Decimal("250.00")}
 
     def test_generate_notifications_target_price_reached_is_never_deduplicated(self):
         stock = open_stock_after_burn(current_price="100.00", previous_close_price="195.00")
         stock.sync_targets([Decimal("200.00")])
         source1 = make_stock(current_price="200.00", previous_close_price="195.00")
         stock.update(source1)
-        stock.generate_notifications(_DEFAULT_NOW)
-        result1 = stock.drain_notifications(_formatter)
-        assert any("hit target" in m for m in result1)
+        result1 = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert any("hit target" in m for m in result1.messages)
 
         stock.sync_targets([Decimal("250.00")])
         source2 = make_stock(current_price="250.00", previous_close_price="195.00")
         stock.update(source2)
-        stock.generate_notifications(_DEFAULT_NOW)
-        result2 = stock.drain_notifications(_formatter)
-        assert any("hit target" in m for m in result2)
+        result2 = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert any("hit target" in m for m in result2.messages)
 
 
 class TestSyncTargets:
@@ -1500,26 +1488,25 @@ class TestSyncTargets:
 
         source_below = make_stock(current_price="180.00", previous_close_price="148.00")
         stock.update(source_below)
-        generate_and_drain(stock)
-        assert not any("hit target" in m for m in [])
-        assert stock.drain_fulfilled_targets() == []
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert result.fulfilled_targets == []
 
         source_hit = make_stock(current_price="200.00", previous_close_price="195.00")
         stock.update(source_hit)
-        messages = generate_and_drain(stock)
-        assert any("hit target" in m for m in messages)
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
+        assert any("hit target" in m for m in result.messages)
 
     def test_sync_targets_removes_missing_targets(self):
         stock = make_stock(current_price="150.00")
-        generate_and_drain(stock)
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
         stock.sync_targets([Decimal("200.00")])
 
         source = make_stock(current_price="260.00", previous_close_price="148.00")
         stock.update(source)
-        generate_and_drain(stock)
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
+        assert result.fulfilled_targets == [Decimal("200.00")]
 
     def test_sync_targets_clears_all_on_empty_list(self):
         stock = make_stock(current_price="150.00")
@@ -1528,52 +1515,49 @@ class TestSyncTargets:
 
         source = make_stock(current_price="200.00", previous_close_price="148.00")
         stock.update(source)
-        generate_and_drain(stock)
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        assert stock.drain_fulfilled_targets() == []
+        assert result.fulfilled_targets == []
 
     def test_sync_targets_adds_new_and_preserves_existing(self):
         stock = make_stock(current_price="150.00")
-        generate_and_drain(stock)
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
         stock.sync_targets([Decimal("200.00")])
         stock.sync_targets([Decimal("200.00"), Decimal("250.00")])
 
         source = make_stock(current_price="260.00", previous_close_price="148.00")
         stock.update(source)
-        generate_and_drain(stock)
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        assert set(stock.drain_fulfilled_targets()) == {Decimal("200.00"), Decimal("250.00")}
+        assert set(result.fulfilled_targets) == {Decimal("200.00"), Decimal("250.00")}
 
 
-class TestDrainFulfilledTargets:
-    def test_drain_fulfilled_targets_returns_fulfilled_targets(self):
+class TestFulfilledTargetsInResult:
+    def test_generate_notifications_returns_fulfilled_targets(self):
         stock = open_stock_after_burn(current_price="150.00", previous_close_price="145.00")
         stock.sync_targets([Decimal("150.00")])
-        generate_and_drain(stock)
 
-        fulfilled = stock.drain_fulfilled_targets()
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        assert len(fulfilled) == 1
-        assert fulfilled[0] == Decimal("150.00")
+        assert len(result.fulfilled_targets) == 1
+        assert result.fulfilled_targets[0] == Decimal("150.00")
 
-    def test_drain_fulfilled_targets_clears_list_after_drain(self):
+    def test_generate_notifications_does_not_accumulate_fulfilled_targets_across_calls(self):
         stock = make_stock(current_price="150.00", previous_close_price="145.00")
         stock.sync_targets([Decimal("150.00")])
-        generate_and_drain(stock)
-        stock.drain_fulfilled_targets()
+        stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        second_drain = stock.drain_fulfilled_targets()
+        second_result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        assert second_drain == []
+        assert second_result.fulfilled_targets == []
 
-    def test_drain_fulfilled_targets_returns_empty_when_no_targets_fulfilled(self):
+    def test_generate_notifications_returns_empty_fulfilled_when_no_targets_reached(self):
         stock = make_stock(current_price="150.00", previous_close_price="145.00")
         stock.sync_targets([Decimal("200.00")])
-        generate_and_drain(stock)
 
-        fulfilled = stock.drain_fulfilled_targets()
+        result = stock.generate_notifications(_DEFAULT_NOW, _formatter)
 
-        assert fulfilled == []
+        assert result.fulfilled_targets == []
 
 
 class TestCryptoNotifications:
@@ -1987,7 +1971,7 @@ class TestDelayWindow:
         stock.update(source)
         now = datetime(2024, 1, 1, 9, 0, 0)
 
-        messages = generate_and_drain(stock, now=now)
+        result = stock.generate_notifications(now, _formatter)
 
-        assert messages == []
-        assert stock.drain_fulfilled_targets() == []
+        assert result.messages == []
+        assert result.fulfilled_targets == []

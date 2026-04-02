@@ -119,14 +119,12 @@ def make_stock(
 def open_stock_after_burn(**kwargs) -> Stock:
     """Constructs a stock and pre-seeds notification history by running one full cycle."""
     stock = make_stock(**kwargs)
-    stock.generate_notifications(_DEFAULT_NOW)
-    stock.drain_notifications(_formatter)
+    stock.generate_notifications(_DEFAULT_NOW, _formatter)
     return stock
 
 
 def generate_and_drain(stock: Stock, now: datetime = _DEFAULT_NOW) -> list[str]:
-    stock.generate_notifications(now)
-    return stock.drain_notifications(_formatter)
+    return stock.generate_notifications(now, _formatter).messages
 
 
 def open_stock_ready_for_target(entry_price: str, target: str, hit_price: str) -> Stock:

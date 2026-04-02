@@ -56,8 +56,7 @@ class TestNotificationService:
             fifty_two_week_high=Decimal("190.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications(_NOW)
-        stock.drain_notifications(self.formatter)
+        stock.generate_notifications(_NOW, self.formatter)
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -79,8 +78,7 @@ class TestNotificationService:
             fifty_two_week_low=Decimal("110.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications(_NOW)
-        stock.drain_notifications(self.formatter)
+        stock.generate_notifications(_NOW, self.formatter)
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("100.00"),
@@ -101,8 +99,7 @@ class TestNotificationService:
             current_price=Decimal("100.00"),
             market_state=MarketState.OPEN,
         )
-        stock.generate_notifications(_NOW)
-        stock.drain_notifications(self.formatter)
+        stock.generate_notifications(_NOW, self.formatter)
         stock.sync_targets([Decimal("200.00")])
         source = Stock(
             symbol="AAPL",
@@ -112,10 +109,10 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock)
+        fulfilled = self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
-        assert stock.drain_fulfilled_targets() == [Decimal("200.00")]
+        assert fulfilled == [Decimal("200.00")]
 
     def test_does_not_remove_unreached_target(self):
         stock = Stock(
@@ -132,9 +129,9 @@ class TestNotificationService:
         )
         stock.update(source)
 
-        self.service.send_stock_notifications(stock)
+        fulfilled = self.service.send_stock_notifications(stock)
 
-        assert stock.drain_fulfilled_targets() == []
+        assert fulfilled == []
 
 
 class TestStockSynchronizer:
@@ -183,8 +180,7 @@ class TestStockSynchronizer:
 
         synced_stock = result[0]
         formatter = ConsolidatingNotificationFormatter()
-        synced_stock.generate_notifications(_NOW)
-        synced_stock.drain_notifications(formatter)
+        synced_stock.generate_notifications(_NOW, formatter)
         source = Stock(
             symbol="AAPL",
             current_price=Decimal("200.00"),
@@ -192,9 +188,8 @@ class TestStockSynchronizer:
             market_state=MarketState.OPEN,
         )
         synced_stock.update(source)
-        synced_stock.generate_notifications(_NOW)
-        synced_stock.drain_notifications(formatter)
-        assert synced_stock.drain_fulfilled_targets() == [Decimal("200.00")]
+        result = synced_stock.generate_notifications(_NOW, formatter)
+        assert result.fulfilled_targets == [Decimal("200.00")]
 
     def test_fetch_and_sync_with_empty_symbols_returns_empty(self):
         self.mock_provider.get_stocks.return_value = []

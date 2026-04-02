@@ -19,10 +19,11 @@ class NotificationService:
         self._formatter = formatter
         self._clock = clock
 
-    def send_stock_notifications(self, stock: Stock) -> None:
-        stock.generate_notifications(now=self._clock())
-        for message in stock.drain_notifications(self._formatter):
+    def send_stock_notifications(self, stock: Stock) -> list[Decimal]:
+        result = stock.generate_notifications(now=self._clock(), formatter=self._formatter)
+        for message in result.messages:
             self._message_sender.send_message(message)
+        return result.fulfilled_targets
 
 
 class StockSynchronizer:

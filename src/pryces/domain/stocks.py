@@ -7,6 +7,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
 from pryces.domain.notification_formatter import NotificationFormatter, StockContext
+from pryces.domain.notification_result import NotificationResult
 from pryces.domain.notifications import Notification, NotificationType
 from pryces.domain.utils import _calculate_percentage_change
 
@@ -260,12 +261,12 @@ class Stock:
     def snapshot(self) -> StockSnapshot | None:
         return self._snapshot
 
-    def drain_fulfilled_targets(self) -> list[Decimal]:
+    def _drain_fulfilled_targets(self) -> list[Decimal]:
         fulfilled = [t.target for t in self._fulfilled_targets]
         self._fulfilled_targets = []
         return fulfilled
 
-    def drain_notifications(self, formatter: NotificationFormatter) -> list[str]:
+    def _drain_notifications(self, formatter: NotificationFormatter) -> list[str]:
         context = StockContext(self._symbol, self._current_price, self._previous_close_price)
         result = formatter.format(list(self._pending_notifications), context)
         self._notifications.extend(self._pending_notifications)
@@ -314,13 +315,17 @@ class Stock:
             and self._market_state in (MarketState.OPEN, MarketState.POST)
         )
 
-    def generate_notifications(self, now: datetime) -> None:
-        if self._is_in_delay_window(now):
-            return
-        if self._is_market_state_open():
-            self._generate_market_open_notifications()
-        elif self._is_market_state_post():
-            self._generate_market_closed_notifications()
+    def generate_notifications(
+        self, now: datetime, formatter: NotificationFormatter
+    ) -> NotificationResult:
+        if not self._is_in_delay_window(now):
+            if self._is_market_state_open():
+                self._generate_market_open_notifications()
+            elif self._is_market_state_post():
+                self._generate_market_closed_notifications()
+        messages = self._drain_notifications(formatter)
+        fulfilled_targets = self._drain_fulfilled_targets()
+        return NotificationResult(messages=messages, fulfilled_targets=fulfilled_targets)
 
     def _compute_cap_size(self) -> CapSize | None:
         if (
