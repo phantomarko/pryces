@@ -7,12 +7,17 @@ from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
 from pryces.domain.notification_formatter import NotificationFormatter, StockContext
-from pryces.domain.notification_result import NotificationResult
 from pryces.domain.notifications import Notification, NotificationType
 from pryces.domain.utils import _calculate_percentage_change
 
 if TYPE_CHECKING:
     from pryces.domain.target_prices import TargetPrice
+
+
+@dataclass(frozen=True, slots=True)
+class GenerateNotificationsResult:
+    messages: list[str]
+    fulfilled_targets: list[Decimal]
 
 
 @dataclass(frozen=True, slots=True)
@@ -317,7 +322,7 @@ class Stock:
 
     def generate_notifications(
         self, now: datetime, formatter: NotificationFormatter
-    ) -> NotificationResult:
+    ) -> GenerateNotificationsResult:
         if not self._is_in_delay_window(now):
             if self._is_market_state_open():
                 self._generate_market_open_notifications()
@@ -325,7 +330,7 @@ class Stock:
                 self._generate_market_closed_notifications()
         messages = self._drain_notifications(formatter)
         fulfilled_targets = self._drain_fulfilled_targets()
-        return NotificationResult(messages=messages, fulfilled_targets=fulfilled_targets)
+        return GenerateNotificationsResult(messages=messages, fulfilled_targets=fulfilled_targets)
 
     def _compute_cap_size(self) -> CapSize | None:
         if (
