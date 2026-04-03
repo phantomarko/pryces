@@ -47,8 +47,10 @@ class TelegramMessageSender(MessageSender):
             self._logger.info(f"Notification sent:\n{message}")
             return True
 
+        error_code = response_data.get("error_code", 0)
+        retryable = error_code == 429 or error_code >= 500
         self._logger.error(f"Telegram API returned ok=false: {response_data}")
-        raise MessageSendingFailed(f"ok=false: {response_data}")
+        raise MessageSendingFailed(f"ok=false: {response_data}", retryable=retryable)
 
 
 @dataclass(frozen=True, slots=True)
