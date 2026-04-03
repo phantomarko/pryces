@@ -23,14 +23,14 @@ class TestSendMessages:
         assert result == SendMessagesResponse(successful=3, failed=0)
         assert self.mock_sender.send_message.call_count == 3
 
-    def test_handle_counts_false_returns_as_failures(self):
-        self.mock_sender.send_message.return_value = False
-        request = SendMessagesRequest(messages=["msg1", "msg2"])
+    def test_handle_counts_mixed_successes_and_failures(self):
+        self.mock_sender.send_message.side_effect = [True, False, True]
+        request = SendMessagesRequest(messages=["msg1", "msg2", "msg3"])
         use_case = SendMessages(sender=self.mock_sender)
 
         result = use_case.handle(request)
 
-        assert result == SendMessagesResponse(successful=0, failed=2)
+        assert result == SendMessagesResponse(successful=2, failed=1)
 
     def test_handle_returns_zero_counts_for_empty_list(self):
         request = SendMessagesRequest(messages=[])

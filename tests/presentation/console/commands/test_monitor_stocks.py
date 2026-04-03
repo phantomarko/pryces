@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+
 from pryces.presentation.console.commands.base import CommandMetadata, InputPrompt
 from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
 from pryces.presentation.console.utils import (
@@ -13,7 +15,8 @@ from pryces.presentation.console.utils import (
 
 class TestMonitorStocksCommand:
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.command = MonitorStocksCommand()
 
     def test_get_metadata_returns_correct_metadata(self):
@@ -137,6 +140,21 @@ class TestMonitorStocksCommand:
         result = self.command.execute(config_selection="1", duration="10")
 
         assert result.message == "Monitor started in background (PID: 42)"
+
+    @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
+    @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")
+    def test_execute_returns_failure_when_popen_raises(self, mock_get, mock_popen, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.touch()
+        mock_get.return_value = [path]
+        self.command.get_input_prompts()
+        mock_popen.side_effect = OSError("executable not found")
+
+        result = self.command.execute(config_selection="1", duration="10")
+
+        assert result.success is False
+        assert "executable not found" in result.message
+        assert "Failed to start monitor process" in result.message
 
     @patch("pryces.presentation.console.commands.monitor_stocks.subprocess.Popen")
     @patch("pryces.presentation.console.commands.monitor_stocks.get_config_files")

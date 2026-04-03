@@ -26,6 +26,21 @@ class TestCreateYahooFinanceSettings:
         with pytest.raises(ConfigurationError):
             SettingsFactory.create_yahoo_finance_settings()
 
+    def test_empty_string_env_var_raises_configuration_error(self, monkeypatch):
+        monkeypatch.setenv("MAX_FETCH_WORKERS", "")
+        with pytest.raises(ConfigurationError):
+            SettingsFactory.create_yahoo_finance_settings()
+
+    def test_negative_env_var_is_accepted(self, monkeypatch):
+        monkeypatch.setenv("MAX_FETCH_WORKERS", "-1")
+        settings = SettingsFactory.create_yahoo_finance_settings()
+        assert settings.max_workers == -1
+
+    def test_zero_env_var_is_accepted(self, monkeypatch):
+        monkeypatch.setenv("MAX_FETCH_WORKERS", "0")
+        settings = SettingsFactory.create_yahoo_finance_settings()
+        assert settings.max_workers == 0
+
 
 class TestCreateTelegramSettings:
     def test_happy_path(self, monkeypatch):

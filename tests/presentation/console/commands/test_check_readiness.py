@@ -91,7 +91,8 @@ class TestCheckReadinessCommand:
 
 class TestEnvVarsChecker:
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.checker = EnvVarsChecker()
 
     @patch.dict(
@@ -222,7 +223,8 @@ class TestEnvVarsChecker:
 
 class TestTelegramChecker:
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.mock_sender = Mock(spec=MessageSender)
         self.checker = TelegramChecker(
             send_messages=SendMessages(sender=self.mock_sender),

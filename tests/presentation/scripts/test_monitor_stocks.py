@@ -15,21 +15,7 @@ from pryces.presentation.scripts.config import (
 )
 from pryces.presentation.scripts.monitor_stocks import MonitorStocksScript
 
-
-def make_symbol(symbol: str = "AAPL", prices: list = None) -> SymbolConfig:
-    return SymbolConfig(symbol=symbol, prices=prices or [Decimal("5")])
-
-
-def make_config(**overrides) -> MonitorStocksConfig:
-    defaults = {
-        "interval": 5,
-        "symbols": [
-            SymbolConfig("AAPL", [Decimal("150"), Decimal("200")]),
-            SymbolConfig("GOOGL", [Decimal("100")]),
-        ],
-    }
-    defaults.update(overrides)
-    return MonitorStocksConfig(**defaults)
+from tests.presentation.scripts.factories import make_config, make_symbol
 
 
 def make_refresher(config=None, config_manager=None, logger_factory=None) -> ConfigRefresher:

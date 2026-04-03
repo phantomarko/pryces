@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.application.dtos import StockDTO
+from pryces.application.dtos import StockDTO, TargetPriceDTO
 from pryces.domain.stocks import Stock
 from tests.fixtures.factories import create_stock
 
@@ -46,3 +46,38 @@ class TestStockDTO:
         result = StockDTO.from_stock(stock)
 
         assert result.price_delay_in_minutes == 15
+
+
+class TestTargetPriceDTO:
+
+    def test_stores_symbol_and_target(self):
+        dto = TargetPriceDTO(symbol="AAPL", target=Decimal("200.00"))
+
+        assert dto.symbol == "AAPL"
+        assert dto.target == Decimal("200.00")
+
+    def test_is_immutable(self):
+        dto = TargetPriceDTO(symbol="AAPL", target=Decimal("200.00"))
+
+        import pytest
+
+        with pytest.raises(Exception):
+            dto.symbol = "TSLA"  # type: ignore[misc]
+
+    def test_equality_with_same_values(self):
+        dto_a = TargetPriceDTO(symbol="AAPL", target=Decimal("200.00"))
+        dto_b = TargetPriceDTO(symbol="AAPL", target=Decimal("200.00"))
+
+        assert dto_a == dto_b
+
+    def test_inequality_with_different_symbol(self):
+        dto_a = TargetPriceDTO(symbol="AAPL", target=Decimal("200.00"))
+        dto_b = TargetPriceDTO(symbol="TSLA", target=Decimal("200.00"))
+
+        assert dto_a != dto_b
+
+    def test_inequality_with_different_target(self):
+        dto_a = TargetPriceDTO(symbol="AAPL", target=Decimal("200.00"))
+        dto_b = TargetPriceDTO(symbol="AAPL", target=Decimal("300.00"))
+
+        assert dto_a != dto_b

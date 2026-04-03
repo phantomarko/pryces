@@ -18,17 +18,7 @@ from pryces.presentation.scripts.bot_commands import (
 )
 from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
 
-
-def make_config(**overrides) -> MonitorStocksConfig:
-    defaults = {
-        "interval": 30,
-        "symbols": [
-            SymbolConfig("AAPL", [Decimal("150"), Decimal("200")]),
-            SymbolConfig("GOOGL", [Decimal("100")]),
-        ],
-    }
-    defaults.update(overrides)
-    return MonitorStocksConfig(**defaults)
+from tests.presentation.scripts.factories import make_config
 
 
 def write_config(tmp_path, config, name="test.json"):

@@ -1,11 +1,15 @@
 import logging
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from pryces.infrastructure.logging import PythonLogger, PythonLoggerFactory
 
 
 class TestPythonLogger:
-    def setup_method(self):
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.inner = MagicMock(spec=logging.Logger)
         self.logger = PythonLogger(self.inner)
 

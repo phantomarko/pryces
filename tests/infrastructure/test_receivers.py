@@ -21,7 +21,7 @@ def make_response(result: list) -> Mock:
 class TestTelegramUpdatePoller:
 
     @patch("pryces.infrastructure.receivers.urllib.request.urlopen")
-    def test_parses_updates_correctly(self, mock_urlopen):
+    def test_returns_all_updates_when_multiple_messages_present(self, mock_urlopen):
         mock_urlopen.return_value = make_response(
             [
                 {
@@ -39,7 +39,45 @@ class TestTelegramUpdatePoller:
         updates = poller.get_updates(0)
 
         assert len(updates) == 2
+
+    @patch("pryces.infrastructure.receivers.urllib.request.urlopen")
+    def test_parses_first_update_fields_correctly(self, mock_urlopen):
+        mock_urlopen.return_value = make_response(
+            [
+                {
+                    "update_id": 1,
+                    "message": {"chat": {"id": 456}, "text": "/help"},
+                },
+                {
+                    "update_id": 2,
+                    "message": {"chat": {"id": 789}, "text": "/targets AAPL"},
+                },
+            ]
+        )
+        poller = make_poller()
+
+        updates = poller.get_updates(0)
+
         assert updates[0] == BotUpdate(update_id=1, chat_id="456", text="/help")
+
+    @patch("pryces.infrastructure.receivers.urllib.request.urlopen")
+    def test_parses_second_update_fields_correctly(self, mock_urlopen):
+        mock_urlopen.return_value = make_response(
+            [
+                {
+                    "update_id": 1,
+                    "message": {"chat": {"id": 456}, "text": "/help"},
+                },
+                {
+                    "update_id": 2,
+                    "message": {"chat": {"id": 789}, "text": "/targets AAPL"},
+                },
+            ]
+        )
+        poller = make_poller()
+
+        updates = poller.get_updates(0)
+
         assert updates[1] == BotUpdate(update_id=2, chat_id="789", text="/targets AAPL")
 
     @patch("pryces.infrastructure.receivers.urllib.request.urlopen")

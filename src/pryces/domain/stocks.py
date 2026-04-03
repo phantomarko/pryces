@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pryces.domain.notification_formatter import NotificationFormatter, StockContext
 from pryces.domain.notifications import Notification, NotificationType
-from pryces.domain.utils import _calculate_percentage_change
+from pryces.domain.utils import calculate_percentage_change
 
 if TYPE_CHECKING:
     from pryces.domain.target_prices import TargetPrice
@@ -389,7 +389,7 @@ class Stock:
         if self.previous_close_price is None:
             return None
 
-        return _calculate_percentage_change(self.current_price, self.previous_close_price)
+        return calculate_percentage_change(self.current_price, self.previous_close_price)
 
     def _is_market_state_open(self) -> bool:
         return self._market_state == MarketState.OPEN
@@ -434,7 +434,7 @@ class Stock:
     def _compute_market_open_percentage_level(self) -> NotificationType | None:
         if self._open_price is None or self._previous_close_price is None:
             return None
-        change = _calculate_percentage_change(self._open_price, self._previous_close_price)
+        change = calculate_percentage_change(self._open_price, self._previous_close_price)
         return self._resolve_percentage_level(change)
 
     def _generate_percentage_change_notification(

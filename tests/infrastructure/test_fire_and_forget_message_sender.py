@@ -73,3 +73,15 @@ class TestFireAndForgetMessageSender:
         sender.shutdown()
 
         inner.send_message.assert_called_once_with("hello")
+
+    def test_shutdown_does_not_propagate_exception_raised_by_inner(self, caplog):
+        inner = MagicMock()
+        inner.send_message.side_effect = RuntimeError("unexpected failure")
+        sender = self._create_sender(inner, logger_factory=PythonLoggerFactory())
+
+        sender.send_message("hello")
+
+        # shutdown() must return normally even when the background task raised
+        sender.shutdown()
+
+        assert "Failed to send message" in caplog.text

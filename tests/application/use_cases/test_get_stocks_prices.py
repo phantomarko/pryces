@@ -1,6 +1,5 @@
 from decimal import Decimal
 from unittest.mock import Mock
-import pytest
 
 from pryces.application.dtos import StockDTO
 from pryces.application.use_cases.get_stocks_prices import (

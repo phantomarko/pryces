@@ -72,10 +72,13 @@ class MonitorStocksCommand(Command):
             "--extra-delay",
             str(extra_delay_minutes),
         ]
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            process = subprocess.Popen(
+                cmd,
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError as e:
+            return CommandResult(message=f"Failed to start monitor process: {e}", success=False)
         return CommandResult(message=f"Monitor started in background (PID: {process.pid})")

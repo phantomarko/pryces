@@ -2,9 +2,10 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
+import pytest
+
 from pryces.application.dtos import TargetPriceDTO
-from pryces.application.interfaces import MessageSender, StockProvider
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+from pryces.application.interfaces import StockProvider
 from pryces.application.services import NotificationService, StockSynchronizer
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import InMemoryStockRepository
@@ -25,11 +26,12 @@ _NOW = datetime(2024, 1, 1, 12, 0, 0)
 
 class TestTriggerStocksNotifications:
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mock_sender, formatter, clock):
         self.mock_provider = Mock(spec=StockProvider)
-        self.mock_sender = Mock(spec=MessageSender)
-        self.formatter = ConsolidatingNotificationFormatter()
-        self.clock = Mock(return_value=_NOW)
+        self.mock_sender = mock_sender
+        self.formatter = formatter
+        self.clock = clock
         self.notification_service = NotificationService(
             self.mock_sender, self.formatter, self.clock
         )
@@ -150,8 +152,9 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
-        assert any("52-week high" in m for m in messages)
+        assert self.mock_sender.send_message.call_count == 1
+        sent_message = self.mock_sender.send_message.call_args[0][0]
+        assert sent_message == "📈 AAPL rose to 200.00 (+5.26%)\n🏆 Hit a new 52-week high"
 
     def test_handle_returns_empty_list_when_no_targets_fulfilled(self):
         stock = create_stock_no_crossing("AAPL")
@@ -216,5 +219,6 @@ class TestTriggerStocksNotifications:
 
         self.use_case.handle(request)
 
-        messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
-        assert any("52-week low" in m for m in messages)
+        assert self.mock_sender.send_message.call_count == 1
+        sent_message = self.mock_sender.send_message.call_args[0][0]
+        assert sent_message == "📉 AAPL dropped to 100.00 (-9.09%)\n💀 Hit a new 52-week low"

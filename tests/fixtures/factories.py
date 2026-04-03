@@ -127,6 +127,23 @@ def generate_and_drain(stock: Stock, now: datetime = _DEFAULT_NOW) -> list[str]:
     return stock.generate_notifications(now, _formatter).messages
 
 
+def make_stock_with_percentage_history(
+    initial_price: Decimal, previous_close: Decimal, final_price: Decimal
+) -> Stock:
+    """Creates a stock that has gone through a percentage threshold, then price change."""
+    stock = make_stock(
+        current_price=str(initial_price),
+        previous_close_price=str(previous_close),
+    )
+    generate_and_drain(stock)
+    source = make_stock(
+        current_price=str(final_price),
+        previous_close_price=str(previous_close),
+    )
+    stock.update(source)
+    return stock
+
+
 def open_stock_ready_for_target(entry_price: str, target: str, hit_price: str) -> Stock:
     """Stock with pre-seeded history, target set, and updated to hit price."""
     stock = open_stock_after_burn(current_price=entry_price, previous_close_price="195.00")

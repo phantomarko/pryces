@@ -32,9 +32,7 @@ def _build_full_info(**overrides) -> dict:
 
 
 class TestYahooFinanceMapper:
-    def test_maps_full_info_to_stock(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
-
+    def test_maps_full_info_to_stock(self, mapper):
         stock = mapper.map("AAPL", _build_full_info())
 
         assert stock is not None
@@ -55,19 +53,15 @@ class TestYahooFinanceMapper:
         assert stock.price_delay_in_minutes == 0
         assert stock.kind == InstrumentType.STOCK
 
-    def test_returns_none_for_empty_info(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
-
+    def test_returns_none_for_empty_info(self, mapper):
         assert mapper.map("AAPL", {}) is None
 
-    def test_returns_none_for_small_metadata_dict(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_returns_none_for_small_metadata_dict(self, mapper):
         info = {"key1": "val1", "key2": "val2", "key3": "val3"}
 
         assert mapper.map("AAPL", info) is None
 
-    def test_returns_none_when_no_price_available(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_returns_none_when_no_price_available(self, mapper):
         info = _build_full_info()
         del info["currentPrice"]
         del info["regularMarketPrice"]
@@ -75,8 +69,7 @@ class TestYahooFinanceMapper:
 
         assert mapper.map("AAPL", info) is None
 
-    def test_price_fallback_to_regular_market_price(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_price_fallback_to_regular_market_price(self, mapper):
         info = _build_full_info()
         del info["currentPrice"]
         info["regularMarketPrice"] = 155.00
@@ -86,8 +79,7 @@ class TestYahooFinanceMapper:
         assert stock is not None
         assert stock.current_price == Decimal("155.0")
 
-    def test_price_fallback_to_previous_close(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_price_fallback_to_previous_close(self, mapper):
         info = _build_full_info()
         del info["currentPrice"]
         del info["regularMarketPrice"]
@@ -98,8 +90,7 @@ class TestYahooFinanceMapper:
         assert stock is not None
         assert stock.current_price == Decimal("148.5")
 
-    def test_maps_market_states(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_maps_market_states(self, mapper):
         cases = {
             "REGULAR": MarketState.OPEN,
             "PRE": MarketState.PRE,
@@ -118,8 +109,7 @@ class TestYahooFinanceMapper:
                 stock.market_state == expected_state
             ), f"Expected {expected_state} for '{yfinance_value}'"
 
-    def test_maps_unknown_market_state_to_none(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_maps_unknown_market_state_to_none(self, mapper):
         info = _build_full_info(marketState="UNKNOWN_STATE")
 
         stock = mapper.map("AAPL", info)
@@ -127,8 +117,7 @@ class TestYahooFinanceMapper:
         assert stock is not None
         assert stock.market_state is None
 
-    def test_maps_none_market_state_to_none(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_maps_none_market_state_to_none(self, mapper):
         info = _build_full_info(marketState=None)
 
         stock = mapper.map("AAPL", info)
@@ -163,8 +152,7 @@ class TestYahooFinanceMapper:
         assert stock is not None
         assert stock.price_delay_in_minutes == 5
 
-    def test_handles_missing_optional_fields(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_handles_missing_optional_fields(self, mapper):
         info = {"currentPrice": 100.0, "k1": "v1", "k2": "v2", "k3": "v3"}
 
         stock = mapper.map("AAPL", info)
@@ -185,8 +173,7 @@ class TestYahooFinanceMapper:
         assert stock.market_state is None
         assert stock.price_delay_in_minutes == 0
 
-    def test_uppercases_symbol(self):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_uppercases_symbol(self, mapper):
         info = _build_full_info()
 
         stock = mapper.map("aapl", info)
@@ -206,8 +193,7 @@ class TestYahooFinanceMapper:
             (None, None),
         ],
     )
-    def test_maps_instrument_types(self, quote_type, expected_kind):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_maps_instrument_types(self, mapper, quote_type, expected_kind):
         info = _build_full_info(quoteType=quote_type)
 
         stock = mapper.map("AAPL", info)
@@ -231,8 +217,7 @@ class TestYahooFinanceMapper:
             (None, None),
         ],
     )
-    def test_maps_currencies(self, raw_currency, expected_currency):
-        mapper = YahooFinanceMapper(extra_delay_in_minutes=0, logger_factory=Mock())
+    def test_maps_currencies(self, mapper, raw_currency, expected_currency):
         info = _build_full_info(currency=raw_currency)
 
         stock = mapper.map("AAPL", info)

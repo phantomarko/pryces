@@ -10,7 +10,8 @@ from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
 
 class TestListConfigsCommand:
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.command = ListConfigsCommand()
 
     def test_get_metadata(self):

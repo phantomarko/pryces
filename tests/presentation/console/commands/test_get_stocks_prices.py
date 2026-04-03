@@ -18,7 +18,7 @@ class TestGetStocksPricesCommand:
         use_case = GetStocksPrices(provider=self.mock_provider)
         self.command = GetStocksPricesCommand(use_case, logger_factory=Mock())
 
-    def test_execute_returns_formatted_multiple_stocks(self):
+    def test_execute_includes_first_stock_in_output(self):
         symbols = "AAPL GOOGL MSFT"
         self.mock_provider.get_stocks.return_value = [
             create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
@@ -29,8 +29,41 @@ class TestGetStocksPricesCommand:
         result = self.command.execute(symbols)
 
         assert "AAPL - Apple Inc. (USD)" in result.message
+
+    def test_execute_includes_second_stock_in_output(self):
+        symbols = "AAPL GOOGL MSFT"
+        self.mock_provider.get_stocks.return_value = [
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
+        ]
+
+        result = self.command.execute(symbols)
+
         assert "GOOGL - Alphabet Inc. (USD)" in result.message
+
+    def test_execute_includes_third_stock_in_output(self):
+        symbols = "AAPL GOOGL MSFT"
+        self.mock_provider.get_stocks.return_value = [
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
+        ]
+
+        result = self.command.execute(symbols)
+
         assert "MSFT - Microsoft Corporation (USD)" in result.message
+
+    def test_execute_includes_all_successful_summary(self):
+        symbols = "AAPL GOOGL MSFT"
+        self.mock_provider.get_stocks.return_value = [
+            create_stock("AAPL", Decimal("150.25"), name="Apple Inc."),
+            create_stock("GOOGL", Decimal("2847.50"), name="Alphabet Inc."),
+            create_stock("MSFT", Decimal("350.75"), name="Microsoft Corporation"),
+        ]
+
+        result = self.command.execute(symbols)
+
         assert "Summary: 3 requested, 3 successful, 0 failed" in result.message
 
     def test_execute_handles_partial_failures(self):

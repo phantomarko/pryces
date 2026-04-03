@@ -8,7 +8,7 @@ from pryces.domain.notifications import (
     Notification,
     NotificationType,
 )
-from pryces.domain.utils import _calculate_percentage_change
+from pryces.domain.utils import calculate_percentage_change
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +65,7 @@ class ConsolidatingNotificationFormatter(NotificationFormatter):
     def _generate_fallback_header(self, context: StockContext) -> Notification:
         if context.previous_close_price is None:
             return Notification.create_plain_header(context.symbol, context.current_price)
-        change_pct = _calculate_percentage_change(
+        change_pct = calculate_percentage_change(
             context.current_price, context.previous_close_price
         )
         return Notification.create_percentage_change(

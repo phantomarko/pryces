@@ -2,9 +2,11 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
-from pryces.application.interfaces import MessageSender, StockProvider
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+import pytest
+
+from pryces.application.interfaces import StockProvider
 from pryces.application.services import NotificationService, StockSynchronizer
+from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import InMemoryStockRepository
 from tests.fixtures.factories import (
@@ -18,10 +20,11 @@ _NOW = datetime(2024, 1, 1, 12, 0, 0)
 
 class TestNotificationService:
 
-    def setup_method(self):
-        self.mock_sender = Mock(spec=MessageSender)
-        self.formatter = ConsolidatingNotificationFormatter()
-        self.clock = Mock(return_value=_NOW)
+    @pytest.fixture(autouse=True)
+    def setup(self, mock_sender, formatter, clock):
+        self.mock_sender = mock_sender
+        self.formatter = formatter
+        self.clock = clock
         self.service = NotificationService(self.mock_sender, self.formatter, self.clock)
 
     def test_sends_notifications_via_message_sender(self):
@@ -30,8 +33,13 @@ class TestNotificationService:
         self.service.send_stock_notifications(stock)
 
         assert self.mock_sender.send_message.call_count == 1
-        messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
-        assert all("AAPL" in m for m in messages)
+        sent_message = self.mock_sender.send_message.call_args[0][0]
+        expected = (
+            "▶️ AAPL opened at 100.495 (+1.51%)\n"
+            "📈 AAPL rose to 101 (+2.02%)\n"
+            "⚠️ Crossed SMA50 at 100"
+        )
+        assert sent_message == expected
 
     def test_handles_multiple_stocks_independently(self):
         stock1 = create_stock_crossing_fifty_day("AAPL")
@@ -68,8 +76,9 @@ class TestNotificationService:
 
         self.service.send_stock_notifications(stock)
 
-        messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
-        assert any("52-week high" in m for m in messages)
+        assert self.mock_sender.send_message.call_count == 1
+        sent_message = self.mock_sender.send_message.call_args[0][0]
+        assert sent_message == "📈 AAPL rose to 200.00 (+5.26%)\n🏆 Hit a new 52-week high"
 
     def test_sends_new_52_week_low_notification_when_snapshot_exists(self):
         stock = Stock(
@@ -90,8 +99,9 @@ class TestNotificationService:
 
         self.service.send_stock_notifications(stock)
 
-        messages = [call[0][0] for call in self.mock_sender.send_message.call_args_list]
-        assert any("52-week low" in m for m in messages)
+        assert self.mock_sender.send_message.call_count == 1
+        sent_message = self.mock_sender.send_message.call_args[0][0]
+        assert sent_message == "📉 AAPL dropped to 100.00 (-9.09%)\n💀 Hit a new 52-week low"
 
     def test_sends_target_notification_when_target_reached(self):
         stock = Stock(
@@ -112,6 +122,27 @@ class TestNotificationService:
         fulfilled = self.service.send_stock_notifications(stock)
 
         self.mock_sender.send_message.assert_called()
+        assert fulfilled == [Decimal("200.00")]
+
+    def test_returns_fulfilled_targets_even_when_sender_returns_false(self):
+        self.mock_sender.send_message.return_value = False
+        stock = Stock(
+            symbol="AAPL",
+            current_price=Decimal("100.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.generate_notifications(_NOW, self.formatter)
+        stock.sync_targets([Decimal("200.00")])
+        source = Stock(
+            symbol="AAPL",
+            current_price=Decimal("200.00"),
+            previous_close_price=Decimal("195.00"),
+            market_state=MarketState.OPEN,
+        )
+        stock.update(source)
+
+        fulfilled = self.service.send_stock_notifications(stock)
+
         assert fulfilled == [Decimal("200.00")]
 
     def test_does_not_remove_unreached_target(self):
@@ -136,7 +167,8 @@ class TestNotificationService:
 
 class TestStockSynchronizer:
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.mock_provider = Mock(spec=StockProvider)
         self.stock_repository = InMemoryStockRepository()
         self.synchronizer = StockSynchronizer(
@@ -195,6 +227,21 @@ class TestStockSynchronizer:
         self.mock_provider.get_stocks.return_value = []
 
         result = self.synchronizer.fetch_and_sync([], {})
+
+        assert result == []
+
+    def test_fetch_and_sync_skips_symbols_not_returned_by_provider(self):
+        stock = create_stock("AAPL")
+        self.mock_provider.get_stocks.return_value = [stock]
+
+        result = self.synchronizer.fetch_and_sync(["AAPL", "GOOGL"], {})
+
+        assert result == [stock]
+
+    def test_fetch_and_sync_returns_empty_when_provider_returns_nothing(self):
+        self.mock_provider.get_stocks.return_value = []
+
+        result = self.synchronizer.fetch_and_sync(["AAPL", "GOOGL"], {})
 
         assert result == []
 
