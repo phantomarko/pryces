@@ -364,7 +364,7 @@ class Stock:
         if sma is None or self.previous_close_price is None:
             return False
 
-        change_percentage = (sma - self.current_price) / self.current_price * 100
+        change_percentage = calculate_percentage_change(sma, self.current_price)
 
         return (
             self.previous_close_price < sma
