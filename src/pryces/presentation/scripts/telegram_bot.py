@@ -97,10 +97,10 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
         symbols_cmd,
         symbol_add_cmd,
         symbol_remove_cmd,
-        stats_cmd,
         targets_cmd,
         target_add_cmd,
         target_remove_cmd,
+        stats_cmd,
     ]
     help_cmd = HelpCommand(commands + [HelpCommand([])])
     all_commands = commands + [help_cmd]

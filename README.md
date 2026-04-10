@@ -200,6 +200,7 @@ python -m pryces.presentation.scripts.telegram_bot --verbose
 | `/targets <symbol>` | List all target prices for a symbol |
 | `/target_add <symbol> <price>` | Add a target price to a symbol |
 | `/target_remove <symbol> <price>` | Remove a specific target price from a symbol |
+| `/stats <symbol>` | Show price statistics for a symbol |
 | `/help` | Show all commands with usage |
 
 Messages from chats other than `TELEGRAM_GROUP_ID` are silently ignored. The bot uses long-polling (`getUpdates`) — no webhook or public URL is required.
