@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -183,7 +184,11 @@ class YahooFinanceStatisticsMapper:
             return None
 
         last_trading_date = history.index[-1].date()
-        current_price = Decimal(str(history.iloc[-1]["Close"]))
+        raw_current_price = history.iloc[-1]["Close"]
+        if math.isnan(raw_current_price):
+            self._logger.error(f"Current price is NaN for symbol: {symbol}")
+            return None
+        current_price = Decimal(str(raw_current_price))
 
         return StockStatistics(
             symbol=symbol.upper(),
@@ -209,6 +214,8 @@ class YahooFinanceStatisticsMapper:
                 continue
 
             close_price = subset.iloc[-1]["Close"]
+            if math.isnan(close_price):
+                continue
             closes.append(
                 HistoricalClose(
                     period=period,

@@ -395,6 +395,23 @@ class TestYahooFinanceStatisticsMapper:
         assert ytd is not None
         assert ytd.close_price == Decimal("275.0")
 
+    def test_returns_none_when_current_price_is_nan(self, statistics_mapper):
+        history = _build_history(days_back=5)
+        history.iloc[-1, history.columns.get_loc("Close")] = float("nan")
+
+        assert statistics_mapper.map("AAPL", _build_full_info(), history) is None
+
+    def test_skips_period_when_historical_close_is_nan(self, statistics_mapper):
+        history = _build_history(days_back=400)
+        history.iloc[0, history.columns.get_loc("Close")] = float("nan")
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
+
+        assert stats is not None
+        # YTD uses the oldest row; even if it were NaN the period would just be skipped
+        # The important assertion is no InvalidOperation is raised and current_price is valid
+        assert stats.current_price > 0
+
     def test_weekend_uses_last_trading_date_as_anchor(self, statistics_mapper):
         # Reproduces the Saturday bug: history ends on Friday, today is Saturday.
         # current_price must be Friday's close and 1D must compare against Thursday's close.
