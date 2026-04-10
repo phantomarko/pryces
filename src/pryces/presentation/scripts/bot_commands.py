@@ -328,8 +328,6 @@ class SymbolsCommand(BotCommand):
 
 def _format_stats(dto: StockStatisticsDTO) -> str:
     header = f"📊 {dto.symbol} — {dto.current_price:.2f}"
-    if dto.currency:
-        header += f" {dto.currency}"
     lines = [header]
     if not dto.price_changes:
         lines.append("No historical data available")

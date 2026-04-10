@@ -503,7 +503,7 @@ class TestStatsCommand:
 
         result = cmd.execute(["aapl"])
 
-        assert result.startswith("📊 AAPL — 182.50 USD")
+        assert result.startswith("📊 AAPL — 182.50")
         assert "Apple Inc." not in result
         assert "1D" in result
         assert "+0.72%" in result
