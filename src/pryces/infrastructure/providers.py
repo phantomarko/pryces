@@ -178,36 +178,31 @@ class YahooFinanceStatisticsMapper:
             self._logger.error(f"No data available for symbol: {symbol}")
             return None
 
-        current_price = None
-        for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
-            if price_key in info and info[price_key] is not None:
-                current_price = info[price_key]
-                break
-
-        if current_price is None:
-            self._logger.error(f"Unable to retrieve current price for symbol: {symbol}")
+        if history.empty:
+            self._logger.error(f"No historical data available for symbol: {symbol}")
             return None
+
+        last_trading_date = history.index[-1].date()
+        current_price = Decimal(str(history.iloc[-1]["Close"]))
 
         return StockStatistics(
             symbol=symbol.upper(),
-            current_price=Decimal(str(current_price)),
-            historical_closes=self._build_historical_closes(history),
+            current_price=current_price,
+            historical_closes=self._build_historical_closes(history, last_trading_date),
             name=info.get("longName") or info.get("shortName"),
             currency=map_currency(info.get("currency")),
         )
 
-    def _build_historical_closes(self, history: pd.DataFrame) -> list[HistoricalClose]:
-        if history.empty:
-            return []
-
-        today = date.today()
+    def _build_historical_closes(
+        self, history: pd.DataFrame, last_trading_date: date
+    ) -> list[HistoricalClose]:
         closes: list[HistoricalClose] = []
 
         for period, delta in _PERIOD_DELTAS.items():
             if delta is not None:
-                target_date = today - delta
+                target_date = last_trading_date - delta
             else:
-                target_date = date(today.year - 1, 12, 31)
+                target_date = date(last_trading_date.year - 1, 12, 31)
 
             subset = history[history.index.date <= target_date]
             if subset.empty:

@@ -270,7 +270,6 @@ class TestYahooFinanceStatisticsMapper:
 
         assert stats is not None
         assert stats.symbol == "AAPL"
-        assert stats.current_price == Decimal("150.25")
         assert stats.name == "Test Company Inc."
         assert stats.currency == Currency.USD
         assert len(stats.price_changes) > 0
@@ -282,23 +281,10 @@ class TestYahooFinanceStatisticsMapper:
         info = {"key1": "val1", "key2": "val2", "key3": "val3"}
         assert statistics_mapper.map("AAPL", info, _build_history()) is None
 
-    def test_returns_none_when_no_price_available(self, statistics_mapper):
-        info = _build_full_info()
-        del info["currentPrice"]
-        del info["regularMarketPrice"]
-        del info["previousClose"]
+    def test_returns_none_when_history_is_empty(self, statistics_mapper):
+        empty_history = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
 
-        assert statistics_mapper.map("AAPL", info, _build_history()) is None
-
-    def test_price_fallback_to_regular_market_price(self, statistics_mapper):
-        info = _build_full_info()
-        del info["currentPrice"]
-        info["regularMarketPrice"] = 155.00
-
-        stats = statistics_mapper.map("AAPL", info, _build_history())
-
-        assert stats is not None
-        assert stats.current_price == Decimal("155.0")
+        assert statistics_mapper.map("AAPL", _build_full_info(), empty_history) is None
 
     def test_uppercases_symbol(self, statistics_mapper):
         stats = statistics_mapper.map("aapl", _build_full_info(), _build_history())
@@ -322,13 +308,14 @@ class TestYahooFinanceStatisticsMapper:
         assert stats is not None
         assert stats.name == "Test Co"
 
-    def test_empty_history_produces_no_price_changes(self, statistics_mapper):
-        empty_history = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+    def test_current_price_is_last_history_close(self, statistics_mapper):
+        history = _build_history()
+        expected_price = Decimal(str(history.iloc[-1]["Close"]))
 
-        stats = statistics_mapper.map("AAPL", _build_full_info(), empty_history)
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
 
         assert stats is not None
-        assert stats.price_changes == []
+        assert stats.current_price == expected_price
 
     def test_builds_all_periods_from_full_history(self, statistics_mapper):
         history = _build_history(days_back=400)
@@ -357,9 +344,9 @@ class TestYahooFinanceStatisticsMapper:
 
     def test_historical_close_uses_closest_trading_day(self, statistics_mapper):
         today = date.today()
-        target_date = today - timedelta(days=1)
-        # Create history with only specific dates (sparse)
-        dates = pd.to_datetime([target_date - timedelta(days=2), target_date])
+        last_trading_date = today - timedelta(days=1)
+        # Sparse history: only two dates, with a gap around the 1D target
+        dates = pd.to_datetime([last_trading_date - timedelta(days=2), last_trading_date])
         history = pd.DataFrame(
             {
                 "Close": [90.0, 95.0],
@@ -374,27 +361,26 @@ class TestYahooFinanceStatisticsMapper:
         stats = statistics_mapper.map("AAPL", _build_full_info(), history)
 
         assert stats is not None
+        assert stats.current_price == Decimal("95.0")
         one_day = next(
             (pc for pc in stats.price_changes if pc.period == StatisticsPeriod.ONE_DAY),
             None,
         )
         assert one_day is not None
-        assert one_day.close_price == Decimal("95.0")
+        # 1D target = last_trading_date - 1 day; closest prior close is last_trading_date - 2 days
+        assert one_day.close_price == Decimal("90.0")
 
-    @patch("pryces.infrastructure.providers.date")
-    def test_ytd_uses_previous_year_end(self, mock_date, statistics_mapper):
-        mock_date.today.return_value = date(2026, 3, 15)
-        mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
-
-        dec_31 = date(2025, 12, 31)
-        dates = pd.to_datetime([dec_31 - timedelta(days=1), dec_31])
+    def test_ytd_uses_previous_year_end(self, statistics_mapper):
+        # History ends in 2026 (last_trading_date = Mar 15 2026),
+        # so YTD anchor = date(2026 - 1, 12, 31) = Dec 31, 2025
+        dates = pd.to_datetime([date(2025, 12, 30), date(2025, 12, 31), date(2026, 3, 15)])
         history = pd.DataFrame(
             {
-                "Close": [270.0, 275.0],
-                "Open": [270.0, 275.0],
-                "High": [271.0, 276.0],
-                "Low": [269.0, 274.0],
-                "Volume": [1000, 1000],
+                "Close": [270.0, 275.0, 300.0],
+                "Open": [270.0, 275.0, 300.0],
+                "High": [271.0, 276.0, 301.0],
+                "Low": [269.0, 274.0, 299.0],
+                "Volume": [1000, 1000, 1000],
             },
             index=dates,
         )
@@ -408,3 +394,31 @@ class TestYahooFinanceStatisticsMapper:
         )
         assert ytd is not None
         assert ytd.close_price == Decimal("275.0")
+
+    def test_weekend_uses_last_trading_date_as_anchor(self, statistics_mapper):
+        # Reproduces the Saturday bug: history ends on Friday, today is Saturday.
+        # current_price must be Friday's close and 1D must compare against Thursday's close.
+        thursday = date(2026, 4, 9)
+        friday = date(2026, 4, 10)
+        dates = pd.to_datetime([thursday, friday])
+        history = pd.DataFrame(
+            {
+                "Close": [148.0, 150.0],
+                "Open": [148.0, 150.0],
+                "High": [149.0, 151.0],
+                "Low": [147.0, 149.0],
+                "Volume": [1000, 1000],
+            },
+            index=dates,
+        )
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
+
+        assert stats is not None
+        assert stats.current_price == Decimal("150.0")
+        one_day = next(
+            (pc for pc in stats.price_changes if pc.period == StatisticsPeriod.ONE_DAY),
+            None,
+        )
+        assert one_day is not None
+        assert one_day.close_price == Decimal("148.0")
