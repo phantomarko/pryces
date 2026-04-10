@@ -1,11 +1,18 @@
 from abc import ABC, abstractmethod
 
+from pryces.domain.stock_statistics import StockStatistics
 from pryces.domain.stocks import Stock
 
 
 class StockProvider(ABC):
     @abstractmethod
     def get_stocks(self, symbols: list[str]) -> list[Stock]:
+        pass
+
+
+class StockStatisticsProvider(ABC):
+    @abstractmethod
+    def get_stock_statistics(self, symbols: list[str]) -> list[StockStatistics]:
         pass
 
 

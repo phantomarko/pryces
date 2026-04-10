@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
+from pryces.domain.stock_statistics import PriceChange, StockStatistics
 from pryces.domain.stocks import Stock
 
 
@@ -53,3 +54,39 @@ class StockDTO:
 class TargetPriceDTO:
     symbol: str
     target: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class PriceChangeDTO:
+    period: str
+    close_price: Decimal
+    change: Decimal
+    change_percentage: Decimal
+
+    @staticmethod
+    def from_price_change(price_change: PriceChange) -> PriceChangeDTO:
+        return PriceChangeDTO(
+            period=price_change.period.value,
+            close_price=price_change.close_price,
+            change=price_change.change,
+            change_percentage=price_change.change_percentage,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class StockStatisticsDTO:
+    symbol: str
+    current_price: Decimal
+    price_changes: list[PriceChangeDTO]
+    name: str | None = None
+    currency: str | None = None
+
+    @staticmethod
+    def from_stock_statistics(stats: StockStatistics) -> StockStatisticsDTO:
+        return StockStatisticsDTO(
+            symbol=stats.symbol,
+            current_price=stats.current_price,
+            price_changes=[PriceChangeDTO.from_price_change(pc) for pc in stats.price_changes],
+            name=stats.name,
+            currency=stats.currency.value if stats.currency is not None else None,
+        )

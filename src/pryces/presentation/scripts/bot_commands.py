@@ -5,6 +5,7 @@ from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 
+from ...application.dtos import StockStatisticsDTO
 from ...application.interfaces import LoggerFactory
 from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
 
@@ -64,6 +65,7 @@ _FindConfigByNameFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _GetAllSymbolsFn = Callable[[], list[str]]
 _GetAllSymbolsWithTargetsFn = Callable[[], list[tuple[str, list[Decimal]]]]
 _GetConfigNamesFn = Callable[[], list[str]]
+_GetStockStatisticsFn = Callable[[str], StockStatisticsDTO | None]
 
 
 def _find_symbol_config(
@@ -322,6 +324,53 @@ class SymbolsCommand(BotCommand):
             else:
                 lines.append(f"{i}) {symbol}")
         return "\n".join(lines)
+
+
+def _format_stats(dto: StockStatisticsDTO) -> str:
+    header = f"📊 {dto.symbol} — {dto.current_price:.2f}"
+    if dto.currency:
+        header += f" {dto.currency}"
+    lines = [header]
+    if not dto.price_changes:
+        lines.append("No historical data available")
+        return "\n".join(lines)
+    for pc in dto.price_changes:
+        sign = "+" if pc.change_percentage > 0 else ""
+        pct_str = f"{sign}{pc.change_percentage:.2f}%"
+        icon = "📈" if pc.change_percentage >= 0 else "📉"
+        lines.append(f"{icon} {pc.period:<3}  {pc.close_price:.2f}  {pct_str}")
+    return "\n".join(lines)
+
+
+class StatsCommand(BotCommand):
+    def __init__(self, get_stock_statistics: _GetStockStatisticsFn) -> None:
+        self._get_stock_statistics = get_stock_statistics
+
+    @property
+    def name(self) -> str:
+        return "/stats"
+
+    @property
+    def usage(self) -> str:
+        return "/stats <symbol>"
+
+    @property
+    def description(self) -> str:
+        return "Show price statistics for a symbol"
+
+    @property
+    def arg_count(self) -> int:
+        return 1
+
+    def execute(self, args: list[str]) -> str:
+        symbol = args[0].upper()
+        try:
+            dto = self._get_stock_statistics(symbol)
+            if dto is None:
+                return f"❌ {symbol} not found"
+            return _format_stats(dto)
+        except Exception as e:
+            return f"❌ Error: {e}"
 
 
 class ConfigsCommand(BotCommand):

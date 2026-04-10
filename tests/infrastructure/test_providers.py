@@ -1,10 +1,13 @@
+from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
+import pandas as pd
 import pytest
 
+from pryces.domain.stock_statistics import StatisticsPeriod
 from pryces.domain.stocks import Currency, InstrumentType, MarketState
-from pryces.infrastructure.providers import YahooFinanceMapper
+from pryces.infrastructure.providers import YahooFinanceMapper, map_currency
 
 
 def _build_full_info(**overrides) -> dict:
@@ -224,3 +227,184 @@ class TestYahooFinanceMapper:
 
         assert stock is not None
         assert stock.currency == expected_currency
+
+
+class TestMapCurrency:
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            ("USD", Currency.USD),
+            ("EUR", Currency.EUR),
+            ("GBp", Currency.GBP),
+            ("TWD", None),
+            (None, None),
+        ],
+    )
+    def test_maps_currency_values(self, raw, expected):
+        assert map_currency(raw) == expected
+
+
+def _build_history(days_back: int = 400) -> pd.DataFrame:
+    today = date.today()
+    dates = pd.date_range(
+        start=today - timedelta(days=days_back),
+        end=today,
+        freq="B",
+    )
+    data = {
+        "Open": [100.0 + i * 0.1 for i in range(len(dates))],
+        "High": [101.0 + i * 0.1 for i in range(len(dates))],
+        "Low": [99.0 + i * 0.1 for i in range(len(dates))],
+        "Close": [100.0 + i * 0.1 for i in range(len(dates))],
+        "Volume": [1000000] * len(dates),
+    }
+    return pd.DataFrame(data, index=dates)
+
+
+class TestYahooFinanceStatisticsMapper:
+    def test_maps_full_info_to_statistics(self, statistics_mapper):
+        info = _build_full_info()
+        history = _build_history()
+
+        stats = statistics_mapper.map("AAPL", info, history)
+
+        assert stats is not None
+        assert stats.symbol == "AAPL"
+        assert stats.current_price == Decimal("150.25")
+        assert stats.name == "Test Company Inc."
+        assert stats.currency == Currency.USD
+        assert len(stats.price_changes) > 0
+
+    def test_returns_none_for_empty_info(self, statistics_mapper):
+        assert statistics_mapper.map("AAPL", {}, _build_history()) is None
+
+    def test_returns_none_for_small_metadata_dict(self, statistics_mapper):
+        info = {"key1": "val1", "key2": "val2", "key3": "val3"}
+        assert statistics_mapper.map("AAPL", info, _build_history()) is None
+
+    def test_returns_none_when_no_price_available(self, statistics_mapper):
+        info = _build_full_info()
+        del info["currentPrice"]
+        del info["regularMarketPrice"]
+        del info["previousClose"]
+
+        assert statistics_mapper.map("AAPL", info, _build_history()) is None
+
+    def test_price_fallback_to_regular_market_price(self, statistics_mapper):
+        info = _build_full_info()
+        del info["currentPrice"]
+        info["regularMarketPrice"] = 155.00
+
+        stats = statistics_mapper.map("AAPL", info, _build_history())
+
+        assert stats is not None
+        assert stats.current_price == Decimal("155.0")
+
+    def test_uppercases_symbol(self, statistics_mapper):
+        stats = statistics_mapper.map("aapl", _build_full_info(), _build_history())
+
+        assert stats is not None
+        assert stats.symbol == "AAPL"
+
+    def test_maps_currency(self, statistics_mapper):
+        info = _build_full_info(currency="EUR")
+
+        stats = statistics_mapper.map("AAPL", info, _build_history())
+
+        assert stats is not None
+        assert stats.currency == Currency.EUR
+
+    def test_name_falls_back_to_short_name(self, statistics_mapper):
+        info = _build_full_info(longName=None)
+
+        stats = statistics_mapper.map("AAPL", info, _build_history())
+
+        assert stats is not None
+        assert stats.name == "Test Co"
+
+    def test_empty_history_produces_no_price_changes(self, statistics_mapper):
+        empty_history = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), empty_history)
+
+        assert stats is not None
+        assert stats.price_changes == []
+
+    def test_builds_all_periods_from_full_history(self, statistics_mapper):
+        history = _build_history(days_back=400)
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
+
+        assert stats is not None
+        periods = {pc.period for pc in stats.price_changes}
+        assert periods == {
+            StatisticsPeriod.ONE_DAY,
+            StatisticsPeriod.ONE_WEEK,
+            StatisticsPeriod.THREE_MONTHS,
+            StatisticsPeriod.ONE_YEAR,
+            StatisticsPeriod.YEAR_TO_DATE,
+        }
+
+    def test_skips_periods_without_data(self, statistics_mapper):
+        history = _build_history(days_back=5)
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
+
+        assert stats is not None
+        periods = {pc.period for pc in stats.price_changes}
+        assert StatisticsPeriod.ONE_YEAR not in periods
+        assert StatisticsPeriod.THREE_MONTHS not in periods
+
+    def test_historical_close_uses_closest_trading_day(self, statistics_mapper):
+        today = date.today()
+        target_date = today - timedelta(days=1)
+        # Create history with only specific dates (sparse)
+        dates = pd.to_datetime([target_date - timedelta(days=2), target_date])
+        history = pd.DataFrame(
+            {
+                "Close": [90.0, 95.0],
+                "Open": [90.0, 95.0],
+                "High": [91.0, 96.0],
+                "Low": [89.0, 94.0],
+                "Volume": [1000, 1000],
+            },
+            index=dates,
+        )
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
+
+        assert stats is not None
+        one_day = next(
+            (pc for pc in stats.price_changes if pc.period == StatisticsPeriod.ONE_DAY),
+            None,
+        )
+        assert one_day is not None
+        assert one_day.close_price == Decimal("95.0")
+
+    @patch("pryces.infrastructure.providers.date")
+    def test_ytd_uses_previous_year_end(self, mock_date, statistics_mapper):
+        mock_date.today.return_value = date(2026, 3, 15)
+        mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
+
+        dec_31 = date(2025, 12, 31)
+        dates = pd.to_datetime([dec_31 - timedelta(days=1), dec_31])
+        history = pd.DataFrame(
+            {
+                "Close": [270.0, 275.0],
+                "Open": [270.0, 275.0],
+                "High": [271.0, 276.0],
+                "Low": [269.0, 274.0],
+                "Volume": [1000, 1000],
+            },
+            index=dates,
+        )
+
+        stats = statistics_mapper.map("AAPL", _build_full_info(), history)
+
+        assert stats is not None
+        ytd = next(
+            (pc for pc in stats.price_changes if pc.period == StatisticsPeriod.YEAR_TO_DATE),
+            None,
+        )
+        assert ytd is not None
+        assert ytd.close_price == Decimal("275.0")

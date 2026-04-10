@@ -4,11 +4,13 @@ from unittest.mock import Mock
 
 import pytest
 
+from pryces.application.dtos import PriceChangeDTO, StockStatisticsDTO
 from pryces.presentation.scripts.bot_commands import (
     _MAX_MESSAGE_LENGTH,
     BotCommandDispatcher,
     ConfigsCommand,
     HelpCommand,
+    StatsCommand,
     SymbolAddCommand,
     SymbolRemoveCommand,
     SymbolsCommand,
@@ -475,3 +477,80 @@ class TestTargetRemoveCommandValidation:
         result = cmd.execute(["AAPL", "0"])
 
         assert result == "❌ Invalid price"
+
+
+def _make_price_change(period: str, close_price: str, change_pct: str) -> PriceChangeDTO:
+    close = Decimal(close_price)
+    pct = Decimal(change_pct)
+    change = close * pct / 100
+    return PriceChangeDTO(period=period, close_price=close, change=change, change_percentage=pct)
+
+
+class TestStatsCommand:
+    def test_returns_formatted_stats_with_all_fields(self):
+        dto = StockStatisticsDTO(
+            symbol="AAPL",
+            current_price=Decimal("182.50"),
+            name="Apple Inc.",
+            currency="USD",
+            price_changes=[
+                _make_price_change("1D", "181.20", "0.72"),
+                _make_price_change("1W", "179.00", "1.96"),
+                _make_price_change("1Y", "140.00", "-23.29"),
+            ],
+        )
+        cmd = StatsCommand(lambda _: dto)
+
+        result = cmd.execute(["aapl"])
+
+        assert result.startswith("📊 AAPL — 182.50 USD")
+        assert "Apple Inc." not in result
+        assert "1D" in result
+        assert "+0.72%" in result
+        assert "1W" in result
+        assert "+1.96%" in result
+        assert "1Y" in result
+        assert "-23.29%" in result
+
+    def test_returns_formatted_stats_without_name_and_currency(self):
+        dto = StockStatisticsDTO(
+            symbol="BTC-USD",
+            current_price=Decimal("65000"),
+            price_changes=[_make_price_change("1D", "63000", "3.17")],
+        )
+        cmd = StatsCommand(lambda _: dto)
+
+        result = cmd.execute(["BTC-USD"])
+
+        assert result.split("\n")[0] == "📊 BTC-USD — 65000.00"
+        assert "+3.17%" in result
+
+    def test_returns_formatted_stats_with_empty_price_changes(self):
+        dto = StockStatisticsDTO(
+            symbol="AAPL",
+            current_price=Decimal("182.50"),
+            price_changes=[],
+        )
+        cmd = StatsCommand(lambda _: dto)
+
+        result = cmd.execute(["AAPL"])
+
+        assert "📊 AAPL" in result
+        assert "No historical data available" in result
+
+    def test_returns_error_when_symbol_not_found(self):
+        cmd = StatsCommand(lambda _: None)
+
+        result = cmd.execute(["UNKNOWN"])
+
+        assert result == "❌ UNKNOWN not found"
+
+    def test_returns_error_on_exception(self):
+        def raise_error(_):
+            raise RuntimeError("network failure")
+
+        cmd = StatsCommand(raise_error)
+
+        result = cmd.execute(["AAPL"])
+
+        assert result.startswith("❌ Error:")

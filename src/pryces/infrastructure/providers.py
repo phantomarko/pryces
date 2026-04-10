@@ -1,11 +1,31 @@
+from __future__ import annotations
+
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import Decimal
 
+import pandas as pd
 import yfinance as yf
 
-from ..application.interfaces import LoggerFactory, StockProvider
+from ..application.interfaces import LoggerFactory, StockProvider, StockStatisticsProvider
+from ..domain.stock_statistics import HistoricalClose, StatisticsPeriod, StockStatistics
 from ..domain.stocks import Currency, InstrumentType, MarketState, Stock
+
+_CURRENCY_ALIASES: dict[str, Currency] = {
+    "GBp": Currency.GBP,
+}
+
+
+def map_currency(value: str | None) -> Currency | None:
+    if value is None:
+        return None
+    if value in _CURRENCY_ALIASES:
+        return _CURRENCY_ALIASES[value]
+    try:
+        return Currency(value)
+    except ValueError:
+        return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,19 +112,8 @@ class YahooFinanceMapper:
             return None
         return mapping.get(value)
 
-    _CURRENCY_ALIASES: dict[str, Currency] = {
-        "GBp": Currency.GBP,  # yfinance reports pence for LSE stocks
-    }
-
     def _map_currency(self, value: str | None) -> Currency | None:
-        if value is None:
-            return None
-        if value in self._CURRENCY_ALIASES:
-            return self._CURRENCY_ALIASES[value]
-        try:
-            return Currency(value)
-        except ValueError:
-            return None
+        return map_currency(value)
 
     def _map_market_state(self, value: str | None) -> MarketState | None:
         match value:
@@ -149,3 +158,96 @@ class YahooFinanceProvider(StockProvider):
             results = list(executor.map(self._get_stock, symbols))
 
         return [stock for stock in results if stock is not None]
+
+
+_PERIOD_DELTAS: dict[StatisticsPeriod, timedelta | None] = {
+    StatisticsPeriod.ONE_DAY: timedelta(days=1),
+    StatisticsPeriod.ONE_WEEK: timedelta(weeks=1),
+    StatisticsPeriod.THREE_MONTHS: timedelta(days=90),
+    StatisticsPeriod.ONE_YEAR: timedelta(days=365),
+    StatisticsPeriod.YEAR_TO_DATE: None,
+}
+
+
+class YahooFinanceStatisticsMapper:
+    def __init__(self, logger_factory: LoggerFactory) -> None:
+        self._logger = logger_factory.get_logger(__name__)
+
+    def map(self, symbol: str, info: dict, history: pd.DataFrame) -> StockStatistics | None:
+        if not info or len(info) <= 3:
+            self._logger.error(f"No data available for symbol: {symbol}")
+            return None
+
+        current_price = None
+        for price_key in ["currentPrice", "regularMarketPrice", "previousClose"]:
+            if price_key in info and info[price_key] is not None:
+                current_price = info[price_key]
+                break
+
+        if current_price is None:
+            self._logger.error(f"Unable to retrieve current price for symbol: {symbol}")
+            return None
+
+        return StockStatistics(
+            symbol=symbol.upper(),
+            current_price=Decimal(str(current_price)),
+            historical_closes=self._build_historical_closes(history),
+            name=info.get("longName") or info.get("shortName"),
+            currency=map_currency(info.get("currency")),
+        )
+
+    def _build_historical_closes(self, history: pd.DataFrame) -> list[HistoricalClose]:
+        if history.empty:
+            return []
+
+        today = date.today()
+        closes: list[HistoricalClose] = []
+
+        for period, delta in _PERIOD_DELTAS.items():
+            if delta is not None:
+                target_date = today - delta
+            else:
+                target_date = date(today.year - 1, 12, 31)
+
+            subset = history[history.index.date <= target_date]
+            if subset.empty:
+                continue
+
+            close_price = subset.iloc[-1]["Close"]
+            closes.append(
+                HistoricalClose(
+                    period=period,
+                    close_price=Decimal(str(close_price)),
+                )
+            )
+
+        return closes
+
+
+class YahooFinanceStatisticsProvider(StockStatisticsProvider):
+    def __init__(self, settings: YahooFinanceSettings, logger_factory: LoggerFactory) -> None:
+        self._max_workers = settings.max_workers
+        self._mapper = YahooFinanceStatisticsMapper(logger_factory)
+        self._logger = logger_factory.get_logger(__name__)
+
+    def _get_stock_statistics(self, symbol: str) -> StockStatistics | None:
+        try:
+            self._logger.debug(f"Fetching stock statistics for {symbol}")
+            ticker_obj = yf.Ticker(symbol)
+            info = ticker_obj.info
+            history = ticker_obj.history(start=date.today() - timedelta(days=400))
+            stats = self._mapper.map(symbol, info, history)
+            del info, history, ticker_obj
+            return stats
+        except Exception as e:
+            self._logger.error(f"Error fetching statistics for {symbol}: {e}")
+            return None
+
+    def get_stock_statistics(self, symbols: list[str]) -> list[StockStatistics]:
+        if not symbols:
+            return []
+
+        with ThreadPoolExecutor(max_workers=min(len(symbols), self._max_workers)) as executor:
+            results = list(executor.map(self._get_stock_statistics, symbols))
+
+        return [stats for stats in results if stats is not None]

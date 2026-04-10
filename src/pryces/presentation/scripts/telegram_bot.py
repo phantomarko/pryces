@@ -3,9 +3,15 @@ import sys
 
 from dotenv import load_dotenv
 
+from ...application.dtos import StockStatisticsDTO
 from ...application.interfaces import LoggerFactory, MessageSender
+from ...application.use_cases.get_stocks_statistics import (
+    GetStocksStatistics,
+    GetStocksStatisticsRequest,
+)
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
+from ...infrastructure.providers import YahooFinanceStatisticsProvider
 from ...infrastructure.receivers import TelegramUpdatePoller
 from ...infrastructure.senders import TelegramMessageSender
 from .bot_commands import (
@@ -13,6 +19,7 @@ from .bot_commands import (
     BotCommandDispatcher,
     ConfigsCommand,
     HelpCommand,
+    StatsCommand,
     SymbolAddCommand,
     SymbolRemoveCommand,
     SymbolsCommand,
@@ -67,6 +74,16 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
         settings=telegram_settings, logger_factory=logger_factory
     )
 
+    yahoo_settings = SettingsFactory.create_yahoo_finance_settings()
+    statistics_provider = YahooFinanceStatisticsProvider(
+        settings=yahoo_settings, logger_factory=logger_factory
+    )
+    get_stocks_statistics = GetStocksStatistics(statistics_provider)
+
+    def get_stock_statistics(symbol: str) -> StockStatisticsDTO | None:
+        results = get_stocks_statistics.handle(GetStocksStatisticsRequest(symbols=[symbol]))
+        return results[0] if results else None
+
     targets_cmd = TargetsCommand(find_config_for_symbol)
     target_add_cmd = TargetAddCommand(find_config_for_symbol)
     target_remove_cmd = TargetRemoveCommand(find_config_for_symbol)
@@ -74,11 +91,13 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     configs_cmd = ConfigsCommand(get_config_names)
     symbol_add_cmd = SymbolAddCommand(find_config_by_name)
     symbol_remove_cmd = SymbolRemoveCommand(find_config_for_symbol)
+    stats_cmd = StatsCommand(get_stock_statistics)
     commands: list[BotCommand] = [
         configs_cmd,
         symbols_cmd,
         symbol_add_cmd,
         symbol_remove_cmd,
+        stats_cmd,
         targets_cmd,
         target_add_cmd,
         target_remove_cmd,
