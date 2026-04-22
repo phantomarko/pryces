@@ -14,6 +14,7 @@ Retrieves real-time stock data from Yahoo Finance and delivers Telegram notifica
   - [Scripts](#scripts)
     - [Monitor Stocks](#monitor-stocks)
     - [Telegram Bot](#telegram-bot)
+    - [Report Stocks Statistics](#report-stocks-statistics)
   - [Interactive CLI](#interactive-cli)
     - [List Configs](#list-configs)
     - [Create Config](#create-config)
@@ -204,6 +205,32 @@ python -m pryces.presentation.scripts.telegram_bot --verbose
 | `/help` | Show all commands with usage |
 
 Messages from chats other than `TELEGRAM_GROUP_ID` are silently ignored. The bot uses long-polling (`getUpdates`) — no webhook or public URL is required.
+
+#### Report Stocks Statistics
+
+Reads all config files in the `configs/` directory, collects every tracked symbol, fetches price statistics for each (current price + percentage changes for 1D, 1W, 3M, 1Y, YTD periods), and sends one Telegram message per symbol. Runs once and exits — intended for scheduled use (e.g. a daily cron job).
+
+```bash
+# using Makefile
+make report
+make report VERBOSE=1
+
+# or using Python
+source venv/bin/activate
+python -m pryces.presentation.scripts.report_stocks_statistics
+python -m pryces.presentation.scripts.report_stocks_statistics --verbose
+```
+
+**Example output per symbol:**
+
+```
+📊 AAPL — 182.50
+📈 1D   181.20  +0.72%
+📈 1W   179.00  +1.96%
+📉 1Y   140.00  -23.29%
+```
+
+If no symbols are tracked (all config files are empty or `configs/` is empty), the script exits without sending any messages.
 
 ### Interactive CLI
 
