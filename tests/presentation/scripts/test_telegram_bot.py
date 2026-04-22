@@ -1,5 +1,6 @@
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, call
 
+from pryces.application.use_cases.send_messages import SendMessages, SendMessagesRequest
 from pryces.infrastructure.receivers import BotUpdate, TelegramUpdatePoller
 from pryces.presentation.scripts.bot_commands import BotCommandDispatcher
 from pryces.presentation.scripts.telegram_bot import TelegramBotScript
@@ -7,13 +8,13 @@ from pryces.presentation.scripts.telegram_bot import TelegramBotScript
 
 def make_script(
     poller=None,
-    message_sender=None,
+    send_messages=None,
     dispatcher=None,
     group_id="123",
 ) -> TelegramBotScript:
     return TelegramBotScript(
         poller=poller or Mock(spec=TelegramUpdatePoller),
-        message_sender=message_sender or Mock(),
+        send_messages=send_messages or Mock(spec=SendMessages),
         dispatcher=dispatcher or Mock(spec=BotCommandDispatcher),
         group_id=group_id,
         logger_factory=Mock(),
@@ -26,11 +27,11 @@ class TestTelegramBotScript:
         poller = Mock(spec=TelegramUpdatePoller)
         updates = [BotUpdate(update_id=1, chat_id="123", text="/help")]
         poller.get_updates.side_effect = [updates, KeyboardInterrupt]
-        sender = Mock()
+        send_messages = Mock(spec=SendMessages)
         dispatcher = Mock(spec=BotCommandDispatcher)
         dispatcher.dispatch.return_value = "help text"
 
-        script = make_script(poller=poller, message_sender=sender, dispatcher=dispatcher)
+        script = make_script(poller=poller, send_messages=send_messages, dispatcher=dispatcher)
 
         try:
             script.run()
@@ -38,16 +39,16 @@ class TestTelegramBotScript:
             pass
 
         dispatcher.dispatch.assert_called_once_with("/help")
-        sender.send_message.assert_called_once_with("help text")
+        send_messages.handle.assert_called_once_with(SendMessagesRequest(messages=["help text"]))
 
     def test_skips_updates_from_foreign_chat_id(self):
         poller = Mock(spec=TelegramUpdatePoller)
         updates = [BotUpdate(update_id=1, chat_id="999", text="/help")]
         poller.get_updates.side_effect = [updates, KeyboardInterrupt]
-        sender = Mock()
+        send_messages = Mock(spec=SendMessages)
         dispatcher = Mock(spec=BotCommandDispatcher)
 
-        script = make_script(poller=poller, message_sender=sender, dispatcher=dispatcher)
+        script = make_script(poller=poller, send_messages=send_messages, dispatcher=dispatcher)
 
         try:
             script.run()
@@ -55,24 +56,24 @@ class TestTelegramBotScript:
             pass
 
         dispatcher.dispatch.assert_not_called()
-        sender.send_message.assert_not_called()
+        send_messages.handle.assert_not_called()
 
     def test_does_not_send_when_dispatch_returns_empty(self):
         poller = Mock(spec=TelegramUpdatePoller)
         updates = [BotUpdate(update_id=1, chat_id="123", text="hello")]
         poller.get_updates.side_effect = [updates, KeyboardInterrupt]
-        sender = Mock()
+        send_messages = Mock(spec=SendMessages)
         dispatcher = Mock(spec=BotCommandDispatcher)
         dispatcher.dispatch.return_value = ""
 
-        script = make_script(poller=poller, message_sender=sender, dispatcher=dispatcher)
+        script = make_script(poller=poller, send_messages=send_messages, dispatcher=dispatcher)
 
         try:
             script.run()
         except KeyboardInterrupt:
             pass
 
-        sender.send_message.assert_not_called()
+        send_messages.handle.assert_not_called()
 
     def test_advances_offset_correctly(self):
         poller = Mock(spec=TelegramUpdatePoller)
@@ -101,16 +102,16 @@ class TestTelegramBotScript:
             BotUpdate(update_id=2, chat_id="123", text="/help"),
         ]
         poller.get_updates.side_effect = [updates, KeyboardInterrupt]
-        sender = Mock()
-        sender.send_message.side_effect = [Exception("send failed"), True]
+        send_messages = Mock(spec=SendMessages)
+        send_messages.handle.side_effect = [Exception("send failed"), None]
         dispatcher = Mock(spec=BotCommandDispatcher)
         dispatcher.dispatch.return_value = "reply"
 
-        script = make_script(poller=poller, message_sender=sender, dispatcher=dispatcher)
+        script = make_script(poller=poller, send_messages=send_messages, dispatcher=dispatcher)
 
         try:
             script.run()
         except KeyboardInterrupt:
             pass
 
-        assert sender.send_message.call_count == 2
+        assert send_messages.handle.call_count == 2
