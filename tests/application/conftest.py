@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from pryces.application.interfaces import MessageSender
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+from pryces.infrastructure.formatters import ConsolidatingNotificationFormatter
 
 _NOW = datetime(2024, 1, 1, 12, 0, 0)
 

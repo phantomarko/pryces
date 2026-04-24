@@ -6,7 +6,7 @@ import pytest
 
 from pryces.application.interfaces import StockProvider
 from pryces.application.services import NotificationService, StockSynchronizer
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+from pryces.infrastructure.formatters import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import MarketState, Stock
 from pryces.infrastructure.repositories import InMemoryStockRepository
 from tests.fixtures.factories import (

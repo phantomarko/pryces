@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
-from ...domain.notification_formatter import ConsolidatingNotificationFormatter
+from ...infrastructure.formatters import ConsolidatingNotificationFormatter
 from ...application.services import NotificationService, StockSynchronizer
 from ...application.use_cases.trigger_stocks_notifications import (
     TriggerStocksNotifications,

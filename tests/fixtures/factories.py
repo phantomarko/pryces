@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from pryces.application.dtos import StockDTO
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+from pryces.infrastructure.formatters import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import Currency, InstrumentType, MarketState, Stock
 
 _DEFAULT_NOW = datetime(2024, 1, 1, 12, 0, 0)

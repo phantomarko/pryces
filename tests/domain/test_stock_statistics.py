@@ -3,11 +3,11 @@ from decimal import Decimal
 from pryces.domain.stock_statistics import (
     HistoricalClose,
     PriceChange,
-    RegularStockStatisticsFormatter,
     StatisticsPeriod,
     StockStatistics,
 )
 from pryces.domain.stocks import Currency
+from pryces.infrastructure.formatters import RegularStockStatisticsFormatter
 
 
 class TestPriceChange:
@@ -163,81 +163,3 @@ class TestStockStatistics:
             StatisticsPeriod.ONE_DAY,
             StatisticsPeriod.THREE_MONTHS,
         ]
-
-
-def _make_stats(
-    symbol: str = "AAPL",
-    current_price: str = "182.50",
-    historical_closes: list[HistoricalClose] | None = None,
-) -> StockStatistics:
-    return StockStatistics(
-        symbol=symbol,
-        current_price=Decimal(current_price),
-        historical_closes=(
-            historical_closes
-            if historical_closes is not None
-            else [
-                HistoricalClose(StatisticsPeriod.ONE_DAY, Decimal("181.20")),
-                HistoricalClose(StatisticsPeriod.ONE_WEEK, Decimal("179.00")),
-            ]
-        ),
-    )
-
-
-class TestRegularStockStatisticsFormatter:
-    def setup_method(self):
-        self.formatter = RegularStockStatisticsFormatter()
-
-    def test_header_contains_symbol_and_current_price(self):
-        result = self.formatter.format(_make_stats())
-
-        assert result.startswith("📊 AAPL — 182.50")
-
-    def test_positive_change_shows_plus_sign_and_up_icon(self):
-        stats = _make_stats(
-            current_price="182.50",
-            historical_closes=[HistoricalClose(StatisticsPeriod.ONE_DAY, Decimal("181.20"))],
-        )
-
-        result = self.formatter.format(stats)
-
-        assert "+" in result
-        assert "📈" in result
-
-    def test_negative_change_shows_no_plus_sign_and_down_icon(self):
-        stats = _make_stats(
-            current_price="175.00",
-            historical_closes=[HistoricalClose(StatisticsPeriod.ONE_WEEK, Decimal("179.00"))],
-        )
-
-        result = self.formatter.format(stats)
-
-        assert "📉" in result
-        assert "+" not in result.split("\n")[1]
-
-    def test_each_period_appears_on_its_own_line(self):
-        result = self.formatter.format(_make_stats())
-        lines = result.splitlines()
-
-        periods = [line for line in lines if "1D" in line or "1W" in line]
-        assert len(periods) == 2
-
-    def test_empty_price_changes_shows_fallback_message(self):
-        stats = _make_stats(historical_closes=[])
-
-        result = self.formatter.format(stats)
-
-        assert "No historical data available" in result
-
-    def test_empty_price_changes_still_includes_header(self):
-        stats = _make_stats(historical_closes=[])
-
-        result = self.formatter.format(stats)
-
-        assert result.startswith("📊 AAPL — 182.50")
-
-    def test_close_price_appears_in_output(self):
-        result = self.formatter.format(_make_stats())
-
-        assert "181.20" in result
-        assert "179.00" in result

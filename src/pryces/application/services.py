@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Callable
 
-from pryces.domain.notification_formatter import NotificationFormatter
+from pryces.domain.notifications import NotificationFormatter
 from pryces.domain.stocks import Stock
 
 from .interfaces import MessageSender, StockProvider, StockRepository

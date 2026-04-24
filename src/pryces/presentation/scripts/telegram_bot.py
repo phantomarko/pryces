@@ -4,7 +4,7 @@ import sys
 from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
-from ...domain.stock_statistics import RegularStockStatisticsFormatter
+from ...infrastructure.formatters import RegularStockStatisticsFormatter
 from ...application.use_cases.trigger_stocks_statistics import (
     TriggerStocksStatistics,
     TriggerStocksStatisticsRequest,

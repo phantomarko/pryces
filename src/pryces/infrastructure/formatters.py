@@ -1,27 +1,13 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from decimal import Decimal
-
 from pryces.domain.notifications import (
     MILESTONE_NOTIFICATION_TYPES,
     STANDALONE_NOTIFICATION_TYPES,
     Notification,
+    NotificationFormatter,
     NotificationType,
+    StockContext,
 )
+from pryces.domain.stock_statistics import StockStatistics, StockStatisticsFormatter
 from pryces.domain.utils import calculate_percentage_change
-
-
-@dataclass(frozen=True, slots=True)
-class StockContext:
-    symbol: str
-    current_price: Decimal
-    previous_close_price: Decimal | None
-
-
-class NotificationFormatter(ABC):
-    @abstractmethod
-    def format(self, notifications: list[Notification], context: StockContext) -> list[str]:
-        pass
 
 
 class ConsolidatingNotificationFormatter(NotificationFormatter):
@@ -74,3 +60,18 @@ class ConsolidatingNotificationFormatter(NotificationFormatter):
             context.current_price,
             change_pct,
         )
+
+
+class RegularStockStatisticsFormatter(StockStatisticsFormatter):
+    def format(self, stats: StockStatistics) -> str:
+        header = f"📊 {stats.symbol} — {stats.current_price:.2f}"
+        lines = [header]
+        if not stats.price_changes:
+            lines.append("No historical data available")
+            return "\n".join(lines)
+        for pc in stats.price_changes:
+            sign = "+" if pc.change_percentage > 0 else ""
+            pct_str = f"{sign}{pc.change_percentage:.2f}%"
+            icon = "📈" if pc.change_percentage >= 0 else "📉"
+            lines.append(f"{icon} {pc.period.value:<3}  {pc.close_price:.2f}  {pct_str}")
+        return "\n".join(lines)

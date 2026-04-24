@@ -8,7 +8,7 @@ from ...application.use_cases.trigger_stocks_statistics import (
     TriggerStocksStatistics,
     TriggerStocksStatisticsRequest,
 )
-from ...domain.stock_statistics import RegularStockStatisticsFormatter
+from ...infrastructure.formatters import RegularStockStatisticsFormatter
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
 from ...infrastructure.providers import YahooFinanceStatisticsProvider

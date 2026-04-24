@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+from pryces.infrastructure.formatters import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import MarketState, Stock
 from tests.fixtures.factories import (
     _DEFAULT_NOW,

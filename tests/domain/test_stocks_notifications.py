@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from pryces.domain.notification_formatter import ConsolidatingNotificationFormatter
+from pryces.infrastructure.formatters import ConsolidatingNotificationFormatter
 from pryces.domain.stocks import (
     Currency,
     InstrumentType,

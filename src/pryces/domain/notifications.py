@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
@@ -179,6 +181,19 @@ class Notification:
         return Notification(
             Notification._CREATION_KEY, NotificationType.TARGET_PRICE_REACHED, message
         )
+
+
+@dataclass(frozen=True, slots=True)
+class StockContext:
+    symbol: str
+    current_price: Decimal
+    previous_close_price: Decimal | None
+
+
+class NotificationFormatter(ABC):
+    @abstractmethod
+    def format(self, notifications: list[Notification], context: StockContext) -> list[str]:
+        pass
 
 
 STANDALONE_NOTIFICATION_TYPES = frozenset(

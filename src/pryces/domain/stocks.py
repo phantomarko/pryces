@@ -6,8 +6,12 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, ClassVar
 
-from pryces.domain.notification_formatter import NotificationFormatter, StockContext
-from pryces.domain.notifications import Notification, NotificationType
+from pryces.domain.notifications import (
+    Notification,
+    NotificationFormatter,
+    NotificationType,
+    StockContext,
+)
 from pryces.domain.utils import calculate_percentage_change
 
 if TYPE_CHECKING:
