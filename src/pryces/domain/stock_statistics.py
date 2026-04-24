@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -54,6 +55,12 @@ class PriceChange:
         return self._change_percentage
 
 
+class StockStatisticsFormatter(ABC):
+    @abstractmethod
+    def format(self, stats: StockStatistics) -> str:
+        pass
+
+
 class StockStatistics:
     __slots__ = ("_symbol", "_name", "_currency", "_current_price", "_price_changes")
 
@@ -98,3 +105,21 @@ class StockStatistics:
     @property
     def price_changes(self) -> list[PriceChange]:
         return list(self._price_changes)
+
+    def format(self, formatter: StockStatisticsFormatter) -> str:
+        return formatter.format(self)
+
+
+class RegularStockStatisticsFormatter(StockStatisticsFormatter):
+    def format(self, stats: StockStatistics) -> str:
+        header = f"📊 {stats.symbol} — {stats.current_price:.2f}"
+        lines = [header]
+        if not stats.price_changes:
+            lines.append("No historical data available")
+            return "\n".join(lines)
+        for pc in stats.price_changes:
+            sign = "+" if pc.change_percentage > 0 else ""
+            pct_str = f"{sign}{pc.change_percentage:.2f}%"
+            icon = "📈" if pc.change_percentage >= 0 else "📉"
+            lines.append(f"{icon} {pc.period.value:<3}  {pc.close_price:.2f}  {pct_str}")
+        return "\n".join(lines)

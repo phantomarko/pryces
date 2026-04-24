@@ -5,10 +5,8 @@ from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 
-from ...application.dtos import StockStatisticsDTO
 from ...application.interfaces import LoggerFactory
 from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
-from .formatters import format_stats
 
 _MAX_MESSAGE_LENGTH = 256
 _MAX_INTEGER_DIGITS = 7
@@ -66,7 +64,7 @@ _FindConfigByNameFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _GetAllSymbolsFn = Callable[[], list[str]]
 _GetAllSymbolsWithTargetsFn = Callable[[], list[tuple[str, list[Decimal]]]]
 _GetConfigNamesFn = Callable[[], list[str]]
-_GetStockStatisticsFn = Callable[[str], StockStatisticsDTO | None]
+_GetStockStatisticsFn = Callable[[str], str | None]
 
 
 def _find_symbol_config(
@@ -350,10 +348,10 @@ class StatsCommand(BotCommand):
     def execute(self, args: list[str]) -> str:
         symbol = args[0].upper()
         try:
-            dto = self._get_stock_statistics(symbol)
-            if dto is None:
+            result = self._get_stock_statistics(symbol)
+            if result is None:
                 return f"❌ {symbol} not found"
-            return format_stats(dto)
+            return result
         except Exception as e:
             return f"❌ Error: {e}"
 

@@ -1,27 +1,10 @@
-from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from pryces.application.dtos import PriceChangeDTO, StockStatisticsDTO
 from pryces.application.use_cases.get_stocks_statistics import GetStocksStatistics
 from pryces.application.use_cases.send_messages import SendMessages
 from pryces.presentation.scripts.report_stocks_statistics import ReportStocksStatisticsScript
-
-
-def _make_price_change(period: str, close_price: str, change_pct: str) -> PriceChangeDTO:
-    close = Decimal(close_price)
-    pct = Decimal(change_pct)
-    change = close * pct / 100
-    return PriceChangeDTO(period=period, close_price=close, change=change, change_percentage=pct)
-
-
-def _make_dto(symbol: str = "AAPL", current_price: str = "182.50") -> StockStatisticsDTO:
-    return StockStatisticsDTO(
-        symbol=symbol,
-        current_price=Decimal(current_price),
-        price_changes=[_make_price_change("1D", "181.00", "0.83")],
-    )
 
 
 @pytest.fixture()
@@ -69,7 +52,7 @@ class TestReportStocksStatisticsScript:
     def test_fetches_statistics_for_all_tracked_symbols(
         self, get_stocks_statistics, send_messages, logger_factory
     ):
-        get_stocks_statistics.handle.return_value = [_make_dto("AAPL"), _make_dto("GOOGL")]
+        get_stocks_statistics.handle.return_value = ["msg1", "msg2"]
         script = _make_script(get_stocks_statistics, send_messages, logger_factory)
 
         with patch(
@@ -84,7 +67,7 @@ class TestReportStocksStatisticsScript:
     def test_sends_one_message_per_symbol(
         self, get_stocks_statistics, send_messages, logger_factory
     ):
-        get_stocks_statistics.handle.return_value = [_make_dto("AAPL"), _make_dto("GOOGL")]
+        get_stocks_statistics.handle.return_value = ["msg_aapl", "msg_googl"]
         send_messages.handle.return_value = MagicMock(successful=2, failed=0)
         script = _make_script(get_stocks_statistics, send_messages, logger_factory)
 
@@ -100,7 +83,7 @@ class TestReportStocksStatisticsScript:
     def test_message_content_includes_symbol_and_price(
         self, get_stocks_statistics, send_messages, logger_factory
     ):
-        get_stocks_statistics.handle.return_value = [_make_dto("AAPL", "182.50")]
+        get_stocks_statistics.handle.return_value = ["📊 AAPL — 182.50\n📈 1D   181.00  +0.83%"]
         script = _make_script(get_stocks_statistics, send_messages, logger_factory)
 
         with patch(
@@ -116,8 +99,7 @@ class TestReportStocksStatisticsScript:
     def test_sends_only_available_stats_when_provider_returns_subset(
         self, get_stocks_statistics, send_messages, logger_factory
     ):
-        # Provider returned only 1 result for 2 requested symbols
-        get_stocks_statistics.handle.return_value = [_make_dto("AAPL")]
+        get_stocks_statistics.handle.return_value = ["msg_aapl"]
         send_messages.handle.return_value = MagicMock(successful=1, failed=0)
         script = _make_script(get_stocks_statistics, send_messages, logger_factory)
 

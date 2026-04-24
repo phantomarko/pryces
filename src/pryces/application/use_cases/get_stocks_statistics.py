@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..dtos import StockStatisticsDTO
+from ...domain.stock_statistics import StockStatisticsFormatter
 from ..interfaces import StockStatisticsProvider
 
 
@@ -10,9 +10,12 @@ class GetStocksStatisticsRequest:
 
 
 class GetStocksStatistics:
-    def __init__(self, provider: StockStatisticsProvider) -> None:
+    def __init__(
+        self, provider: StockStatisticsProvider, formatter: StockStatisticsFormatter
+    ) -> None:
         self._provider = provider
+        self._formatter = formatter
 
-    def handle(self, request: GetStocksStatisticsRequest) -> list[StockStatisticsDTO]:
+    def handle(self, request: GetStocksStatisticsRequest) -> list[str]:
         statistics = self._provider.get_stock_statistics(request.symbols)
-        return [StockStatisticsDTO.from_stock_statistics(stats) for stats in statistics]
+        return [stats.format(self._formatter) for stats in statistics]

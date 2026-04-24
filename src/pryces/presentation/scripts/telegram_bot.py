@@ -3,8 +3,8 @@ import sys
 
 from dotenv import load_dotenv
 
-from ...application.dtos import StockStatisticsDTO
 from ...application.interfaces import LoggerFactory
+from ...domain.stock_statistics import RegularStockStatisticsFormatter
 from ...application.use_cases.get_stocks_statistics import (
     GetStocksStatistics,
     GetStocksStatisticsRequest,
@@ -80,9 +80,11 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     statistics_provider = YahooFinanceStatisticsProvider(
         settings=yahoo_settings, logger_factory=logger_factory
     )
-    get_stocks_statistics = GetStocksStatistics(statistics_provider)
+    get_stocks_statistics = GetStocksStatistics(
+        statistics_provider, RegularStockStatisticsFormatter()
+    )
 
-    def get_stock_statistics(symbol: str) -> StockStatisticsDTO | None:
+    def get_stock_statistics(symbol: str) -> str | None:
         results = get_stocks_statistics.handle(GetStocksStatisticsRequest(symbols=[symbol]))
         return results[0] if results else None
 

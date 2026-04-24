@@ -9,12 +9,12 @@ from ...application.use_cases.get_stocks_statistics import (
     GetStocksStatisticsRequest,
 )
 from ...application.use_cases.send_messages import SendMessages, SendMessagesRequest
+from ...domain.stock_statistics import RegularStockStatisticsFormatter
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
 from ...infrastructure.providers import YahooFinanceStatisticsProvider
 from ...infrastructure.senders import TelegramMessageSender
 from .config import get_all_tracked_symbols
-from .formatters import format_stats
 
 
 class ReportStocksStatisticsScript:
@@ -35,9 +35,8 @@ class ReportStocksStatisticsScript:
             return
 
         self._logger.info(f"Fetching statistics for {len(symbols)} symbol(s): {symbols}")
-        stats = self._get_stocks_statistics.handle(GetStocksStatisticsRequest(symbols=symbols))
+        messages = self._get_stocks_statistics.handle(GetStocksStatisticsRequest(symbols=symbols))
 
-        messages = [format_stats(dto) for dto in stats]
         result = self._send_messages.handle(SendMessagesRequest(messages=messages))
         self._logger.info(f"Report sent: {result.successful} ok, {result.failed} failed.")
 
@@ -47,7 +46,9 @@ def _create_script(logger_factory: LoggerFactory) -> ReportStocksStatisticsScrip
     statistics_provider = YahooFinanceStatisticsProvider(
         settings=yahoo_settings, logger_factory=logger_factory
     )
-    get_stocks_statistics = GetStocksStatistics(statistics_provider)
+    get_stocks_statistics = GetStocksStatistics(
+        statistics_provider, RegularStockStatisticsFormatter()
+    )
 
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(
