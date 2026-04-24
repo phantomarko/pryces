@@ -479,28 +479,20 @@ class TestTargetRemoveCommandValidation:
 
 
 class TestStatsCommand:
-    def test_returns_formatted_string_from_get_function(self):
-        formatted = "📊 AAPL — 182.50\n📈 1D   181.20  +0.72%"
-        cmd = StatsCommand(lambda _: formatted)
-
-        result = cmd.execute(["aapl"])
-
-        assert result == formatted
-
-    def test_upcases_symbol_before_passing_to_get_function(self):
+    def test_upcases_symbol_before_passing_to_trigger_function(self):
         received = []
-        cmd = StatsCommand(lambda s: received.append(s) or "formatted")
+        cmd = StatsCommand(lambda s: received.append(s))
 
         cmd.execute(["aapl"])
 
         assert received == ["AAPL"]
 
-    def test_returns_error_when_symbol_not_found(self):
+    def test_returns_empty_string_on_success(self):
         cmd = StatsCommand(lambda _: None)
 
-        result = cmd.execute(["UNKNOWN"])
+        result = cmd.execute(["AAPL"])
 
-        assert result == "❌ UNKNOWN not found"
+        assert result == ""
 
     def test_returns_error_on_exception(self):
         def raise_error(_):

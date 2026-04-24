@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
 from ...domain.stock_statistics import RegularStockStatisticsFormatter
-from ...application.use_cases.get_stocks_statistics import (
-    GetStocksStatistics,
-    GetStocksStatisticsRequest,
+from ...application.use_cases.trigger_stocks_statistics import (
+    TriggerStocksStatistics,
+    TriggerStocksStatisticsRequest,
 )
 from ...application.use_cases.send_messages import SendMessages, SendMessagesRequest
 from ...infrastructure.factories import SettingsFactory
@@ -80,13 +80,12 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     statistics_provider = YahooFinanceStatisticsProvider(
         settings=yahoo_settings, logger_factory=logger_factory
     )
-    get_stocks_statistics = GetStocksStatistics(
-        statistics_provider, RegularStockStatisticsFormatter()
+    trigger_stocks_statistics = TriggerStocksStatistics(
+        statistics_provider, RegularStockStatisticsFormatter(), telegram_message_sender
     )
 
-    def get_stock_statistics(symbol: str) -> str | None:
-        results = get_stocks_statistics.handle(GetStocksStatisticsRequest(symbols=[symbol]))
-        return results[0] if results else None
+    def trigger_stock_statistics(symbol: str) -> None:
+        trigger_stocks_statistics.handle(TriggerStocksStatisticsRequest(symbols=[symbol]))
 
     targets_cmd = TargetsCommand(find_config_for_symbol)
     target_add_cmd = TargetAddCommand(find_config_for_symbol)
@@ -95,7 +94,7 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     configs_cmd = ConfigsCommand(get_config_names)
     symbol_add_cmd = SymbolAddCommand(find_config_by_name)
     symbol_remove_cmd = SymbolRemoveCommand(find_config_for_symbol)
-    stats_cmd = StatsCommand(get_stock_statistics)
+    stats_cmd = StatsCommand(trigger_stock_statistics)
     commands: list[BotCommand] = [
         configs_cmd,
         symbols_cmd,

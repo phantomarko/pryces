@@ -4,11 +4,10 @@ import sys
 from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
-from ...application.use_cases.get_stocks_statistics import (
-    GetStocksStatistics,
-    GetStocksStatisticsRequest,
+from ...application.use_cases.trigger_stocks_statistics import (
+    TriggerStocksStatistics,
+    TriggerStocksStatisticsRequest,
 )
-from ...application.use_cases.send_messages import SendMessages, SendMessagesRequest
 from ...domain.stock_statistics import RegularStockStatisticsFormatter
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
@@ -20,12 +19,10 @@ from .config import get_all_tracked_symbols
 class ReportStocksStatisticsScript:
     def __init__(
         self,
-        get_stocks_statistics: GetStocksStatistics,
-        send_messages: SendMessages,
+        trigger_stocks_statistics: TriggerStocksStatistics,
         logger_factory: LoggerFactory,
     ) -> None:
-        self._get_stocks_statistics = get_stocks_statistics
-        self._send_messages = send_messages
+        self._trigger_stocks_statistics = trigger_stocks_statistics
         self._logger = logger_factory.get_logger(__name__)
 
     def run(self) -> None:
@@ -34,11 +31,9 @@ class ReportStocksStatisticsScript:
             self._logger.info("No symbols tracked, nothing to report.")
             return
 
-        self._logger.info(f"Fetching statistics for {len(symbols)} symbol(s): {symbols}")
-        messages = self._get_stocks_statistics.handle(GetStocksStatisticsRequest(symbols=symbols))
-
-        result = self._send_messages.handle(SendMessagesRequest(messages=messages))
-        self._logger.info(f"Report sent: {result.successful} ok, {result.failed} failed.")
+        self._logger.info(f"Triggering statistics for {len(symbols)} symbol(s): {symbols}")
+        self._trigger_stocks_statistics.handle(TriggerStocksStatisticsRequest(symbols=symbols))
+        self._logger.info(f"Report triggered for {len(symbols)} symbol(s).")
 
 
 def _create_script(logger_factory: LoggerFactory) -> ReportStocksStatisticsScript:
@@ -46,19 +41,16 @@ def _create_script(logger_factory: LoggerFactory) -> ReportStocksStatisticsScrip
     statistics_provider = YahooFinanceStatisticsProvider(
         settings=yahoo_settings, logger_factory=logger_factory
     )
-    get_stocks_statistics = GetStocksStatistics(
-        statistics_provider, RegularStockStatisticsFormatter()
-    )
-
     telegram_settings = SettingsFactory.create_telegram_settings()
     message_sender = TelegramMessageSender(
         settings=telegram_settings, logger_factory=logger_factory
     )
-    send_messages = SendMessages(message_sender)
+    trigger_stocks_statistics = TriggerStocksStatistics(
+        statistics_provider, RegularStockStatisticsFormatter(), message_sender
+    )
 
     return ReportStocksStatisticsScript(
-        get_stocks_statistics=get_stocks_statistics,
-        send_messages=send_messages,
+        trigger_stocks_statistics=trigger_stocks_statistics,
         logger_factory=logger_factory,
     )
 
