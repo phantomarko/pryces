@@ -20,7 +20,8 @@ class TriggerStocksStatistics:
         self._formatter = formatter
         self._sender = sender
 
-    def handle(self, request: TriggerStocksStatisticsRequest) -> None:
+    def handle(self, request: TriggerStocksStatisticsRequest) -> bool:
         statistics = self._provider.get_stock_statistics(request.symbols)
         for stats in statistics:
             self._sender.send_message(stats.format(self._formatter))
+        return bool(statistics)

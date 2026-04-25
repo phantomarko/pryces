@@ -79,8 +79,8 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
         statistics_provider, RegularStockStatisticsFormatter(), telegram_message_sender
     )
 
-    def trigger_stock_statistics(symbol: str) -> None:
-        trigger_stocks_statistics.handle(TriggerStocksStatisticsRequest(symbols=[symbol]))
+    def trigger_stock_statistics(symbol: str) -> bool:
+        return trigger_stocks_statistics.handle(TriggerStocksStatisticsRequest(symbols=[symbol]))
 
     config_store = ConfigStore(CONFIGS_DIR)
     targets_cmd = TargetsCommand(config_store.find_for_symbol)

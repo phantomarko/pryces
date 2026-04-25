@@ -93,9 +93,9 @@ class TestTriggerStocksStatistics:
         self.mock_formatter.format.assert_any_call(stats[0])
         self.mock_formatter.format.assert_any_call(stats[1])
 
-    def test_handle_returns_none(self):
+    def test_handle_returns_false_when_no_statistics(self):
         self.mock_provider.get_stock_statistics.return_value = []
-        request = TriggerStocksStatisticsRequest(symbols=[])
+        request = TriggerStocksStatisticsRequest(symbols=["SXRS"])
         use_case = TriggerStocksStatistics(
             provider=self.mock_provider,
             formatter=self.mock_formatter,
@@ -104,4 +104,17 @@ class TestTriggerStocksStatistics:
 
         result = use_case.handle(request)
 
-        assert result is None
+        assert result is False
+
+    def test_handle_returns_true_when_statistics_found(self):
+        self.mock_provider.get_stock_statistics.return_value = [_make_stats("AAPL")]
+        request = TriggerStocksStatisticsRequest(symbols=["AAPL"])
+        use_case = TriggerStocksStatistics(
+            provider=self.mock_provider,
+            formatter=self.mock_formatter,
+            sender=self.mock_sender,
+        )
+
+        result = use_case.handle(request)
+
+        assert result is True

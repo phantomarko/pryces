@@ -64,7 +64,7 @@ _FindConfigByNameFn = Callable[[str], tuple[Path, MonitorStocksConfig] | None]
 _GetAllSymbolsFn = Callable[[], list[str]]
 _GetAllSymbolsWithTargetsFn = Callable[[], list[tuple[str, list[Decimal]]]]
 _GetConfigNamesFn = Callable[[], list[str]]
-_GetStockStatisticsFn = Callable[[str], None]
+_GetStockStatisticsFn = Callable[[str], bool]
 
 
 def _find_symbol_config(
@@ -323,8 +323,8 @@ class StatsCommand(BotCommand):
     def execute(self, args: list[str]) -> str:
         symbol = args[0].upper()
         try:
-            self._get_stock_statistics(symbol)
-            return ""
+            found = self._get_stock_statistics(symbol)
+            return "" if found else f"❌ No data found for {symbol}"
         except Exception as e:
             return f"❌ Error: {e}"
 

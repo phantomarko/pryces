@@ -481,18 +481,30 @@ class TestTargetRemoveCommandValidation:
 class TestStatsCommand:
     def test_upcases_symbol_before_passing_to_trigger_function(self):
         received = []
-        cmd = StatsCommand(lambda s: received.append(s))
+
+        def capture(s):
+            received.append(s)
+            return True
+
+        cmd = StatsCommand(capture)
 
         cmd.execute(["aapl"])
 
         assert received == ["AAPL"]
 
-    def test_returns_empty_string_on_success(self):
-        cmd = StatsCommand(lambda _: None)
+    def test_returns_empty_string_when_data_found(self):
+        cmd = StatsCommand(lambda _: True)
 
         result = cmd.execute(["AAPL"])
 
         assert result == ""
+
+    def test_returns_error_message_when_no_data_found(self):
+        cmd = StatsCommand(lambda _: False)
+
+        result = cmd.execute(["SXRS"])
+
+        assert result == "❌ No data found for SXRS"
 
     def test_returns_error_on_exception(self):
         def raise_error(_):
