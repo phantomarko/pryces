@@ -2,7 +2,12 @@ from decimal import Decimal
 
 import pytest
 
-from pryces.domain.notifications import Notification, NotificationFormatter, NotificationType, StockContext
+from pryces.domain.notifications import (
+    Notification,
+    NotificationFormatter,
+    NotificationType,
+    StockContext,
+)
 from pryces.domain.stock_statistics import HistoricalClose, StatisticsPeriod, StockStatistics
 from pryces.infrastructure.formatters import (
     ConsolidatingNotificationFormatter,
@@ -242,6 +247,18 @@ class TestRegularStockStatisticsFormatter:
         result = self.formatter.format(stats)
 
         assert result.startswith("📊 AAPL — 182.50")
+
+    def test_zero_change_shows_equal_icon(self):
+        stats = _make_stats(
+            current_price="182.50",
+            historical_closes=[HistoricalClose(StatisticsPeriod.ONE_DAY, Decimal("182.50"))],
+        )
+
+        result = self.formatter.format(stats)
+
+        assert "🟰" in result
+        assert "📈" not in result
+        assert "📉" not in result
 
     def test_close_price_appears_in_output(self):
         result = self.formatter.format(_make_stats())

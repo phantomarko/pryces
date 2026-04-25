@@ -72,6 +72,6 @@ class RegularStockStatisticsFormatter(StockStatisticsFormatter):
         for pc in stats.price_changes:
             sign = "+" if pc.change_percentage > 0 else ""
             pct_str = f"{sign}{pc.change_percentage:.2f}%"
-            icon = "📈" if pc.change_percentage >= 0 else "📉"
+            icon = "📈" if pc.change_percentage > 0 else "🟰" if pc.change_percentage == 0 else "📉"
             lines.append(f"{icon} {pc.period.value:<3}  {pc.close_price:.2f}  {pct_str}")
         return "\n".join(lines)
