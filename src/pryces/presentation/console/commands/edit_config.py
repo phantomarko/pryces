@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pryces.presentation.scripts.config import ConfigManager, MonitorStocksConfig
+from pryces.infrastructure.configs import ConfigManager, MonitorStocksConfig
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 from ..utils import (

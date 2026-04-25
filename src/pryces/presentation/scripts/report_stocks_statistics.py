@@ -13,7 +13,7 @@ from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
 from ...infrastructure.providers import YahooFinanceStatisticsProvider
 from ...infrastructure.senders import TelegramMessageSender
-from .config import get_all_tracked_symbols
+from ...infrastructure.configs import get_all_tracked_symbols
 
 
 class ReportStocksStatisticsScript:

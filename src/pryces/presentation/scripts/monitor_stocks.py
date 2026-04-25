@@ -22,8 +22,9 @@ from ...infrastructure.senders import (
     TelegramMessageSender,
 )
 from pryces.infrastructure.logging import PythonLoggerFactory, setup_logging
-from .config import ConfigManager, ConfigRefresher
-from .exceptions import ConfigLoadingFailed
+from ...infrastructure.configs import ConfigManager
+from ...infrastructure.exceptions import ConfigLoadingFailed
+from .config_refresher import ConfigRefresher
 
 
 class MonitorStocksScript:

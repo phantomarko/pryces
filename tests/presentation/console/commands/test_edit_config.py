@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from pryces.presentation.console.commands.edit_config import EditConfigCommand
-from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import MonitorStocksConfig, SymbolConfig
 
 _PATCH_TARGET = "pryces.presentation.console.commands.edit_config.get_config_files"
 

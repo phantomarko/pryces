@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from pryces.presentation.scripts.config import (
+from pryces.infrastructure.configs import (
     ConfigManager,
     MonitorStocksConfig,
     SymbolConfig,
     get_all_tracked_symbols,
     get_all_tracked_symbols_with_targets,
 )
-from pryces.presentation.scripts.exceptions import ConfigLoadingFailed
+from pryces.infrastructure.exceptions import ConfigLoadingFailed
 
 
 def make_config_data(**overrides) -> dict:
@@ -71,7 +71,7 @@ class TestConfigManager:
         config_file.write_text(json.dumps(make_config_data()))
         manager = ConfigManager(config_file)
         monkeypatch.setattr(
-            "pryces.presentation.scripts.config.json.loads",
+            "pryces.infrastructure.configs.json.loads",
             lambda _: (_ for _ in ()).throw(RuntimeError("boom")),
         )
 
@@ -163,7 +163,7 @@ class TestConfigManager:
 class TestGetAllTrackedSymbols:
 
     def test_collects_symbols_from_multiple_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
         (tmp_path / "a.json").write_text(
             json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
         )
@@ -176,14 +176,14 @@ class TestGetAllTrackedSymbols:
         assert result == ["AAPL", "MSFT"]
 
     def test_returns_empty_list_when_no_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
 
         result = get_all_tracked_symbols()
 
         assert result == []
 
     def test_skips_malformed_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
         (tmp_path / "good.json").write_text(
             json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
         )
@@ -194,7 +194,7 @@ class TestGetAllTrackedSymbols:
         assert result == ["AAPL"]
 
     def test_deduplicates_and_sorts_symbols(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
         (tmp_path / "a.json").write_text(
             json.dumps(
                 {
@@ -216,7 +216,7 @@ class TestGetAllTrackedSymbols:
 
     def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            "pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path / "nonexistent"
+            "pryces.infrastructure.configs.CONFIGS_DIR", tmp_path / "nonexistent"
         )
 
         result = get_all_tracked_symbols()
@@ -227,7 +227,7 @@ class TestGetAllTrackedSymbols:
 class TestGetAllTrackedSymbolsWithTargets:
 
     def test_collects_symbols_with_targets(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
         (tmp_path / "a.json").write_text(
             json.dumps(
                 {
@@ -253,7 +253,7 @@ class TestGetAllTrackedSymbolsWithTargets:
         ]
 
     def test_deduplicates_first_config_wins(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
         (tmp_path / "a.json").write_text(
             json.dumps(
                 {
@@ -276,7 +276,7 @@ class TestGetAllTrackedSymbolsWithTargets:
         assert result == [("AAPL", [Decimal("100")])]
 
     def test_returns_empty_list_when_no_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
 
         result = get_all_tracked_symbols_with_targets()
 
@@ -284,7 +284,7 @@ class TestGetAllTrackedSymbolsWithTargets:
 
     def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            "pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path / "nonexistent"
+            "pryces.infrastructure.configs.CONFIGS_DIR", tmp_path / "nonexistent"
         )
 
         result = get_all_tracked_symbols_with_targets()
@@ -292,7 +292,7 @@ class TestGetAllTrackedSymbolsWithTargets:
         assert result == []
 
     def test_skips_malformed_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.presentation.scripts.config.CONFIGS_DIR", tmp_path)
+        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
         (tmp_path / "good.json").write_text(
             json.dumps(
                 {
@@ -306,3 +306,81 @@ class TestGetAllTrackedSymbolsWithTargets:
         result = get_all_tracked_symbols_with_targets()
 
         assert result == [("AAPL", [Decimal("150")])]
+
+
+class TestConfigManagerMutators:
+
+    def _write(self, path, config):
+        ConfigManager(path).write_monitor_stocks_config(config)
+
+    def test_replace_symbol_prices_overwrites_only_target_symbol(self, tmp_path):
+        path = tmp_path / "c.json"
+        self._write(
+            path,
+            MonitorStocksConfig(
+                interval=30,
+                symbols=[
+                    SymbolConfig("AAPL", [Decimal("150")]),
+                    SymbolConfig("MSFT", [Decimal("300")]),
+                ],
+            ),
+        )
+
+        ConfigManager(path).replace_symbol_prices("AAPL", [Decimal("200"), Decimal("210")])
+
+        restored = ConfigManager(path).read_monitor_stocks_config()
+        assert restored.symbols == [
+            SymbolConfig("AAPL", [Decimal("200"), Decimal("210")]),
+            SymbolConfig("MSFT", [Decimal("300")]),
+        ]
+
+    def test_replace_symbol_prices_with_empty_list_keeps_symbol_entry(self, tmp_path):
+        path = tmp_path / "c.json"
+        self._write(
+            path,
+            MonitorStocksConfig(
+                interval=30,
+                symbols=[SymbolConfig("AAPL", [Decimal("150")])],
+            ),
+        )
+
+        ConfigManager(path).replace_symbol_prices("AAPL", [])
+
+        restored = ConfigManager(path).read_monitor_stocks_config()
+        assert restored.symbols == [SymbolConfig("AAPL", [])]
+
+    def test_add_symbol_appends_with_empty_prices(self, tmp_path):
+        path = tmp_path / "c.json"
+        self._write(
+            path,
+            MonitorStocksConfig(
+                interval=30,
+                symbols=[SymbolConfig("AAPL", [Decimal("150")])],
+            ),
+        )
+
+        ConfigManager(path).add_symbol("MSFT")
+
+        restored = ConfigManager(path).read_monitor_stocks_config()
+        assert restored.symbols == [
+            SymbolConfig("AAPL", [Decimal("150")]),
+            SymbolConfig("MSFT", []),
+        ]
+
+    def test_remove_symbol_drops_matching_entry(self, tmp_path):
+        path = tmp_path / "c.json"
+        self._write(
+            path,
+            MonitorStocksConfig(
+                interval=30,
+                symbols=[
+                    SymbolConfig("AAPL", [Decimal("150")]),
+                    SymbolConfig("MSFT", [Decimal("300")]),
+                ],
+            ),
+        )
+
+        ConfigManager(path).remove_symbol("AAPL")
+
+        restored = ConfigManager(path).read_monitor_stocks_config()
+        assert restored.symbols == [SymbolConfig("MSFT", [Decimal("300")])]

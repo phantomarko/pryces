@@ -20,7 +20,7 @@ from pryces.presentation.console.utils import (
     validate_symbols,
     validate_symbols_with_targets,
 )
-from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import MonitorStocksConfig, SymbolConfig
 from pryces.domain.stocks import Currency
 from tests.fixtures.factories import create_stock_dto
 

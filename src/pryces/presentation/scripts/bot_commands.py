@@ -6,7 +6,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from ...application.interfaces import LoggerFactory
-from .config import ConfigManager, MonitorStocksConfig, SymbolConfig
+from ...infrastructure.configs import ConfigManager, MonitorStocksConfig, SymbolConfig
 
 _MAX_MESSAGE_LENGTH = 256
 _MAX_INTEGER_DIGITS = 7
@@ -80,31 +80,6 @@ def _find_symbol_config(
     return f"{symbol} is not tracked"
 
 
-def _update_symbol_prices(
-    path: Path, config: MonitorStocksConfig, symbol: str, new_prices: list[Decimal]
-) -> None:
-    updated_symbols = [
-        SymbolConfig(symbol=sc.symbol, prices=new_prices) if sc.symbol == symbol else sc
-        for sc in config.symbols
-    ]
-    new_config = MonitorStocksConfig(interval=config.interval, symbols=updated_symbols)
-    ConfigManager(path).write_monitor_stocks_config(new_config)
-
-
-def _add_symbol_to_config(path: Path, config: MonitorStocksConfig, symbol: str) -> None:
-    updated = config.symbols + [SymbolConfig(symbol=symbol, prices=[])]
-    ConfigManager(path).write_monitor_stocks_config(
-        MonitorStocksConfig(interval=config.interval, symbols=updated)
-    )
-
-
-def _remove_symbol_from_config(path: Path, config: MonitorStocksConfig, symbol: str) -> None:
-    updated = [sc for sc in config.symbols if sc.symbol != symbol]
-    ConfigManager(path).write_monitor_stocks_config(
-        MonitorStocksConfig(interval=config.interval, symbols=updated)
-    )
-
-
 class TargetsCommand(BotCommand):
     def __init__(self, find_config: _FindConfigFn) -> None:
         self._find_config = find_config
@@ -171,10 +146,10 @@ class TargetAddCommand(BotCommand):
             config_result = _find_symbol_config(self._find_config, symbol)
             if isinstance(config_result, str):
                 return config_result
-            path, config, sc = config_result
+            path, _, sc = config_result
             if price in sc.prices:
                 return f"ℹ️ {symbol} already has target {price}"
-            _update_symbol_prices(path, config, symbol, sc.prices + [price])
+            ConfigManager(path).replace_symbol_prices(symbol, sc.prices + [price])
             return f"✅ Added target {price} to {symbol}"
         except Exception as e:
             return f"❌ Error: {e}"
@@ -211,10 +186,10 @@ class TargetRemoveCommand(BotCommand):
             config_result = _find_symbol_config(self._find_config, symbol)
             if isinstance(config_result, str):
                 return config_result
-            path, config, sc = config_result
+            path, _, sc = config_result
             if price not in sc.prices:
                 return f"ℹ️ {symbol} does not have target {price}"
-            _update_symbol_prices(path, config, symbol, [p for p in sc.prices if p != price])
+            ConfigManager(path).replace_symbol_prices(symbol, [p for p in sc.prices if p != price])
             return f"✅ Removed target {price} from {symbol}"
         except Exception as e:
             return f"❌ Error: {e}"
@@ -250,7 +225,7 @@ class SymbolAddCommand(BotCommand):
             path, config = result
             if any(sc.symbol == symbol for sc in config.symbols):
                 return f"ℹ️ {symbol} is already in {config_name}"
-            _add_symbol_to_config(path, config, symbol)
+            ConfigManager(path).add_symbol(symbol)
             return f"✅ Added {symbol} to {config_name}"
         except Exception as e:
             return f"❌ Error: {e}"
@@ -285,7 +260,7 @@ class SymbolRemoveCommand(BotCommand):
             path, config = result
             if len(config.symbols) == 1:
                 return "⚠️ Cannot remove the last symbol from a config"
-            _remove_symbol_from_config(path, config, symbol)
+            ConfigManager(path).remove_symbol(symbol)
             return f"✅ Removed {symbol} from config"
         except Exception as e:
             return f"❌ Error: {e}"

@@ -6,11 +6,9 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from pryces.application.dtos import StockDTO
-from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import CONFIGS_DIR, MonitorStocksConfig, SymbolConfig
 
 _MONITOR_MODULE = "pryces.presentation.scripts.monitor_stocks"
-
-CONFIGS_DIR = Path(__file__).resolve().parents[4] / "configs"
 
 
 def get_running_monitors() -> list[tuple[str, str]]:

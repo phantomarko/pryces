@@ -17,7 +17,7 @@ from pryces.presentation.scripts.bot_commands import (
     TargetRemoveCommand,
     TargetsCommand,
 )
-from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import MonitorStocksConfig, SymbolConfig
 
 from tests.presentation.scripts.factories import make_config
 
@@ -42,7 +42,7 @@ def make_find_config(tmp_path, config=None, name="test.json"):
     def find_config(symbol):
         for sc in config.symbols:
             if sc.symbol == symbol.upper():
-                from pryces.presentation.scripts.config import ConfigManager
+                from pryces.infrastructure.configs import ConfigManager
 
                 return path, ConfigManager(path).read_monitor_stocks_config()
         return None
@@ -190,7 +190,7 @@ def make_find_config_by_name(tmp_path, config=None, name="test"):
     def find_config_by_name(config_name):
         if config_name != name:
             return None
-        from pryces.presentation.scripts.config import ConfigManager
+        from pryces.infrastructure.configs import ConfigManager
 
         path = tmp_path / f"{config_name}.json"
         return path, ConfigManager(path).read_monitor_stocks_config()

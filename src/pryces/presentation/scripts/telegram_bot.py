@@ -28,7 +28,7 @@ from .bot_commands import (
     TargetRemoveCommand,
     TargetsCommand,
 )
-from .config import (
+from ...infrastructure.configs import (
     find_config_by_name,
     find_config_for_symbol,
     get_all_tracked_symbols_with_targets,

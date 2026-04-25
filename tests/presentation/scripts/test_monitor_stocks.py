@@ -7,12 +7,12 @@ import pytest
 from pryces.application.dtos import TargetPriceDTO
 from pryces.application.use_cases.trigger_stocks_notifications import TriggerStocksNotifications
 from pryces.infrastructure.logging import PythonLoggerFactory
-from pryces.presentation.scripts.config import (
+from pryces.infrastructure.configs import (
     ConfigManager,
-    ConfigRefresher,
     MonitorStocksConfig,
     SymbolConfig,
 )
+from pryces.presentation.scripts.config_refresher import ConfigRefresher
 from pryces.presentation.scripts.monitor_stocks import MonitorStocksScript
 
 from tests.presentation.scripts.factories import make_config, make_symbol

@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from pryces.presentation.console.commands.list_configs import ListConfigsCommand
-from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import MonitorStocksConfig, SymbolConfig
 
 
 class TestListConfigsCommand:

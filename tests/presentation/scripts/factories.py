@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pryces.presentation.scripts.config import MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import MonitorStocksConfig, SymbolConfig
 
 
 def make_symbol(symbol: str = "AAPL", prices: list = None) -> SymbolConfig:

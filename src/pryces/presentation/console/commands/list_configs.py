@@ -1,4 +1,4 @@
-from pryces.presentation.scripts.config import ConfigManager
+from pryces.infrastructure.configs import ConfigManager
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 from ..utils import CONFIGS_DIR, format_config_details, get_config_files
