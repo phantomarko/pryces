@@ -175,6 +175,14 @@ def test_create_percentage_change_formats_decrease_message():
     assert "📉 AAPL dropped to 135.00 (-10.00%)" == notification.message
 
 
+def test_create_percentage_change_formats_zero_change_message():
+    notification = Notification.create_percentage_change(
+        NotificationType.LEVEL_1_INCREASE, "AAPL", Decimal("150.00"), Decimal("0.00")
+    )
+
+    assert "🟰 AAPL at 150.00 (+0.00%)" == notification.message
+
+
 def test_create_percentage_change_preserves_notification_type():
     for notification_type in [
         NotificationType.LEVEL_1_INCREASE,

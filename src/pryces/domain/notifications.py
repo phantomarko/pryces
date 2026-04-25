@@ -148,7 +148,7 @@ class Notification:
             emoji = "📉"
         else:
             union = "at"
-            emoji = "➡️"
+            emoji = "🟰"
         return f"{emoji} {symbol} {union} {current_price} ({change_percentage:+.2f}%)"
 
     @staticmethod
