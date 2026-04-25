@@ -70,7 +70,7 @@ def main() -> int:
 
     load_dotenv()
     setup_logging(
-        SettingsFactory.create_bot_logging_settings(verbose=args.verbose, debug=args.debug)
+        SettingsFactory.create_report_logging_settings(verbose=args.verbose, debug=args.debug)
     )
     logger_factory = PythonLoggerFactory()
 

@@ -1,7 +1,13 @@
 import os
 
 from .exceptions import ConfigurationError
-from .logging import BOT_ENTRY_POINT, CLI_ENTRY_POINT, MONITOR_ENTRY_POINT, LoggingSettings
+from .logging import (
+    BOT_ENTRY_POINT,
+    CLI_ENTRY_POINT,
+    MONITOR_ENTRY_POINT,
+    REPORT_ENTRY_POINT,
+    LoggingSettings,
+)
 from .providers import YahooFinanceSettings
 from .senders import TelegramSettings
 
@@ -46,6 +52,17 @@ class SettingsFactory:
     def create_bot_logging_settings(verbose: bool = False, debug: bool = False) -> LoggingSettings:
         return LoggingSettings(
             entry_point=BOT_ENTRY_POINT,
+            verbose=verbose,
+            debug=debug,
+            logs_directory=os.environ.get("LOGS_DIRECTORY"),
+        )
+
+    @staticmethod
+    def create_report_logging_settings(
+        verbose: bool = False, debug: bool = False
+    ) -> LoggingSettings:
+        return LoggingSettings(
+            entry_point=REPORT_ENTRY_POINT,
             verbose=verbose,
             debug=debug,
             logs_directory=os.environ.get("LOGS_DIRECTORY"),
