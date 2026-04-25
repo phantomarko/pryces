@@ -10,7 +10,6 @@ from pryces.presentation.console.utils import (
     format_running_monitors,
     format_stock,
     format_stock_list,
-    get_config_files,
     get_running_monitors,
     parse_symbols_input,
     parse_symbols_with_targets,
@@ -433,31 +432,6 @@ class TestFormatStockList:
 
         assert result.count("------------------------------------------------------------") == 2
         assert "Summary: 3 requested, 3 successful, 0 failed" in result
-
-
-class TestGetConfigFiles:
-
-    def test_returns_empty_when_dir_does_not_exist(self, tmp_path):
-        with patch("pryces.presentation.console.utils.CONFIGS_DIR", tmp_path / "nonexistent"):
-            result = get_config_files()
-        assert result == []
-
-    def test_returns_sorted_json_files(self, tmp_path):
-        (tmp_path / "b.json").touch()
-        (tmp_path / "a.json").touch()
-        (tmp_path / "c.txt").touch()
-        with patch("pryces.presentation.console.utils.CONFIGS_DIR", tmp_path):
-            result = get_config_files()
-        names = [p.name for p in result]
-        assert names == ["a.json", "b.json"]
-
-    def test_excludes_non_json_files(self, tmp_path):
-        (tmp_path / "config.yaml").touch()
-        (tmp_path / "config.json").touch()
-        with patch("pryces.presentation.console.utils.CONFIGS_DIR", tmp_path):
-            result = get_config_files()
-        assert len(result) == 1
-        assert result[0].name == "config.json"
 
 
 class TestFormatConfigList:

@@ -1,10 +1,13 @@
-from pryces.infrastructure.configs import ConfigManager
+from pryces.infrastructure.configs import ConfigManager, ConfigStore
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
-from ..utils import CONFIGS_DIR, format_config_details, get_config_files
+from ..utils import format_config_details
 
 
 class ListConfigsCommand(Command):
+    def __init__(self, config_store: ConfigStore) -> None:
+        self._config_store = config_store
+
     def get_metadata(self) -> CommandMetadata:
         return CommandMetadata(
             id="list_configs",
@@ -17,9 +20,9 @@ class ListConfigsCommand(Command):
         return []
 
     def execute(self, **kwargs) -> CommandResult:
-        paths = get_config_files()
+        paths = self._config_store.list_paths()
         if not paths:
-            return CommandResult(f"No configs found in {CONFIGS_DIR.name}/.")
+            return CommandResult("No configs found.")
 
         parts = []
         for i, path in enumerate(paths):

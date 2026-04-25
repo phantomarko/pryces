@@ -1,6 +1,7 @@
 from ...application.interfaces import LoggerFactory, MessageSender, StockProvider
 from ...application.use_cases.get_stocks_prices import GetStocksPrices
 from ...application.use_cases.send_messages import SendMessages
+from ...infrastructure.configs import ConfigStore
 from .commands.check_readiness import CheckReadinessCommand, EnvVarsChecker, TelegramChecker
 from .commands.create_config import CreateConfigCommand
 from .commands.delete_config import DeleteConfigCommand
@@ -19,13 +20,15 @@ class CommandFactory:
         stock_provider: StockProvider,
         message_sender: MessageSender,
         logger_factory: LoggerFactory,
+        config_store: ConfigStore,
     ) -> None:
         self._stock_provider = stock_provider
         self._message_sender = message_sender
         self._logger_factory = logger_factory
+        self._config_store = config_store
 
     def _create_monitor_stocks_command(self) -> MonitorStocksCommand:
-        return MonitorStocksCommand()
+        return MonitorStocksCommand(self._config_store)
 
     def _create_get_stocks_prices_command(self) -> GetStocksPricesCommand:
         use_case = GetStocksPrices(provider=self._stock_provider)
@@ -53,16 +56,16 @@ class CommandFactory:
         return StopMonitorCommand()
 
     def _create_list_configs_command(self) -> ListConfigsCommand:
-        return ListConfigsCommand()
+        return ListConfigsCommand(self._config_store)
 
     def _create_create_config_command(self) -> CreateConfigCommand:
-        return CreateConfigCommand()
+        return CreateConfigCommand(self._config_store)
 
     def _create_edit_config_command(self) -> EditConfigCommand:
-        return EditConfigCommand()
+        return EditConfigCommand(self._config_store)
 
     def _create_delete_config_command(self) -> DeleteConfigCommand:
-        return DeleteConfigCommand()
+        return DeleteConfigCommand(self._config_store)
 
     def create_command_registry(self) -> CommandRegistry:
         registry = CommandRegistry()

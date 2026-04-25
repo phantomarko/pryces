@@ -28,12 +28,7 @@ from .bot_commands import (
     TargetRemoveCommand,
     TargetsCommand,
 )
-from ...infrastructure.configs import (
-    find_config_by_name,
-    find_config_for_symbol,
-    get_all_tracked_symbols_with_targets,
-    get_config_names,
-)
+from ...infrastructure.configs import CONFIGS_DIR, ConfigStore
 
 
 class TelegramBotScript:
@@ -87,13 +82,14 @@ def _create_script(logger_factory: LoggerFactory) -> TelegramBotScript:
     def trigger_stock_statistics(symbol: str) -> None:
         trigger_stocks_statistics.handle(TriggerStocksStatisticsRequest(symbols=[symbol]))
 
-    targets_cmd = TargetsCommand(find_config_for_symbol)
-    target_add_cmd = TargetAddCommand(find_config_for_symbol)
-    target_remove_cmd = TargetRemoveCommand(find_config_for_symbol)
-    symbols_cmd = SymbolsCommand(get_all_tracked_symbols_with_targets)
-    configs_cmd = ConfigsCommand(get_config_names)
-    symbol_add_cmd = SymbolAddCommand(find_config_by_name)
-    symbol_remove_cmd = SymbolRemoveCommand(find_config_for_symbol)
+    config_store = ConfigStore(CONFIGS_DIR)
+    targets_cmd = TargetsCommand(config_store.find_for_symbol)
+    target_add_cmd = TargetAddCommand(config_store.find_for_symbol)
+    target_remove_cmd = TargetRemoveCommand(config_store.find_for_symbol)
+    symbols_cmd = SymbolsCommand(config_store.list_tracked_symbols_with_targets)
+    configs_cmd = ConfigsCommand(config_store.list_names)
+    symbol_add_cmd = SymbolAddCommand(config_store.find_by_name)
+    symbol_remove_cmd = SymbolRemoveCommand(config_store.find_for_symbol)
     stats_cmd = StatsCommand(trigger_stock_statistics)
     commands: list[BotCommand] = [
         configs_cmd,

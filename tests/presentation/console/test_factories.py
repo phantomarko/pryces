@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 from pryces.application.interfaces import MessageSender, StockProvider
+from pryces.infrastructure.configs import ConfigStore
 from pryces.presentation.console.factories import CommandFactory
 from pryces.presentation.console.commands.get_stocks_prices import GetStocksPricesCommand
 from pryces.presentation.console.commands.monitor_stocks import MonitorStocksCommand
@@ -15,7 +16,10 @@ class TestCommandFactory:
         custom_sender = Mock(spec=MessageSender)
 
         factory = CommandFactory(
-            stock_provider=custom_provider, message_sender=custom_sender, logger_factory=Mock()
+            stock_provider=custom_provider,
+            message_sender=custom_sender,
+            logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         assert factory._stock_provider is custom_provider
@@ -27,6 +31,7 @@ class TestCommandFactory:
             stock_provider=mock_provider,
             message_sender=Mock(spec=MessageSender),
             logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         registry = factory.create_command_registry()
@@ -39,6 +44,7 @@ class TestCommandFactory:
             stock_provider=mock_provider,
             message_sender=Mock(spec=MessageSender),
             logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         command = factory._create_get_stocks_prices_command()
@@ -51,6 +57,7 @@ class TestCommandFactory:
             stock_provider=mock_provider,
             message_sender=Mock(spec=MessageSender),
             logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         registry = factory.create_command_registry()
@@ -64,6 +71,7 @@ class TestCommandFactory:
             stock_provider=mock_provider,
             message_sender=Mock(spec=MessageSender),
             logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         registry = factory.create_command_registry()
@@ -77,6 +85,7 @@ class TestCommandFactory:
             stock_provider=mock_provider,
             message_sender=Mock(spec=MessageSender),
             logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         registry = factory.create_command_registry()
@@ -90,6 +99,7 @@ class TestCommandFactory:
             stock_provider=mock_provider,
             message_sender=Mock(spec=MessageSender),
             logger_factory=Mock(),
+            config_store=Mock(spec=ConfigStore),
         )
 
         registry = factory.create_command_registry()

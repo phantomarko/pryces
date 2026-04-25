@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -18,9 +18,10 @@ def logger_factory():
     return factory
 
 
-def _make_script(trigger_stocks_statistics, logger_factory):
+def _make_script(trigger_stocks_statistics, logger_factory, list_tracked_symbols):
     return ReportStocksStatisticsScript(
         trigger_stocks_statistics=trigger_stocks_statistics,
+        list_tracked_symbols=list_tracked_symbols,
         logger_factory=logger_factory,
     )
 
@@ -29,37 +30,25 @@ class TestReportStocksStatisticsScript:
     def test_does_not_trigger_when_no_symbols_tracked(
         self, trigger_stocks_statistics, logger_factory
     ):
-        script = _make_script(trigger_stocks_statistics, logger_factory)
+        script = _make_script(trigger_stocks_statistics, logger_factory, lambda: [])
 
-        with patch(
-            "pryces.presentation.scripts.report_stocks_statistics.get_all_tracked_symbols",
-            return_value=[],
-        ):
-            script.run()
+        script.run()
 
         trigger_stocks_statistics.handle.assert_not_called()
 
     def test_triggers_statistics_for_all_tracked_symbols(
         self, trigger_stocks_statistics, logger_factory
     ):
-        script = _make_script(trigger_stocks_statistics, logger_factory)
+        script = _make_script(trigger_stocks_statistics, logger_factory, lambda: ["AAPL", "GOOGL"])
 
-        with patch(
-            "pryces.presentation.scripts.report_stocks_statistics.get_all_tracked_symbols",
-            return_value=["AAPL", "GOOGL"],
-        ):
-            script.run()
+        script.run()
 
         request = trigger_stocks_statistics.handle.call_args[0][0]
         assert request.symbols == ["AAPL", "GOOGL"]
 
     def test_triggers_once_for_all_symbols(self, trigger_stocks_statistics, logger_factory):
-        script = _make_script(trigger_stocks_statistics, logger_factory)
+        script = _make_script(trigger_stocks_statistics, logger_factory, lambda: ["AAPL", "GOOGL"])
 
-        with patch(
-            "pryces.presentation.scripts.report_stocks_statistics.get_all_tracked_symbols",
-            return_value=["AAPL", "GOOGL"],
-        ):
-            script.run()
+        script.run()
 
         trigger_stocks_statistics.handle.assert_called_once()

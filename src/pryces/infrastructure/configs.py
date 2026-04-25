@@ -87,59 +87,75 @@ class ConfigManager:
         )
 
 
-def find_config_by_name(config_name: str) -> tuple[Path, MonitorStocksConfig] | None:
-    if not CONFIGS_DIR.exists():
-        return None
-    path = CONFIGS_DIR / f"{config_name}.json"
-    try:
-        return path, ConfigManager(path).read_monitor_stocks_config()
-    except ConfigLoadingFailed:
-        return None
+class ConfigStore:
+    def __init__(self, configs_dir: Path) -> None:
+        self._configs_dir = configs_dir
 
+    def list_paths(self) -> list[Path]:
+        if not self._configs_dir.exists():
+            return []
+        return sorted(self._configs_dir.glob("*.json"))
 
-def find_config_for_symbol(symbol: str) -> tuple[Path, MonitorStocksConfig] | None:
-    if not CONFIGS_DIR.exists():
-        return None
-    for path in sorted(CONFIGS_DIR.glob("*.json")):
+    def list_names(self) -> list[str]:
+        return [path.stem for path in self.list_paths()]
+
+    def find_by_name(self, name: str) -> tuple[Path, MonitorStocksConfig] | None:
+        if not self._configs_dir.exists():
+            return None
+        path = self._configs_dir / f"{name}.json"
         try:
-            config = ConfigManager(path).read_monitor_stocks_config()
-            if any(s.symbol == symbol.upper() for s in config.symbols):
-                return path, config
+            return path, ConfigManager(path).read_monitor_stocks_config()
         except ConfigLoadingFailed:
-            continue
-    return None
+            return None
 
+    def find_for_symbol(self, symbol: str) -> tuple[Path, MonitorStocksConfig] | None:
+        for path in self.list_paths():
+            try:
+                config = ConfigManager(path).read_monitor_stocks_config()
+                if any(s.symbol == symbol.upper() for s in config.symbols):
+                    return path, config
+            except ConfigLoadingFailed:
+                continue
+        return None
 
-def get_config_names() -> list[str]:
-    if not CONFIGS_DIR.exists():
-        return []
-    return sorted(path.stem for path in CONFIGS_DIR.glob("*.json"))
+    def list_tracked_symbols(self) -> list[str]:
+        symbols: set[str] = set()
+        for path in self.list_paths():
+            try:
+                config = ConfigManager(path).read_monitor_stocks_config()
+                for sc in config.symbols:
+                    symbols.add(sc.symbol)
+            except ConfigLoadingFailed:
+                continue
+        return sorted(symbols)
 
+    def list_tracked_symbols_with_targets(self) -> list[tuple[str, list[Decimal]]]:
+        symbols: dict[str, list[Decimal]] = {}
+        for path in self.list_paths():
+            try:
+                config = ConfigManager(path).read_monitor_stocks_config()
+                for sc in config.symbols:
+                    if sc.symbol not in symbols:
+                        symbols[sc.symbol] = sc.prices
+            except ConfigLoadingFailed:
+                continue
+        return [(s, symbols[s]) for s in sorted(symbols)]
 
-def get_all_tracked_symbols() -> list[str]:
-    if not CONFIGS_DIR.exists():
-        return []
-    symbols: set[str] = set()
-    for path in CONFIGS_DIR.glob("*.json"):
-        try:
-            config = ConfigManager(path).read_monitor_stocks_config()
-            for sc in config.symbols:
-                symbols.add(sc.symbol)
-        except ConfigLoadingFailed:
-            continue
-    return sorted(symbols)
+    def validate_name(self, name: str) -> str | None:
+        if not name or not name.strip():
+            return "Name must not be empty."
+        stripped = name.strip()
+        if "/" in stripped or "." in stripped:
+            return "Name must not contain '/' or '.'."
+        if (self._configs_dir / f"{stripped}.json").exists():
+            return f"Config '{stripped}.json' already exists."
+        return None
 
+    def create(self, name: str, config: MonitorStocksConfig) -> Path:
+        self._configs_dir.mkdir(parents=True, exist_ok=True)
+        path = self._configs_dir / f"{name.strip()}.json"
+        ConfigManager(path).write_monitor_stocks_config(config)
+        return path
 
-def get_all_tracked_symbols_with_targets() -> list[tuple[str, list[Decimal]]]:
-    if not CONFIGS_DIR.exists():
-        return []
-    symbols: dict[str, list[Decimal]] = {}
-    for path in sorted(CONFIGS_DIR.glob("*.json")):
-        try:
-            config = ConfigManager(path).read_monitor_stocks_config()
-            for sc in config.symbols:
-                if sc.symbol not in symbols:
-                    symbols[sc.symbol] = sc.prices
-        except ConfigLoadingFailed:
-            continue
-    return [(s, symbols[s]) for s in sorted(symbols)]
+    def delete_by_path(self, path: Path) -> None:
+        path.unlink()

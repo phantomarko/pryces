@@ -1,7 +1,9 @@
 from pathlib import Path
 
+from pryces.infrastructure.configs import ConfigStore
+
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
-from ..utils import create_config_selection_validator, format_config_list, get_config_files
+from ..utils import create_config_selection_validator, format_config_list
 
 
 def _validate_confirm(value: str) -> str | None:
@@ -11,7 +13,8 @@ def _validate_confirm(value: str) -> str | None:
 
 
 class DeleteConfigCommand(Command):
-    def __init__(self) -> None:
+    def __init__(self, config_store: ConfigStore) -> None:
+        self._config_store = config_store
         self._config_files: list[Path] = []
 
     def get_metadata(self) -> CommandMetadata:
@@ -23,7 +26,7 @@ class DeleteConfigCommand(Command):
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
-        self._config_files = get_config_files()
+        self._config_files = self._config_store.list_paths()
         if not self._config_files:
             return []
 
@@ -55,5 +58,5 @@ class DeleteConfigCommand(Command):
         if confirm != "yes":
             return CommandResult("Deletion cancelled.")
 
-        path.unlink()
+        self._config_store.delete_by_path(path)
         return CommandResult(f"Config deleted: {path.name}")

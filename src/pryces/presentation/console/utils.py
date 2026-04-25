@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from pryces.application.dtos import StockDTO
-from pryces.infrastructure.configs import CONFIGS_DIR, MonitorStocksConfig, SymbolConfig
+from pryces.infrastructure.configs import MonitorStocksConfig, SymbolConfig
 
 _MONITOR_MODULE = "pryces.presentation.scripts.monitor_stocks"
 
@@ -92,12 +92,6 @@ def validate_file_path(value: str) -> str | None:
     if value and value.strip() and Path(value.strip()).is_file():
         return None
     return "File not found or not a file."
-
-
-def get_config_files() -> list[Path]:
-    if not CONFIGS_DIR.exists():
-        return []
-    return sorted(CONFIGS_DIR.glob("*.json"))
 
 
 def format_config_list(paths: list[Path]) -> str:

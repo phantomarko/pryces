@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from pryces.infrastructure.configs import ConfigManager, MonitorStocksConfig
+from pryces.infrastructure.configs import ConfigManager, ConfigStore, MonitorStocksConfig
 
 from .base import Command, CommandMetadata, CommandResult, InputPrompt
 from ..utils import (
     create_config_selection_validator,
     format_config_details,
-    get_config_files,
     parse_symbols_with_targets,
     validate_positive_integer,
     validate_symbols_with_targets,
@@ -26,7 +25,8 @@ def _validate_new_value(value: str) -> str | None:
 
 
 class EditConfigCommand(Command):
-    def __init__(self) -> None:
+    def __init__(self, config_store: ConfigStore) -> None:
+        self._config_store = config_store
         self._config_files: list[Path] = []
 
     def get_metadata(self) -> CommandMetadata:
@@ -38,7 +38,7 @@ class EditConfigCommand(Command):
         )
 
     def get_input_prompts(self) -> list[InputPrompt]:
-        self._config_files = get_config_files()
+        self._config_files = self._config_store.list_paths()
         if not self._config_files:
             return []
 

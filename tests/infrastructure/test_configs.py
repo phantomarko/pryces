@@ -1,15 +1,13 @@
 import json
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from pryces.infrastructure.configs import (
     ConfigManager,
+    ConfigStore,
     MonitorStocksConfig,
     SymbolConfig,
-    get_all_tracked_symbols,
-    get_all_tracked_symbols_with_targets,
 )
 from pryces.infrastructure.exceptions import ConfigLoadingFailed
 
@@ -160,154 +158,6 @@ class TestConfigManager:
         assert restored.symbols[0].prices == [Decimal("1"), Decimal("0.92")]
 
 
-class TestGetAllTrackedSymbols:
-
-    def test_collects_symbols_from_multiple_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-        (tmp_path / "a.json").write_text(
-            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
-        )
-        (tmp_path / "b.json").write_text(
-            json.dumps({"interval": 30, "symbols": [{"symbol": "MSFT", "prices": []}]})
-        )
-
-        result = get_all_tracked_symbols()
-
-        assert result == ["AAPL", "MSFT"]
-
-    def test_returns_empty_list_when_no_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-
-        result = get_all_tracked_symbols()
-
-        assert result == []
-
-    def test_skips_malformed_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-        (tmp_path / "good.json").write_text(
-            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
-        )
-        (tmp_path / "bad.json").write_text("not json")
-
-        result = get_all_tracked_symbols()
-
-        assert result == ["AAPL"]
-
-    def test_deduplicates_and_sorts_symbols(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-        (tmp_path / "a.json").write_text(
-            json.dumps(
-                {
-                    "interval": 30,
-                    "symbols": [
-                        {"symbol": "MSFT", "prices": []},
-                        {"symbol": "AAPL", "prices": []},
-                    ],
-                }
-            )
-        )
-        (tmp_path / "b.json").write_text(
-            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
-        )
-
-        result = get_all_tracked_symbols()
-
-        assert result == ["AAPL", "MSFT"]
-
-    def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(
-            "pryces.infrastructure.configs.CONFIGS_DIR", tmp_path / "nonexistent"
-        )
-
-        result = get_all_tracked_symbols()
-
-        assert result == []
-
-
-class TestGetAllTrackedSymbolsWithTargets:
-
-    def test_collects_symbols_with_targets(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-        (tmp_path / "a.json").write_text(
-            json.dumps(
-                {
-                    "interval": 30,
-                    "symbols": [{"symbol": "AAPL", "prices": [150, 200.5]}],
-                }
-            )
-        )
-        (tmp_path / "b.json").write_text(
-            json.dumps(
-                {
-                    "interval": 30,
-                    "symbols": [{"symbol": "MSFT", "prices": []}],
-                }
-            )
-        )
-
-        result = get_all_tracked_symbols_with_targets()
-
-        assert result == [
-            ("AAPL", [Decimal("150"), Decimal("200.5")]),
-            ("MSFT", []),
-        ]
-
-    def test_deduplicates_first_config_wins(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-        (tmp_path / "a.json").write_text(
-            json.dumps(
-                {
-                    "interval": 30,
-                    "symbols": [{"symbol": "AAPL", "prices": [100]}],
-                }
-            )
-        )
-        (tmp_path / "b.json").write_text(
-            json.dumps(
-                {
-                    "interval": 30,
-                    "symbols": [{"symbol": "AAPL", "prices": [200]}],
-                }
-            )
-        )
-
-        result = get_all_tracked_symbols_with_targets()
-
-        assert result == [("AAPL", [Decimal("100")])]
-
-    def test_returns_empty_list_when_no_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-
-        result = get_all_tracked_symbols_with_targets()
-
-        assert result == []
-
-    def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(
-            "pryces.infrastructure.configs.CONFIGS_DIR", tmp_path / "nonexistent"
-        )
-
-        result = get_all_tracked_symbols_with_targets()
-
-        assert result == []
-
-    def test_skips_malformed_configs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("pryces.infrastructure.configs.CONFIGS_DIR", tmp_path)
-        (tmp_path / "good.json").write_text(
-            json.dumps(
-                {
-                    "interval": 30,
-                    "symbols": [{"symbol": "AAPL", "prices": [150]}],
-                }
-            )
-        )
-        (tmp_path / "bad.json").write_text("not json")
-
-        result = get_all_tracked_symbols_with_targets()
-
-        assert result == [("AAPL", [Decimal("150")])]
-
-
 class TestConfigManagerMutators:
 
     def _write(self, path, config):
@@ -384,3 +234,308 @@ class TestConfigManagerMutators:
 
         restored = ConfigManager(path).read_monitor_stocks_config()
         assert restored.symbols == [SymbolConfig("MSFT", [Decimal("300")])]
+
+
+class TestConfigStoreListPaths:
+
+    def test_returns_empty_when_directory_does_not_exist(self, tmp_path):
+        store = ConfigStore(tmp_path / "nonexistent")
+        assert store.list_paths() == []
+
+    def test_returns_sorted_json_files(self, tmp_path):
+        (tmp_path / "b.json").touch()
+        (tmp_path / "a.json").touch()
+        (tmp_path / "c.txt").touch()
+        store = ConfigStore(tmp_path)
+
+        result = store.list_paths()
+
+        assert [p.name for p in result] == ["a.json", "b.json"]
+
+    def test_excludes_non_json_files(self, tmp_path):
+        (tmp_path / "config.yaml").touch()
+        (tmp_path / "config.json").touch()
+        store = ConfigStore(tmp_path)
+
+        result = store.list_paths()
+
+        assert [p.name for p in result] == ["config.json"]
+
+
+class TestConfigStoreListNames:
+
+    def test_returns_sorted_stems(self, tmp_path):
+        (tmp_path / "b.json").touch()
+        (tmp_path / "a.json").touch()
+        store = ConfigStore(tmp_path)
+
+        assert store.list_names() == ["a", "b"]
+
+    def test_returns_empty_when_directory_missing(self, tmp_path):
+        store = ConfigStore(tmp_path / "missing")
+        assert store.list_names() == []
+
+
+class TestConfigStoreFindByName:
+
+    def test_returns_path_and_config_when_present(self, tmp_path):
+        (tmp_path / "x.json").write_text(json.dumps(make_config_data()))
+        store = ConfigStore(tmp_path)
+
+        result = store.find_by_name("x")
+
+        assert result is not None
+        path, config = result
+        assert path.name == "x.json"
+        assert config.interval == 30
+
+    def test_returns_none_when_directory_missing(self, tmp_path):
+        store = ConfigStore(tmp_path / "missing")
+        assert store.find_by_name("x") is None
+
+    def test_returns_none_when_load_fails(self, tmp_path):
+        (tmp_path / "x.json").write_text("not json")
+        store = ConfigStore(tmp_path)
+        assert store.find_by_name("x") is None
+
+    def test_returns_none_when_name_unknown(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.find_by_name("nope") is None
+
+
+class TestConfigStoreFindForSymbol:
+
+    def test_returns_first_config_alphabetically_containing_symbol(self, tmp_path):
+        (tmp_path / "b.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        (tmp_path / "a.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "MSFT", "prices": []}]})
+        )
+        store = ConfigStore(tmp_path)
+
+        result = store.find_for_symbol("AAPL")
+
+        assert result is not None
+        path, _ = result
+        assert path.name == "b.json"
+
+    def test_uppercases_symbol(self, tmp_path):
+        (tmp_path / "x.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        store = ConfigStore(tmp_path)
+
+        assert store.find_for_symbol("aapl") is not None
+
+    def test_returns_none_when_no_match(self, tmp_path):
+        (tmp_path / "x.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        store = ConfigStore(tmp_path)
+        assert store.find_for_symbol("MSFT") is None
+
+    def test_skips_malformed_files(self, tmp_path):
+        (tmp_path / "bad.json").write_text("garbage")
+        (tmp_path / "good.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        store = ConfigStore(tmp_path)
+
+        result = store.find_for_symbol("AAPL")
+
+        assert result is not None
+        assert result[0].name == "good.json"
+
+
+class TestConfigStoreListTrackedSymbols:
+
+    def test_collects_symbols_from_multiple_configs(self, tmp_path):
+        (tmp_path / "a.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        (tmp_path / "b.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "MSFT", "prices": []}]})
+        )
+        store = ConfigStore(tmp_path)
+
+        assert store.list_tracked_symbols() == ["AAPL", "MSFT"]
+
+    def test_returns_empty_list_when_no_configs(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.list_tracked_symbols() == []
+
+    def test_skips_malformed_configs(self, tmp_path):
+        (tmp_path / "good.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        (tmp_path / "bad.json").write_text("not json")
+        store = ConfigStore(tmp_path)
+
+        assert store.list_tracked_symbols() == ["AAPL"]
+
+    def test_deduplicates_and_sorts_symbols(self, tmp_path):
+        (tmp_path / "a.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [
+                        {"symbol": "MSFT", "prices": []},
+                        {"symbol": "AAPL", "prices": []},
+                    ],
+                }
+            )
+        )
+        (tmp_path / "b.json").write_text(
+            json.dumps({"interval": 30, "symbols": [{"symbol": "AAPL", "prices": []}]})
+        )
+        store = ConfigStore(tmp_path)
+
+        assert store.list_tracked_symbols() == ["AAPL", "MSFT"]
+
+    def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path):
+        store = ConfigStore(tmp_path / "nonexistent")
+        assert store.list_tracked_symbols() == []
+
+
+class TestConfigStoreListTrackedSymbolsWithTargets:
+
+    def test_collects_symbols_with_targets(self, tmp_path):
+        (tmp_path / "a.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [{"symbol": "AAPL", "prices": [150, 200.5]}],
+                }
+            )
+        )
+        (tmp_path / "b.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [{"symbol": "MSFT", "prices": []}],
+                }
+            )
+        )
+        store = ConfigStore(tmp_path)
+
+        result = store.list_tracked_symbols_with_targets()
+
+        assert result == [
+            ("AAPL", [Decimal("150"), Decimal("200.5")]),
+            ("MSFT", []),
+        ]
+
+    def test_deduplicates_first_config_wins(self, tmp_path):
+        (tmp_path / "a.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [{"symbol": "AAPL", "prices": [100]}],
+                }
+            )
+        )
+        (tmp_path / "b.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [{"symbol": "AAPL", "prices": [200]}],
+                }
+            )
+        )
+        store = ConfigStore(tmp_path)
+
+        assert store.list_tracked_symbols_with_targets() == [("AAPL", [Decimal("100")])]
+
+    def test_returns_empty_list_when_no_configs(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.list_tracked_symbols_with_targets() == []
+
+    def test_returns_empty_list_when_directory_does_not_exist(self, tmp_path):
+        store = ConfigStore(tmp_path / "nonexistent")
+        assert store.list_tracked_symbols_with_targets() == []
+
+    def test_skips_malformed_configs(self, tmp_path):
+        (tmp_path / "good.json").write_text(
+            json.dumps(
+                {
+                    "interval": 30,
+                    "symbols": [{"symbol": "AAPL", "prices": [150]}],
+                }
+            )
+        )
+        (tmp_path / "bad.json").write_text("not json")
+        store = ConfigStore(tmp_path)
+
+        assert store.list_tracked_symbols_with_targets() == [("AAPL", [Decimal("150")])]
+
+
+class TestConfigStoreValidateName:
+
+    def test_accepts_valid_name(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.validate_name("portfolio") is None
+
+    def test_rejects_empty(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.validate_name("") is not None
+        assert store.validate_name("   ") is not None
+
+    def test_rejects_name_with_dot(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.validate_name("my.config") is not None
+
+    def test_rejects_name_with_slash(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        assert store.validate_name("dir/name") is not None
+
+    def test_rejects_existing_file(self, tmp_path):
+        (tmp_path / "portfolio.json").touch()
+        store = ConfigStore(tmp_path)
+        assert store.validate_name("portfolio") is not None
+
+
+class TestConfigStoreCreate:
+
+    def test_creates_json_file_under_configs_dir(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        config = MonitorStocksConfig(
+            interval=60,
+            symbols=[SymbolConfig("AAPL", [Decimal("150")])],
+        )
+
+        path = store.create("portfolio", config)
+
+        assert path == tmp_path / "portfolio.json"
+        assert path.exists()
+        saved = json.loads(path.read_text())
+        assert saved["interval"] == 60
+
+    def test_creates_directory_if_missing(self, tmp_path):
+        store = ConfigStore(tmp_path / "new_dir")
+        config = MonitorStocksConfig(interval=30, symbols=[SymbolConfig("AAPL", [])])
+
+        path = store.create("a", config)
+
+        assert path.exists()
+        assert path.parent == tmp_path / "new_dir"
+
+    def test_strips_name_whitespace(self, tmp_path):
+        store = ConfigStore(tmp_path)
+        config = MonitorStocksConfig(interval=30, symbols=[SymbolConfig("AAPL", [])])
+
+        path = store.create("  portfolio  ", config)
+
+        assert path.name == "portfolio.json"
+
+
+class TestConfigStoreDeleteByPath:
+
+    def test_removes_file(self, tmp_path):
+        path = tmp_path / "portfolio.json"
+        path.write_text("{}")
+        store = ConfigStore(tmp_path)
+
+        store.delete_by_path(path)
+
+        assert not path.exists()

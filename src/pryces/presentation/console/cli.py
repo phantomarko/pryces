@@ -4,6 +4,7 @@ import sys
 from dotenv import load_dotenv
 
 from ...application.interfaces import LoggerFactory
+from ...infrastructure.configs import CONFIGS_DIR, ConfigStore
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
 from ...infrastructure.providers import YahooFinanceProvider
@@ -27,6 +28,7 @@ def _create_menu(logger_factory: LoggerFactory) -> InteractiveMenu:
         stock_provider=provider,
         message_sender=message_sender,
         logger_factory=logger_factory,
+        config_store=ConfigStore(CONFIGS_DIR),
     )
 
     registry = factory.create_command_registry()

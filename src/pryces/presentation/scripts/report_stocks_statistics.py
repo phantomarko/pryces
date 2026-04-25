@@ -1,5 +1,6 @@
 import argparse
 import sys
+from collections.abc import Callable
 
 from dotenv import load_dotenv
 
@@ -8,25 +9,27 @@ from ...application.use_cases.trigger_stocks_statistics import (
     TriggerStocksStatistics,
     TriggerStocksStatisticsRequest,
 )
+from ...infrastructure.configs import CONFIGS_DIR, ConfigStore
 from ...infrastructure.formatters import RegularStockStatisticsFormatter
 from ...infrastructure.factories import SettingsFactory
 from ...infrastructure.logging import PythonLoggerFactory, setup_logging
 from ...infrastructure.providers import YahooFinanceStatisticsProvider
 from ...infrastructure.senders import TelegramMessageSender
-from ...infrastructure.configs import get_all_tracked_symbols
 
 
 class ReportStocksStatisticsScript:
     def __init__(
         self,
         trigger_stocks_statistics: TriggerStocksStatistics,
+        list_tracked_symbols: Callable[[], list[str]],
         logger_factory: LoggerFactory,
     ) -> None:
         self._trigger_stocks_statistics = trigger_stocks_statistics
+        self._list_tracked_symbols = list_tracked_symbols
         self._logger = logger_factory.get_logger(__name__)
 
     def run(self) -> None:
-        symbols = get_all_tracked_symbols()
+        symbols = self._list_tracked_symbols()
         if not symbols:
             self._logger.info("No symbols tracked, nothing to report.")
             return
@@ -48,9 +51,11 @@ def _create_script(logger_factory: LoggerFactory) -> ReportStocksStatisticsScrip
     trigger_stocks_statistics = TriggerStocksStatistics(
         statistics_provider, RegularStockStatisticsFormatter(), message_sender
     )
+    config_store = ConfigStore(CONFIGS_DIR)
 
     return ReportStocksStatisticsScript(
         trigger_stocks_statistics=trigger_stocks_statistics,
+        list_tracked_symbols=config_store.list_tracked_symbols,
         logger_factory=logger_factory,
     )
 
